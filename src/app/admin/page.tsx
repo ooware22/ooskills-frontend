@@ -1,0 +1,116 @@
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  Sparkles,
+  Clock,
+  Award,
+  BookOpen,
+  HelpCircle,
+  Phone,
+  TrendingUp,
+  Users,
+  Eye,
+  Edit3,
+} from "lucide-react";
+import AdminHeader from "@/components/admin/AdminHeader";
+import Link from "next/link";
+
+const stats = [
+  { label: "Total Visitors", value: "12,458", change: "+12%", icon: Eye },
+  { label: "Page Views", value: "45,892", change: "+8%", icon: TrendingUp },
+  { label: "Leads Generated", value: "234", change: "+24%", icon: Users },
+];
+
+const sections = [
+  { name: "Hero Section", icon: Sparkles, href: "/admin/hero", status: "Published" },
+  { name: "Countdown", icon: Clock, href: "/admin/countdown", status: "Active" },
+  { name: "Features", icon: Award, href: "/admin/features", status: "6 items" },
+  { name: "Courses", icon: BookOpen, href: "/admin/courses", status: "4 items" },
+  { name: "FAQ", icon: HelpCircle, href: "/admin/faq", status: "5 items" },
+  { name: "Contact & Social", icon: Phone, href: "/admin/contact", status: "Published" },
+];
+
+export default function AdminDashboard() {
+  return (
+    <div className="min-h-screen">
+      <AdminHeader 
+        title="Dashboard" 
+        subtitle="Welcome back, Admin" 
+      />
+      
+      <div className="p-6">
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center">
+                  <stat.icon className="w-5 h-5 text-gold" />
+                </div>
+                <span className="text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-full">
+                  {stat.change}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-oxford dark:text-white mb-1">
+                {stat.value}
+              </p>
+              <p className="text-sm text-silver dark:text-white/50">{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Manage Sections */}
+        <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10">
+          <div className="p-6 border-b border-gray-200 dark:border-white/10">
+            <h2 className="text-lg font-semibold text-oxford dark:text-white">
+              Manage Sections
+            </h2>
+            <p className="text-sm text-silver dark:text-white/50">
+              Edit content for each section of your landing page
+            </p>
+          </div>
+          <div className="divide-y divide-gray-200 dark:divide-white/10">
+            {sections.map((section, index) => (
+              <motion.div
+                key={section.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + index * 0.05 }}
+              >
+                <Link
+                  href={section.href}
+                  className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-oxford/5 dark:bg-white/5 rounded-lg flex items-center justify-center">
+                      <section.icon className="w-5 h-5 text-oxford dark:text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-oxford dark:text-white">
+                        {section.name}
+                      </p>
+                      <p className="text-xs text-silver dark:text-white/50">
+                        {section.status}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-silver dark:text-white/50">Edit</span>
+                    <Edit3 className="w-4 h-4 text-silver dark:text-white/50" />
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

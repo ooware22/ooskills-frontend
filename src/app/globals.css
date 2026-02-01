@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --oxford: #002147;
+    --oxford-light: #003366;
+    --gold: #CFB53B;
+    --gold-light: #E8D48A;
+    --cream: #FAF9F6;
+    --blue-light: #EEF4FF;
+    --silver: #6B7280;
+    --border: #E5E7EB;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-oxford antialiased;
+  }
+
+  .dark body {
+    @apply bg-oxford text-white;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    font-family: 'Tajawal', system-ui, sans-serif;
+  }
+
+  [dir="ltr"] {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-oxford rounded-lg hover:bg-oxford-light transition-colors duration-200;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-oxford bg-gold rounded-lg hover:bg-gold-light transition-colors duration-200;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-oxford border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-oxford dark:text-white tracking-tight;
+  }
+
+  .section-subtitle {
+    @apply text-base text-silver dark:text-gray-400 mt-3;
+  }
+
+  .card {
+    @apply bg-white dark:bg-oxford-light rounded-xl border border-gray-100 dark:border-white/5;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Dark mode overrides */
+.dark {
+  --cream: #0a0f1a;
+  --blue-light: #111827;
+}
+
+.dark .btn-outline {
+  @apply text-white border-white/20 hover:bg-white/10;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-padding-top: 80px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-oxford;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400 dark:bg-white/20 dark:hover:bg-white/30;
+}

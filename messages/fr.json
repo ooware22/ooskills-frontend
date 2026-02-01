@@ -1,0 +1,187 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "courses": "Formations",
+    "howItWorks": "Comment ça marche",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "hero": {
+    "badge": "Plateforme E-Learning #1 en Algérie",
+    "title": "Développez vos compétences avec",
+    "titleHighlight": "OOSkills",
+    "subtitle": "Accédez à des formations de qualité en informatique, bureautique et développement personnel. Apprenez à votre rythme avec des experts.",
+    "cta": "Découvrir les formations",
+    "ctaSecondary": "En savoir plus",
+    "floatingCard2": "Rejoignez-nous",
+    "illustrationTitle": "Apprenez. Pratiquez. Réussissez.",
+    "illustrationSubtitle": "Votre parcours vers l'excellence commence ici",
+    "trustIndicator1": "Certificats reconnus",
+    "trustIndicator2": "Experts professionnels",
+    "trustIndicator3": "Support continu",
+    "progressLabel": "Progression",
+    "launchBadge": "Nouveau lancement !",
+    "launchBadgeDesc": "Rejoignez les premiers"
+  },
+  "countdown": {
+    "title": "Lancement de la plateforme bientôt",
+    "subtitle": "Préparez-vous pour une expérience d'apprentissage exceptionnelle",
+    "days": "Jours",
+    "hours": "Heures",
+    "minutes": "Minutes",
+    "seconds": "Secondes",
+    "cta": "Me notifier au lancement",
+    "launchDate": "1er Mai 2026"
+  },
+  "features": {
+    "title": "Pourquoi choisir OOSkills ?",
+    "subtitle": "Une plateforme conçue pour votre réussite",
+    "items": {
+      "quality": {
+        "title": "Contenu de qualité",
+        "description": "Des formations créées par des experts avec des supports pédagogiques complets."
+      },
+      "flexible": {
+        "title": "Apprentissage flexible",
+        "description": "Apprenez à votre rythme, où vous voulez, quand vous voulez."
+      },
+      "certificate": {
+        "title": "Certificats reconnus",
+        "description": "Obtenez des certificats vérifiables à la fin de chaque formation."
+      },
+      "support": {
+        "title": "Support dédié",
+        "description": "Une équipe disponible pour vous accompagner dans votre parcours."
+      },
+      "affordable": {
+        "title": "Prix accessibles",
+        "description": "Des formations de qualité à des prix adaptés au marché algérien."
+      },
+      "progress": {
+        "title": "Suivi de progression",
+        "description": "Suivez votre avancement et gagnez des points XP à chaque leçon."
+      }
+    }
+  },
+  "courses": {
+    "title": "Nos formations populaires",
+    "subtitle": "Découvrez nos formations les plus demandées",
+    "learnMore": "En savoir plus",
+    "viewAll": "Voir toutes les formations",
+    "items": {
+      "excel": {
+        "title": "Excel - Du débutant à l'expert",
+        "category": "Bureautique",
+        "duration": "12 heures",
+        "level": "Tous niveaux"
+      },
+      "web": {
+        "title": "Développement Web Moderne",
+        "category": "Informatique",
+        "duration": "40 heures",
+        "level": "Intermédiaire"
+      },
+      "python": {
+        "title": "Python pour débutants",
+        "category": "Programmation",
+        "duration": "20 heures",
+        "level": "Débutant"
+      },
+      "communication": {
+        "title": "Communication professionnelle",
+        "category": "Soft OOSkills",
+        "duration": "8 heures",
+        "level": "Tous niveaux"
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "subtitle": "Trois étapes simples pour commencer votre parcours d'apprentissage",
+    "step1": {
+      "title": "Créez votre compte",
+      "description": "Inscrivez-vous gratuitement en quelques minutes et explorez les formations disponibles"
+    },
+    "step2": {
+      "title": "Choisissez votre formation",
+      "description": "Parcourez notre catalogue et sélectionnez la formation qui correspond à vos objectifs"
+    },
+    "step3": {
+      "title": "Obtenez votre certificat",
+      "description": "Terminez la formation et recevez un certificat vérifiable et reconnu"
+    },
+    "cta": "Commencer maintenant"
+  },
+  "faq": {
+    "title": "Questions fréquentes",
+    "subtitle": "Trouvez rapidement les réponses à vos questions",
+    "moreQuestions": "Une autre question ?",
+    "contactUs": "Contactez-nous",
+    "items": {
+      "q1": {
+        "question": "Comment accéder aux formations ?",
+        "answer": "Après inscription et paiement, vous avez un accès à vie à vos formations. Connectez-vous simplement à votre compte pour commencer à apprendre."
+      },
+      "q2": {
+        "question": "Les certificats sont-ils reconnus ?",
+        "answer": "Oui, chaque certificat dispose d'un QR code de vérification et est signé numériquement. Ils sont reconnus par de nombreuses entreprises en Algérie."
+      },
+      "q3": {
+        "question": "Quels moyens de paiement acceptez-vous ?",
+        "answer": "Nous acceptons CCP, BaridiMob, et les virements bancaires. Le paiement est 100% sécurisé."
+      },
+      "q4": {
+        "question": "Puis-je suivre les formations sur mobile ?",
+        "answer": "Absolument ! Notre plateforme est entièrement responsive et fonctionne sur tous les appareils : ordinateur, tablette et smartphone."
+      },
+      "q5": {
+        "question": "Y a-t-il un support en cas de problème ?",
+        "answer": "Notre équipe de support est disponible par email et chat. Nous répondons généralement sous 24 heures."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Une question ? N'hésitez pas à nous écrire, nous vous répondrons rapidement.",
+    "info": {
+      "email": "contact@OOSkills.com",
+      "phone": "+213 555 123 456",
+      "address": "Alger, Algérie"
+    },
+    "form": {
+      "name": "Nom complet",
+      "email": "Adresse email",
+      "subject": "Sujet",
+      "message": "Message",
+      "submit": "Envoyer le message",
+      "sending": "Envoi en cours...",
+      "success": "Message envoyé !",
+      "error": "Erreur, réessayez"
+    }
+  },
+  "footer": {
+    "description": "Votre partenaire pour le développement de compétences en Algérie. Des formations de qualité, accessibles à tous.",
+    "links": {
+      "company": "Entreprise",
+      "about": "À propos",
+      "careers": "Carrières",
+      "blog": "Blog",
+      "resources": "Ressources",
+      "help": "Centre d'aide",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Recevez nos dernières actualités et offres exclusives.",
+      "placeholder": "Votre email"
+    },
+    "copyright": "© 2026 OOSkills. Tous droits réservés."
+  }
+}

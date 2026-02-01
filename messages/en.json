@@ -1,0 +1,218 @@
+{
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "courses": "Courses",
+    "howItWorks": "How It Works",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "login": "Login",
+    "signup": "Sign Up",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "hero": {
+    "badge": "#1 E-Learning Platform in Algeria",
+    "title": "Develop your skills with",
+    "titleHighlight": "OOSkills",
+    "subtitle": "Access quality training in IT, office tools, and personal development. Learn at your own pace with experts.",
+    "cta": "Explore Courses",
+    "ctaSecondary": "Learn More",
+    "floatingCard1": "Certificates this month",
+    "floatingCard2": "Active students",
+    "illustrationTitle": "Learn. Practice. Succeed.",
+    "illustrationSubtitle": "Your journey to excellence starts here",
+    "progressLabel": "Learning Progress",
+    "trustIndicator1": "Verified Certificates",
+    "trustIndicator2": "Expert Instructors",
+    "trustIndicator3": "24/7 Support",
+    "launchBadge": "Just Launched!",
+    "launchBadgeDesc": "Join early learners",
+    "stats": {
+      "students": "Students",
+      "courses": "Courses",
+      "certificates": "Certificates Issued",
+      "rating": "Average Rating"
+    }
+  },
+  "features": {
+    "title": "Why Choose OOSkills?",
+    "subtitle": "A platform designed for your success",
+    "items": {
+      "quality": {
+        "title": "Quality Content",
+        "description": "Courses created by experts with comprehensive learning materials."
+      },
+      "flexible": {
+        "title": "Flexible Learning",
+        "description": "Learn at your own pace, wherever you want, whenever you want."
+      },
+      "certificate": {
+        "title": "Recognized Certificates",
+        "description": "Get verifiable certificates upon completion of each course."
+      },
+      "support": {
+        "title": "Dedicated Support",
+        "description": "A team available to guide you throughout your learning journey."
+      },
+      "affordable": {
+        "title": "Affordable Prices",
+        "description": "Quality courses at prices adapted to the Algerian market."
+      },
+      "progress": {
+        "title": "Progress Tracking",
+        "description": "Track your progress and earn XP points with each lesson."
+      }
+    }
+  },
+  "courses": {
+    "title": "Our Popular Courses",
+    "subtitle": "Discover our most requested courses",
+    "learnMore": "Learn More",
+    "viewAll": "View All Courses",
+    "items": {
+      "excel": {
+        "title": "Excel - From Beginner to Expert",
+        "category": "Office",
+        "duration": "12 hours",
+        "level": "All levels"
+      },
+      "web": {
+        "title": "Modern Web Development",
+        "category": "IT",
+        "duration": "40 hours",
+        "level": "Intermediate"
+      },
+      "python": {
+        "title": "Python for Beginners",
+        "category": "Programming",
+        "duration": "20 hours",
+        "level": "Beginner"
+      },
+      "communication": {
+        "title": "Professional Communication",
+        "category": "Soft Skills",
+        "duration": "8 hours",
+        "level": "All levels"
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "subtitle": "Three simple steps to start your learning journey",
+    "step1": {
+      "title": "Create Your Account",
+      "description": "Sign up for free in minutes and start exploring available courses"
+    },
+    "step2": {
+      "title": "Choose Your Course",
+      "description": "Browse the course catalog and select what fits your career goals"
+    },
+    "step3": {
+      "title": "Get Your Certificate",
+      "description": "Complete the course and receive a verified certificate"
+    },
+    "cta": "Start Now"
+  },
+  "countdown": {
+    "title": "Platform Launch Coming Soon",
+    "subtitle": "Get ready for an exceptional learning experience",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "cta": "Notify me at launch",
+    "launchDate": "May 1, 2026"
+  },
+  "testimonials": {
+    "title": "What Our Students Say",
+    "subtitle": "Join thousands of satisfied learners",
+    "items": {
+      "testimonial1": {
+        "name": "Ahmed Benali",
+        "role": "Web Developer",
+        "location": "Algiers",
+        "text": "Thanks to OOSkills, I was able to learn web development at my own pace. The courses are comprehensive and the instructors are very competent."
+      },
+      "testimonial2": {
+        "name": "Fatima Zohra",
+        "role": "Accountant",
+        "location": "Oran",
+        "text": "The Excel courses helped me automate many tasks at work. I highly recommend this platform!"
+      },
+      "testimonial3": {
+        "name": "Karim Messaoudi",
+        "role": "Student",
+        "location": "Constantine",
+        "text": "An accessible and quality platform. The certificates are recognized and helped me land my internship."
+      }
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find quick answers to your questions",
+    "moreQuestions": "Another question?",
+    "contactUs": "Contact Us",
+    "items": {
+      "q1": {
+        "question": "How do I access the courses?",
+        "answer": "After registration and payment, you have lifetime access to your courses. Simply log in to your account to start learning."
+      },
+      "q2": {
+        "question": "Are the certificates recognized?",
+        "answer": "Yes, each certificate has a QR code for verification and is digitally signed. They are recognized by many companies in Algeria."
+      },
+      "q3": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept CCP, BaridiMob, and bank transfers. Payment is 100% secure."
+      },
+      "q4": {
+        "question": "Can I take courses on mobile?",
+        "answer": "Absolutely! Our platform is fully responsive and works on all devices: computer, tablet, and smartphone."
+      },
+      "q5": {
+        "question": "Is there support if I have problems?",
+        "answer": "Our support team is available by email and chat. We usually respond within 24 hours."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Have a question? Don't hesitate to write to us, we'll respond quickly.",
+    "info": {
+      "email": "contact@ooskills.com",
+      "phone": "+213 555 123 456",
+      "address": "Algiers, Algeria"
+    },
+    "form": {
+      "name": "Full Name",
+      "email": "Email Address",
+      "subject": "Subject",
+      "message": "Message",
+      "submit": "Send Message",
+      "sending": "Sending...",
+      "success": "Message Sent!",
+      "error": "Error, try again"
+    }
+  },
+  "footer": {
+    "description": "Your partner for skill development in Algeria. Quality courses accessible to everyone.",
+    "links": {
+      "company": "Company",
+      "about": "About",
+      "careers": "Careers",
+      "blog": "Blog",
+      "resources": "Resources",
+      "help": "Help Center",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Receive our latest news and exclusive offers.",
+      "placeholder": "Your email"
+    },
+    "copyright": "© 2026 OOSkills. All rights reserved."
+  }
+}
