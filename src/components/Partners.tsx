@@ -69,7 +69,7 @@ export default function Partners() {
       <div className="relative">
         {/* Left Shadow */}
         <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-gray-50 via-gray-50/80 dark:from-oxford-light/30 dark:via-oxford-light/20 to-transparent z-10 pointer-events-none" />
-        
+
         {/* Right Shadow */}
         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-gray-50 via-gray-50/80 dark:from-oxford-light/30 dark:via-oxford-light/20 to-transparent z-10 pointer-events-none" />
 
