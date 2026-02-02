@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Save, Check, Globe, Palette, Bell, Shield } from "lucide-react";
+import { DocumentCheckIcon as Save, CheckIcon as Check, GlobeAltIcon as Globe, SwatchIcon as Palette, BellIcon as Bell, ShieldCheckIcon as Shield } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 
 export default function SettingsAdmin() {

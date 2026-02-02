@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Countdown from "@/components/Countdown";
 import Features from "@/components/Features";
+import Categories from "@/components/Categories";
 import Courses from "@/components/Courses";
 import HowItWorks from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
@@ -16,6 +17,7 @@ export default function Home() {
         <Hero />
         <Countdown />
         <Features />
+        <Categories />
         <Courses />
         <HowItWorks />
         <FAQ />

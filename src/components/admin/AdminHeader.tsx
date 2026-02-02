@@ -1,6 +1,8 @@
 "use client";
 
-import { Bell, Search, User, Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { BellIcon as Bell, MagnifyingGlassIcon as Search, UserIcon as User, Bars3Icon as Menu, SunIcon as Sun, MoonIcon as Moon } from "@heroicons/react/24/outline";
 import { useSidebar } from "./AdminSidebar";
 
 interface AdminHeaderProps {
@@ -10,6 +12,12 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
   const { setMobileOpen } = useSidebar();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header className="bg-white dark:bg-oxford-light border-b border-gray-200 dark:border-white/10 px-4 lg:px-6 py-4">
@@ -43,6 +51,21 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
               className="bg-transparent text-sm text-oxford dark:text-white placeholder:text-gray-400 focus:outline-none w-40"
             />
           </div>
+
+          {/* Theme Toggle */}
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </button>
+          )}
 
           {/* Notifications */}
           <button className="relative p-2 text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors">

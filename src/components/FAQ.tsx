@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, MessageCircle } from "lucide-react";
+import { ChevronDownIcon as ChevronDown, ChatBubbleLeftRightIcon as MessageCircle } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
@@ -61,29 +61,57 @@ export default function FAQ() {
             className="lg:col-span-3 space-y-3"
           >
             {faqKeys.map((faq, index) => (
-              <div
+              <motion.div
                 key={faq}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
                 className={cn(
-                  "rounded-xl border transition-all duration-200",
+                  "rounded-xl border transition-all duration-300",
                   openIndex === index
-                    ? "border-gold/30 bg-white dark:bg-oxford-light"
-                    : "border-gray-100 dark:border-white/5 bg-white dark:bg-oxford-light"
+                    ? "border-gold bg-white dark:bg-oxford-light shadow-lg"
+                    : "border-gray-200 dark:border-white/10 bg-white dark:bg-oxford-light hover:border-gold/50"
                 )}
               >
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="w-full flex items-center justify-between p-5 text-start"
+                  className="w-full flex items-center gap-4 p-5 text-start group"
                 >
-                  <span className="text-sm font-medium text-oxford dark:text-white pe-4">
+                  {/* Question number */}
+                  <div 
+                    className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold transition-all duration-300",
+                      openIndex === index 
+                        ? "bg-gold text-oxford" 
+                        : "bg-gray-100 dark:bg-white/10 text-silver group-hover:bg-gold/20 group-hover:text-gold"
+                    )}
+                  >
+                    {String(index + 1).padStart(2, '0')}
+                  </div>
+
+                  <span 
+                    className={cn(
+                      "flex-1 text-sm font-medium transition-colors duration-300",
+                      openIndex === index 
+                        ? "text-oxford dark:text-white" 
+                        : "text-oxford/80 dark:text-white/80"
+                    )}
+                  >
                     {t(`items.${faq}.question`)}
                   </span>
-                  <ChevronDown
+
+                  {/* Expand icon */}
+                  <ChevronDown 
                     className={cn(
-                      "w-4 h-4 text-silver transition-transform duration-200 flex-shrink-0",
-                      openIndex === index && "rotate-180"
+                      "w-5 h-5 transition-all duration-300 flex-shrink-0",
+                      openIndex === index 
+                        ? "text-gold rotate-180" 
+                        : "text-silver"
                     )}
                   />
                 </button>
+
                 <AnimatePresence>
                   {openIndex === index && (
                     <motion.div
@@ -93,13 +121,13 @@ export default function FAQ() {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-5 pb-5 text-sm text-silver dark:text-gray-400 leading-relaxed">
+                      <div className="px-5 pb-5 ps-[4rem] text-sm text-silver dark:text-gray-400 leading-relaxed">
                         {t(`items.${faq}.answer`)}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>

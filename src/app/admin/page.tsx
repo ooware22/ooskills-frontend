@@ -2,17 +2,17 @@
 
 import { motion } from "framer-motion";
 import {
-  Sparkles,
-  Clock,
-  Award,
-  BookOpen,
-  HelpCircle,
-  Phone,
-  TrendingUp,
-  Users,
-  Eye,
-  Edit3,
-} from "lucide-react";
+  SparklesIcon as Sparkles,
+  ClockIcon as Clock,
+  TrophyIcon as Award,
+  BookOpenIcon as BookOpen,
+  QuestionMarkCircleIcon as HelpCircle,
+  PhoneIcon as Phone,
+  ArrowTrendingUpIcon as TrendingUp,
+  UsersIcon as Users,
+  EyeIcon as Eye,
+  PencilSquareIcon as Edit3,
+} from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Link from "next/link";
 

@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 import {
-  Award,
-  Clock,
-  HeadphonesIcon,
-  Sparkles,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
+  TrophyIcon as Award,
+  ClockIcon as Clock,
+  PhoneIcon as HeadphonesIcon,
+  SparklesIcon as Sparkles,
+  ArrowTrendingUpIcon as TrendingUp,
+  WalletIcon as Wallet,
+} from "@heroicons/react/24/outline";
 import { useTranslations } from "@/lib/i18n";
 
 const icons = {
@@ -55,12 +55,12 @@ export default function Features() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="group p-6 bg-white dark:bg-oxford-light rounded-xl border border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10 transition-colors duration-200"
+                className="group p-6 bg-white dark:bg-oxford-light rounded-xl border border-gray-100 dark:border-white/5 hover:border-gold/30 dark:hover:border-gold/30 hover:shadow-xl hover:shadow-gold/5 dark:hover:shadow-gold/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               >
-                <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center mb-4">
-                  <Icon className="w-5 h-5 text-gold" />
+                <div className="w-10 h-10 bg-gold/10 group-hover:bg-gold/20 rounded-lg flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-gold/20">
+                  <Icon className="w-5 h-5 text-gold group-hover:scale-110 transition-transform duration-300" />
                 </div>
-                <h3 className="text-lg font-semibold text-oxford dark:text-white mb-2">
+                <h3 className="text-lg font-semibold text-oxford dark:text-white mb-2 group-hover:text-gold transition-colors duration-300">
                   {t(`items.${feature}.title`)}
                 </h3>
                 <p className="text-sm text-silver dark:text-gray-400 leading-relaxed">

@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import {
+  EnvelopeIcon as Mail,
+  LockClosedIcon as Lock,
+  ArrowRightIcon as ArrowRight,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
@@ -17,11 +24,11 @@ export default function AdminLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // TODO: Replace with actual Django API call
     // Simulating API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     // For now, just redirect to admin dashboard
     router.push("/admin");
   };
@@ -29,11 +36,11 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-oxford flex items-center justify-center p-4">
       {/* Background Pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-          backgroundSize: '32px 32px',
+          backgroundSize: "32px 32px",
         }}
       />
 
@@ -45,8 +52,14 @@ export default function AdminLogin() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold rounded-2xl mb-4">
-            <GraduationCap className="w-8 h-8 text-oxford" />
+          <div className="inline-block mb-4">
+            <Image
+              src="/images/logo/logo_DarkMood2.png"
+              alt="OOSkills"
+              width={180}
+              height={60}
+              className="h-10 w-auto"
+            />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Admin Login</h1>
           <p className="text-white/50 text-sm">
@@ -70,7 +83,9 @@ export default function AdminLogin() {
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="admin@ooskills.com"
                 className="w-full ps-10 pe-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all"
               />
@@ -88,7 +103,9 @@ export default function AdminLogin() {
                 type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 placeholder="••••••••"
                 className="w-full ps-10 pe-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all"
               />

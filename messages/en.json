@@ -214,5 +214,27 @@
       "placeholder": "Your email"
     },
     "copyright": "© 2026 OOSkills. All rights reserved."
+  },
+  "categories": {
+    "title": "Explore Our Categories",
+    "subtitle": "Find the perfect course for your learning goals",
+    "items": {
+      "it": "IT & Software",
+      "business": "Business",
+      "programming": "Programming",
+      "design": "Design",
+      "languages": "Languages",
+      "marketing": "Marketing",
+      "education": "Education",
+      "photography": "Photography",
+      "music": "Music",
+      "health": "Health & Fitness",
+      "ai": "AI & Machine Learning",
+      "finance": "Finance"
+    }
+  },
+  "partners": {
+    "title": "Trusted by Industry Leaders",
+    "subtitle": "We partner with the best to deliver quality education"
   }
 }

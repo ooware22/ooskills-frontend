@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Save, Check, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { DocumentCheckIcon as Save, CheckIcon as Check, PlusIcon as Plus, TrashIcon as Trash2, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 
 interface FAQ {

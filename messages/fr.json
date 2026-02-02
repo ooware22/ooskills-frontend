@@ -183,5 +183,27 @@
       "placeholder": "Votre email"
     },
     "copyright": "© 2026 OOSkills. Tous droits réservés."
+  },
+  "categories": {
+    "title": "Explorez Nos Catégories",
+    "subtitle": "Trouvez le cours parfait pour vos objectifs",
+    "items": {
+      "it": "IT & Logiciels",
+      "business": "Business",
+      "programming": "Programmation",
+      "design": "Design",
+      "languages": "Langues",
+      "marketing": "Marketing",
+      "education": "Éducation",
+      "photography": "Photographie",
+      "music": "Musique",
+      "health": "Santé & Fitness",
+      "ai": "IA & Machine Learning",
+      "finance": "Finance"
+    }
+  },
+  "partners": {
+    "title": "Partenaires de Confiance",
+    "subtitle": "Nous collaborons avec les meilleurs pour offrir une éducation de qualité"
   }
 }

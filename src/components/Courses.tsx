@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, BarChart2, Star, Users } from "lucide-react";
+import { ArrowRightIcon as ArrowRight, ClockIcon as Clock, ChartBarIcon as BarChart2, UserGroupIcon as Users } from "@heroicons/react/24/outline";
+import { StarIcon as Star } from "@heroicons/react/24/solid";
 import { useTranslations } from "@/lib/i18n";
 import Image from "next/image";
 
@@ -45,7 +46,7 @@ export default function Courses() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
-              className="group bg-white dark:bg-oxford-light rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden hover:border-gray-200 dark:hover:border-white/10 hover:shadow-lg transition-all duration-200"
+              className="group bg-white dark:bg-oxford-light rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden hover:border-gold/30 dark:hover:border-gold/30 hover:shadow-xl hover:shadow-gold/10 dark:hover:shadow-gold/15 hover:-translate-y-2 transition-all duration-300 cursor-pointer"
             >
               {/* Thumbnail */}
               <div className="aspect-video bg-gray-100 dark:bg-oxford relative overflow-hidden">
@@ -53,17 +54,19 @@ export default function Courses() {
                   src={courseImages[course]}
                   alt={t(`items.${course}.title`)}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                 />
-                {/* Category Badge */}
-                <div className="absolute top-3 start-3 px-2.5 py-1 bg-oxford/90 dark:bg-white/10 backdrop-blur-sm text-white text-xs font-medium rounded-md">
-                  {t(`items.${course}.category`)}
-                </div>
+                {/* Overlay gradient on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-oxford/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
 
               {/* Content */}
               <div className="p-5">
-                <h3 className="font-semibold text-oxford dark:text-white mb-3 line-clamp-2">
+                {/* Category Badge */}
+                <div className="inline-block px-2.5 py-1 bg-gold/10 dark:bg-gold/15 text-gold text-xs font-medium rounded-full mb-3 group-hover:bg-gold group-hover:text-oxford transition-colors duration-300">
+                  {t(`items.${course}.category`)}
+                </div>
+                <h3 className="font-semibold text-oxford dark:text-white mb-3 line-clamp-2 group-hover:text-gold transition-colors duration-300">
                   {t(`items.${course}.title`)}
                 </h3>
 
@@ -78,7 +81,7 @@ export default function Courses() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-white/5">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-white/5 group-hover:border-gold/20 transition-colors duration-300">
                   <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-gold text-gold" />
                     <span className="text-xs font-medium text-oxford dark:text-white">4.9</span>
