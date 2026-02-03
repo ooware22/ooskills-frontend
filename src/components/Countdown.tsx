@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Rocket, Bell } from "lucide-react";
+import { RocketLaunchIcon as Rocket, BellIcon as Bell } from "@heroicons/react/24/outline";
 import { useTranslations } from "@/lib/i18n";
 
 interface TimeLeft {

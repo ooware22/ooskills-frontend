@@ -4,8 +4,13 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import "./globals.css";
 
 export const metadata = {
-  title: "OOSkills - Plateforme E-Learning",
-  description: "Développez vos compétences avec OOSkills, la plateforme e-learning de référence en Algérie.",
+  title: "Skills - Plateforme E-Learning",
+  description:
+    "Développez vos compétences avec OOSkills, la plateforme e-learning de référence en Algérie.",
+  icons: {
+    icon: "/images/logo/logo_icon2.png",
+    apple: "/images/logo/logo_icon2.png",
+  },
 };
 
 export default function RootLayout({
@@ -15,7 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" dir="ltr" suppressHydrationWarning>
-      <body className="min-h-screen transition-colors duration-300" suppressHydrationWarning>
+      <body
+        className="min-h-screen transition-colors duration-300"
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -2,7 +2,27 @@
 
 import { usePathname } from "next/navigation";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import AdminSidebar, { SidebarProvider } from "@/components/admin/AdminSidebar";
+import AdminSidebar, {
+  SidebarProvider,
+  useSidebar,
+} from "@/components/admin/AdminSidebar";
+
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+  const { collapsed } = useSidebar();
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-oxford">
+      <AdminSidebar />
+      <main
+        className={`transition-all duration-300 ${
+          collapsed ? "lg:ms-16" : "lg:ms-64"
+        }`}
+      >
+        {children}
+      </main>
+    </div>
+  );
+}
 
 export default function AdminLayout({
   children,
@@ -20,12 +40,7 @@ export default function AdminLayout({
   return (
     <ThemeProvider>
       <SidebarProvider>
-        <div className="min-h-screen bg-gray-50 dark:bg-oxford">
-          <AdminSidebar />
-          <main className="lg:ms-64 transition-all duration-300">
-            {children}
-          </main>
-        </div>
+        <AdminLayoutContent>{children}</AdminLayoutContent>
       </SidebarProvider>
     </ThemeProvider>
   );

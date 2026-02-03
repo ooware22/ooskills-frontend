@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Save, RotateCcw, Check } from "lucide-react";
+import { DocumentCheckIcon as Save, ArrowPathIcon as RotateCcw, CheckIcon as Check } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 
 export default function HeroAdmin() {

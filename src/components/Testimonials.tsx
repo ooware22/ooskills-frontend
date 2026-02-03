@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { UserPlus, BookOpen, Award, ArrowRight } from "lucide-react";
+import { UserPlusIcon as UserPlus, BookOpenIcon as BookOpen, TrophyIcon as Award, ArrowRightIcon as ArrowRight } from "@heroicons/react/24/outline";
 import { useTranslations } from "@/lib/i18n";
 
 export default function HowItWorks() {

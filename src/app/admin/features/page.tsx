@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Save, Check, Plus, Trash2, GripVertical } from "lucide-react";
+import { DocumentCheckIcon as Save, CheckIcon as Check, PlusIcon as Plus, TrashIcon as Trash2, Bars2Icon as GripVertical } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 
 const iconOptions = [

@@ -3,7 +3,16 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { Menu, X, Sun, Moon, Monitor, GraduationCap, Globe, ChevronDown } from "lucide-react";
+import Image from "next/image";
+import {
+  Bars3Icon as Menu,
+  XMarkIcon as X,
+  SunIcon as Sun,
+  MoonIcon as Moon,
+  ComputerDesktopIcon as Monitor,
+  GlobeAltIcon as Globe,
+  ChevronDownIcon as ChevronDown,
+} from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n, useTranslations, Locale } from "@/lib/i18n";
 
@@ -14,10 +23,10 @@ const localeLabels: Record<Locale, string> = {
 };
 
 export default function Header() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const { locale, setLocale, dir } = useI18n();
   const t = useTranslations("nav");
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
@@ -63,20 +72,37 @@ export default function Header() {
         "fixed top-0 left-0 right-0 z-50 transition-all duration-200",
         isScrolled || isOpen
           ? "bg-white/95 dark:bg-oxford/95 backdrop-blur-lg border-b border-gray-200/50 dark:border-white/5"
-          : "bg-transparent"
+          : "bg-transparent",
       )}
     >
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gold rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-oxford" />
-            </div>
-            <span className="text-lg font-semibold text-oxford dark:text-white">
-              OOSkills
-            </span>
-          </Link>
+          <a href="#hero" className="flex items-center">
+            {mounted ? (
+              <Image
+                src={
+                  resolvedTheme === "dark"
+                    ? "/images/logo/logo_DarkMood2.png"
+                    : "/images/logo/logo_LightMood2.png"
+                }
+                alt="OOSkills"
+                width={220}
+                height={60}
+                className="h-6 w-auto"
+                priority
+              />
+            ) : (
+              <Image
+                src="/images/logo/logo_LightMood2.png"
+                alt="OOSkills"
+                width={220}
+                height={60}
+                className="h-6 w-auto"
+                priority
+              />
+            )}
+          </a>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
@@ -119,7 +145,7 @@ export default function Header() {
                       }}
                       className={cn(
                         "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-oxford dark:text-white",
-                        locale === lang && "bg-gray-50 dark:bg-white/5"
+                        locale === lang && "bg-gray-50 dark:bg-white/5",
                       )}
                     >
                       <span>{localeLabels[lang]}</span>
@@ -128,7 +154,7 @@ export default function Header() {
                 </div>
               )}
             </div>
-            
+
             {/* Theme Switcher */}
             <div className="relative">
               <button
@@ -167,7 +193,7 @@ export default function Header() {
                       }}
                       className={cn(
                         "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-oxford dark:text-white",
-                        theme === item.value && "bg-gray-50 dark:bg-white/5"
+                        theme === item.value && "bg-gray-50 dark:bg-white/5",
                       )}
                     >
                       <item.icon className="w-4 h-4" />
@@ -188,8 +214,8 @@ export default function Header() {
             >
               {t("login")}
             </Link>
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="px-4 py-2 text-sm font-medium text-oxford bg-gold hover:bg-gold-light rounded-lg transition-colors"
             >
               {t("signup")}
@@ -230,7 +256,7 @@ export default function Header() {
                         "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                         locale === lang
                           ? "bg-gold text-oxford"
-                          : "bg-gray-100 dark:bg-white/5 text-oxford dark:text-white"
+                          : "bg-gray-100 dark:bg-white/5 text-oxford dark:text-white",
                       )}
                     >
                       {lang.toUpperCase()}
@@ -249,14 +275,14 @@ export default function Header() {
                 </button>
               </div>
               <div className="flex gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
-                <Link 
-                  href="#" 
+                <Link
+                  href="#"
                   className="flex-1 text-center py-2.5 text-sm font-medium border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   {t("login")}
                 </Link>
-                <Link 
-                  href="#" 
+                <Link
+                  href="#"
                   className="flex-1 text-center py-2.5 text-sm font-medium bg-gold text-oxford rounded-lg hover:bg-gold-light transition-colors"
                 >
                   {t("signup")}
