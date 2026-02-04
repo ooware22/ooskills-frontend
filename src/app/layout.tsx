@@ -1,5 +1,6 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { I18nProvider } from "@/lib/i18n";
+import { ReduxProvider } from "@/store/provider";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import "./globals.css";
 
@@ -24,18 +25,21 @@ export default function RootLayout({
         className="min-h-screen transition-colors duration-300"
         suppressHydrationWarning
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <I18nProvider>
-            <AnimatedBackground />
-            {children}
-          </I18nProvider>
-        </ThemeProvider>
+        <ReduxProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <I18nProvider>
+              <AnimatedBackground />
+              {children}
+            </I18nProvider>
+          </ThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
 }
+

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, CheckIcon as Check, EnvelopeIcon as Mail, PhoneIcon as Phone, MapPinIcon as MapPin } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, CheckIcon as Check, EnvelopeIcon as Mail, PhoneIcon as Phone, MapPinIcon as MapPin, GlobeAltIcon as Globe } from "@heroicons/react/24/outline";
+import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
+import { useI18n } from "@/lib/i18n";
 
 // Custom social media icons (Heroicons doesn't include brand icons)
 const Facebook = ({ className }: { className?: string }) => (
@@ -22,37 +24,102 @@ const Youtube = ({ className }: { className?: string }) => (
 );
 import AdminHeader from "@/components/admin/AdminHeader";
 
-export default function ContactAdmin() {
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  
-  const [contactInfo, setContactInfo] = useState({
+type ContactFormLabels = {
+  title: string;
+  subtitle: string;
+  nameLabel: string;
+  emailLabel: string;
+  subjectLabel: string;
+  messageLabel: string;
+  buttonText: string;
+};
+
+type ContactFormData = {
+  formLabels: ContactFormLabels;
+};
+
+// Default content per language
+const defaultContent: Record<AdminLocale, ContactFormData> = {
+  en: {
+    formLabels: {
+      title: "Get in Touch",
+      subtitle: "Have a question? We'd love to hear from you.",
+      nameLabel: "Your Name",
+      emailLabel: "Email Address",
+      subjectLabel: "Subject",
+      messageLabel: "Message",
+      buttonText: "Send Message",
+    },
+  },
+  fr: {
+    formLabels: {
+      title: "Contactez-nous",
+      subtitle: "Vous avez une question ? Nous serions ravis de vous entendre.",
+      nameLabel: "Votre nom",
+      emailLabel: "Adresse email",
+      subjectLabel: "Sujet",
+      messageLabel: "Message",
+      buttonText: "Envoyer le message",
+    },
+  },
+  ar: {
+    formLabels: {
+      title: "تواصل معنا",
+      subtitle: "هل لديك سؤال؟ نحب أن نسمع منك.",
+      nameLabel: "اسمك",
+      emailLabel: "عنوان البريد الإلكتروني",
+      subjectLabel: "الموضوع",
+      messageLabel: "الرسالة",
+      buttonText: "إرسال الرسالة",
+    },
+  },
+};
+
+// Contact info and social links are shared across languages
+const defaultSharedInfo = {
+  contactInfo: {
     email: "contact@ooskills.com",
     phone: "+213 555 123 456",
     address: "Algiers, Algeria",
-  });
-
-  const [socialLinks, setSocialLinks] = useState({
+  },
+  socialLinks: {
     facebook: "https://facebook.com/ooskills",
     instagram: "https://instagram.com/ooskills",
     linkedin: "https://linkedin.com/company/ooskills",
     twitter: "https://twitter.com/ooskills",
     youtube: "",
-  });
+  },
+};
 
-  const [formLabels, setFormLabels] = useState({
-    title: "Get in Touch",
-    subtitle: "Have a question? We'd love to hear from you.",
-    nameLabel: "Your Name",
-    emailLabel: "Email Address",
-    subjectLabel: "Subject",
-    messageLabel: "Message",
-    buttonText: "Send Message",
-  });
+export default function ContactAdmin() {
+  const { editingLocale } = useAdminLanguage();
+  const { t } = useI18n();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  
+  // Shared info (same across all languages)
+  const [sharedInfo, setSharedInfo] = useState(defaultSharedInfo);
+  
+  // Store content for all languages
+  const [allContent, setAllContent] = useState<Record<AdminLocale, ContactFormData>>(defaultContent);
+  
+  // Current form data based on selected language
+  const formData = allContent[editingLocale];
+
+  const updateFormLabels = (updates: Partial<ContactFormLabels>) => {
+    setAllContent(prev => ({
+      ...prev,
+      [editingLocale]: {
+        ...prev[editingLocale],
+        formLabels: { ...prev[editingLocale].formLabels, ...updates }
+      }
+    }));
+  };
 
   const handleSave = async () => {
     setSaving(true);
-    // TODO: Replace with actual Django API call
+    console.log(`Saving ${editingLocale} content:`, formData);
+    console.log("Saving shared info:", sharedInfo);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setSaving(false);
     setSaved(true);
@@ -62,76 +129,76 @@ export default function ContactAdmin() {
   return (
     <div className="min-h-screen">
       <AdminHeader 
-        title="Contact & Social" 
-        subtitle="Manage contact information and social media links" 
+        titleKey="admin.contact.title"
+        subtitleKey="admin.contact.subtitle"
       />
       
       <div className="p-6 space-y-6">
-        {/* Contact Information */}
+        {/* Contact Information (Shared) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-6"
         >
-          <h3 className="text-sm font-semibold text-oxford dark:text-white mb-4">Contact Information</h3>
+          <h3 className="text-sm font-semibold text-oxford dark:text-white mb-4">{t("admin.contact.contactInfo")}</h3>
           <div className="grid md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Mail className="w-4 h-4 inline me-2" />
-                Email Address
+                {t("admin.contact.email")}
               </label>
               <input
                 type="email"
-                value={contactInfo.email}
-                onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+                value={sharedInfo.contactInfo.email}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, contactInfo: { ...sharedInfo.contactInfo, email: e.target.value } })}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Phone className="w-4 h-4 inline me-2" />
-                Phone Number
+                {t("admin.contact.phone")}
               </label>
               <input
                 type="tel"
-                value={contactInfo.phone}
-                onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+                value={sharedInfo.contactInfo.phone}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, contactInfo: { ...sharedInfo.contactInfo, phone: e.target.value } })}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <MapPin className="w-4 h-4 inline me-2" />
-                Address
+                {t("admin.contact.address")}
               </label>
               <input
                 type="text"
-                value={contactInfo.address}
-                onChange={(e) => setContactInfo({ ...contactInfo, address: e.target.value })}
+                value={sharedInfo.contactInfo.address}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, contactInfo: { ...sharedInfo.contactInfo, address: e.target.value } })}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
             </div>
           </div>
         </motion.div>
 
-        {/* Social Media Links */}
+        {/* Social Media Links (Shared) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-6"
         >
-          <h3 className="text-sm font-semibold text-oxford dark:text-white mb-4">Social Media Links</h3>
+          <h3 className="text-sm font-semibold text-oxford dark:text-white mb-4">{t("admin.contact.socialLinks")}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Facebook className="w-4 h-4 inline me-2 text-blue-600" />
-                Facebook
+                {t("admin.contact.facebook")}
               </label>
               <input
                 type="url"
-                value={socialLinks.facebook}
-                onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
+                value={sharedInfo.socialLinks.facebook}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, socialLinks: { ...sharedInfo.socialLinks, facebook: e.target.value } })}
                 placeholder="https://facebook.com/..."
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
@@ -139,12 +206,12 @@ export default function ContactAdmin() {
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Instagram className="w-4 h-4 inline me-2 text-pink-600" />
-                Instagram
+                {t("admin.contact.instagram")}
               </label>
               <input
                 type="url"
-                value={socialLinks.instagram}
-                onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                value={sharedInfo.socialLinks.instagram}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, socialLinks: { ...sharedInfo.socialLinks, instagram: e.target.value } })}
                 placeholder="https://instagram.com/..."
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
@@ -152,12 +219,12 @@ export default function ContactAdmin() {
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Linkedin className="w-4 h-4 inline me-2 text-blue-700" />
-                LinkedIn
+                {t("admin.contact.linkedin")}
               </label>
               <input
                 type="url"
-                value={socialLinks.linkedin}
-                onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
+                value={sharedInfo.socialLinks.linkedin}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, socialLinks: { ...sharedInfo.socialLinks, linkedin: e.target.value } })}
                 placeholder="https://linkedin.com/..."
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
@@ -165,12 +232,12 @@ export default function ContactAdmin() {
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Twitter className="w-4 h-4 inline me-2 text-sky-500" />
-                Twitter / X
+                {t("admin.contact.twitter")}
               </label>
               <input
                 type="url"
-                value={socialLinks.twitter}
-                onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                value={sharedInfo.socialLinks.twitter}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, socialLinks: { ...sharedInfo.socialLinks, twitter: e.target.value } })}
                 placeholder="https://twitter.com/..."
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
@@ -178,12 +245,12 @@ export default function ContactAdmin() {
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 <Youtube className="w-4 h-4 inline me-2 text-red-600" />
-                YouTube
+                {t("admin.contact.youtube")}
               </label>
               <input
                 type="url"
-                value={socialLinks.youtube}
-                onChange={(e) => setSocialLinks({ ...socialLinks, youtube: e.target.value })}
+                value={sharedInfo.socialLinks.youtube}
+                onChange={(e) => setSharedInfo({ ...sharedInfo, socialLinks: { ...sharedInfo.socialLinks, youtube: e.target.value } })}
                 placeholder="https://youtube.com/..."
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
@@ -191,7 +258,7 @@ export default function ContactAdmin() {
           </div>
         </motion.div>
 
-        {/* Contact Form Labels */}
+        {/* Contact Form Labels (Language-specific) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -200,8 +267,14 @@ export default function ContactAdmin() {
         >
           <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-oxford dark:text-white">Contact Form Labels</h3>
-              <p className="text-xs text-silver dark:text-white/50">Customize the contact form text</p>
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-semibold text-oxford dark:text-white">{t("admin.contact.formLabels")}</h3>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gold/10 text-gold rounded-full text-xs font-medium">
+                  <Globe className="w-3 h-3" />
+                  {adminLocaleLabels[editingLocale]}
+                </span>
+              </div>
+              <p className="text-xs text-silver dark:text-white/50">{t("admin.common.editingLanguage")}: {adminLocaleLabels[editingLocale]}</p>
             </div>
             <button
               onClick={handleSave}
@@ -215,42 +288,45 @@ export default function ContactAdmin() {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              {saved ? "Saved!" : "Save All Changes"}
+              {saved ? t("admin.common.saved") : t("admin.common.save")}
             </button>
           </div>
           <div className="p-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
-                  Section Title
+                  {t("admin.contact.formTitle")}
                 </label>
                 <input
                   type="text"
-                  value={formLabels.title}
-                  onChange={(e) => setFormLabels({ ...formLabels, title: e.target.value })}
+                  value={formData.formLabels.title}
+                  onChange={(e) => updateFormLabels({ title: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
+                  dir={editingLocale === "ar" ? "rtl" : "ltr"}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
-                  Section Subtitle
+                  {t("admin.contact.formSubtitle")}
                 </label>
                 <input
                   type="text"
-                  value={formLabels.subtitle}
-                  onChange={(e) => setFormLabels({ ...formLabels, subtitle: e.target.value })}
+                  value={formData.formLabels.subtitle}
+                  onChange={(e) => updateFormLabels({ subtitle: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
+                  dir={editingLocale === "ar" ? "rtl" : "ltr"}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
-                  Button Text
+                  {t("admin.contact.buttonText")}
                 </label>
                 <input
                   type="text"
-                  value={formLabels.buttonText}
-                  onChange={(e) => setFormLabels({ ...formLabels, buttonText: e.target.value })}
+                  value={formData.formLabels.buttonText}
+                  onChange={(e) => updateFormLabels({ buttonText: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
+                  dir={editingLocale === "ar" ? "rtl" : "ltr"}
                 />
               </div>
             </div>
