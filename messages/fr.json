@@ -205,5 +205,135 @@
   "partners": {
     "title": "Partenaires de Confiance",
     "subtitle": "Nous collaborons avec les meilleurs pour offrir une éducation de qualité"
+  },
+  "admin": {
+    "common": {
+      "save": "Enregistrer",
+      "saved": "Enregistré !",
+      "saving": "Enregistrement...",
+      "add": "Ajouter",
+      "remove": "Supprimer",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "confirm": "Confirmer",
+      "search": "Rechercher...",
+      "noResults": "Aucun résultat",
+      "loading": "Chargement...",
+      "actions": "Actions",
+      "status": "Statut",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "sectionTitle": "Titre de section",
+      "sectionSubtitle": "Sous-titre de section",
+      "editingLanguage": "Modification",
+      "selectEditingLanguage": "Sélectionner la langue d'édition"
+    },
+    "sidebar": {
+      "dashboard": "Tableau de bord",
+      "hero": "Section Hero",
+      "countdown": "Compte à rebours",
+      "features": "Fonctionnalités",
+      "courses": "Formations",
+      "faq": "FAQ",
+      "contact": "Contact & Réseaux",
+      "settings": "Paramètres",
+      "logout": "Déconnexion",
+      "collapse": "Réduire",
+      "expand": "Développer"
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "subtitle": "Bienvenue dans le panneau d'administration",
+      "overview": "Vue d'ensemble",
+      "recentActivity": "Activité récente",
+      "quickActions": "Actions rapides",
+      "totalCourses": "Total des formations",
+      "totalStudents": "Total des étudiants",
+      "totalRevenue": "Revenu total",
+      "activeUsers": "Utilisateurs actifs"
+    },
+    "hero": {
+      "title": "Section Hero",
+      "subtitle": "Gérer la bannière principale",
+      "editContent": "Modifier le contenu Hero",
+      "badge": "Texte du badge",
+      "mainTitle": "Titre principal",
+      "highlight": "Mot surligné",
+      "subtitleField": "Sous-titre",
+      "primaryCta": "Bouton principal",
+      "secondaryCta": "Bouton secondaire",
+      "preview": "Aperçu"
+    },
+    "countdown": {
+      "title": "Compteur à rebours",
+      "subtitle": "Gérer le compte à rebours de lancement",
+      "editContent": "Modifier le compte à rebours",
+      "countdownTitle": "Titre du compte à rebours",
+      "countdownSubtitle": "Sous-titre du compte à rebours",
+      "launchDate": "Date de lancement",
+      "launchTime": "Heure de lancement",
+      "ctaButton": "Texte du bouton CTA",
+      "showCountdown": "Afficher le compte à rebours",
+      "hideCountdown": "Masquer le compte à rebours"
+    },
+    "features": {
+      "title": "Fonctionnalités / Pourquoi nous choisir",
+      "subtitle": "Gérer les cartes de fonctionnalités",
+      "featureCards": "Cartes de fonctionnalités",
+      "addFeature": "Ajouter une fonctionnalité",
+      "icon": "Icône",
+      "featureTitle": "Titre",
+      "description": "Description",
+      "items": "éléments"
+    },
+    "courses": {
+      "title": "Formations",
+      "subtitle": "Gérer les formations en vedette",
+      "courseCards": "Cartes de formations",
+      "addCourse": "Ajouter une formation",
+      "courseTitle": "Titre",
+      "category": "Catégorie",
+      "duration": "Durée",
+      "level": "Niveau",
+      "imageUrl": "URL de l'image",
+      "coursesCount": "formations"
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Gérer les questions fréquemment posées",
+      "questionsAnswers": "Questions & Réponses",
+      "addQuestion": "Ajouter une question",
+      "question": "Question",
+      "answer": "Réponse"
+    },
+    "contact": {
+      "title": "Contact & Réseaux",
+      "subtitle": "Gérer les informations de contact et les réseaux sociaux",
+      "contactInfo": "Informations de contact",
+      "email": "Adresse email",
+      "phone": "Numéro de téléphone",
+      "address": "Adresse",
+      "socialLinks": "Liens des réseaux sociaux",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "twitter": "Twitter / X",
+      "youtube": "YouTube",
+      "formLabels": "Labels du formulaire de contact",
+      "formTitle": "Titre de section",
+      "formSubtitle": "Sous-titre de section",
+      "buttonText": "Texte du bouton"
+    },
+    "header": {
+      "searchPlaceholder": "Rechercher...",
+      "notifications": "Notifications",
+      "profile": "Profil",
+      "lightMode": "Clair",
+      "darkMode": "Sombre",
+      "systemMode": "Système"
+    }
   }
 }

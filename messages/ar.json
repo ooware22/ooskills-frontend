@@ -205,5 +205,135 @@
   "partners": {
     "title": "شركاء موثوقون",
     "subtitle": "نتعاون مع الأفضل لتقديم تعليم عالي الجودة"
+  },
+  "admin": {
+    "common": {
+      "save": "حفظ التغييرات",
+      "saved": "تم الحفظ!",
+      "saving": "جاري الحفظ...",
+      "add": "إضافة",
+      "remove": "إزالة",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "confirm": "تأكيد",
+      "search": "البحث...",
+      "noResults": "لا توجد نتائج",
+      "loading": "جاري التحميل...",
+      "actions": "إجراءات",
+      "status": "الحالة",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "enabled": "مفعّل",
+      "disabled": "معطّل",
+      "sectionTitle": "عنوان القسم",
+      "sectionSubtitle": "العنوان الفرعي للقسم",
+      "editingLanguage": "تحرير",
+      "selectEditingLanguage": "اختر لغة التحرير"
+    },
+    "sidebar": {
+      "dashboard": "لوحة التحكم",
+      "hero": "القسم الرئيسي",
+      "countdown": "العد التنازلي",
+      "features": "المميزات",
+      "courses": "الدورات",
+      "faq": "الأسئلة الشائعة",
+      "contact": "التواصل والشبكات",
+      "settings": "الإعدادات",
+      "logout": "تسجيل الخروج",
+      "collapse": "طي",
+      "expand": "توسيع"
+    },
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "subtitle": "مرحباً بك في لوحة الإدارة",
+      "overview": "نظرة عامة",
+      "recentActivity": "النشاط الأخير",
+      "quickActions": "إجراءات سريعة",
+      "totalCourses": "إجمالي الدورات",
+      "totalStudents": "إجمالي الطلاب",
+      "totalRevenue": "إجمالي الإيرادات",
+      "activeUsers": "المستخدمون النشطون"
+    },
+    "hero": {
+      "title": "القسم الرئيسي",
+      "subtitle": "إدارة البانر الرئيسي",
+      "editContent": "تعديل محتوى Hero",
+      "badge": "نص الشارة",
+      "mainTitle": "العنوان الرئيسي",
+      "highlight": "الكلمة المميزة",
+      "subtitleField": "العنوان الفرعي",
+      "primaryCta": "الزر الرئيسي",
+      "secondaryCta": "الزر الثانوي",
+      "preview": "معاينة"
+    },
+    "countdown": {
+      "title": "العد التنازلي",
+      "subtitle": "إدارة العد التنازلي للإطلاق",
+      "editContent": "تعديل العد التنازلي",
+      "countdownTitle": "عنوان العد التنازلي",
+      "countdownSubtitle": "العنوان الفرعي للعد التنازلي",
+      "launchDate": "تاريخ الإطلاق",
+      "launchTime": "وقت الإطلاق",
+      "ctaButton": "نص زر CTA",
+      "showCountdown": "إظهار العد التنازلي",
+      "hideCountdown": "إخفاء العد التنازلي"
+    },
+    "features": {
+      "title": "المميزات / لماذا تختارنا",
+      "subtitle": "إدارة بطاقات المميزات",
+      "featureCards": "بطاقات المميزات",
+      "addFeature": "إضافة ميزة",
+      "icon": "أيقونة",
+      "featureTitle": "العنوان",
+      "description": "الوصف",
+      "items": "عناصر"
+    },
+    "courses": {
+      "title": "الدورات",
+      "subtitle": "إدارة الدورات المميزة",
+      "courseCards": "بطاقات الدورات",
+      "addCourse": "إضافة دورة",
+      "courseTitle": "العنوان",
+      "category": "الفئة",
+      "duration": "المدة",
+      "level": "المستوى",
+      "imageUrl": "رابط الصورة",
+      "coursesCount": "دورات"
+    },
+    "faq": {
+      "title": "الأسئلة الشائعة",
+      "subtitle": "إدارة الأسئلة المتكررة",
+      "questionsAnswers": "الأسئلة والأجوبة",
+      "addQuestion": "إضافة سؤال",
+      "question": "السؤال",
+      "answer": "الجواب"
+    },
+    "contact": {
+      "title": "التواصل والشبكات",
+      "subtitle": "إدارة معلومات الاتصال وروابط التواصل الاجتماعي",
+      "contactInfo": "معلومات الاتصال",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "address": "العنوان",
+      "socialLinks": "روابط التواصل الاجتماعي",
+      "facebook": "فيسبوك",
+      "instagram": "إنستغرام",
+      "linkedin": "لينكد إن",
+      "twitter": "تويتر / X",
+      "youtube": "يوتيوب",
+      "formLabels": "تسميات نموذج الاتصال",
+      "formTitle": "عنوان القسم",
+      "formSubtitle": "العنوان الفرعي للقسم",
+      "buttonText": "نص الزر"
+    },
+    "header": {
+      "searchPlaceholder": "البحث...",
+      "notifications": "الإشعارات",
+      "profile": "الملف الشخصي",
+      "lightMode": "فاتح",
+      "darkMode": "داكن",
+      "systemMode": "تلقائي"
+    }
   }
 }

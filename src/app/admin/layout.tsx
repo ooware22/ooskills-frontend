@@ -6,6 +6,7 @@ import AdminSidebar, {
   SidebarProvider,
   useSidebar,
 } from "@/components/admin/AdminSidebar";
+import { AdminLanguageProvider } from "@/contexts/AdminLanguageContext";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar();
@@ -39,9 +40,11 @@ export default function AdminLayout({
 
   return (
     <ThemeProvider>
-      <SidebarProvider>
-        <AdminLayoutContent>{children}</AdminLayoutContent>
-      </SidebarProvider>
+      <AdminLanguageProvider>
+        <SidebarProvider>
+          <AdminLayoutContent>{children}</AdminLayoutContent>
+        </SidebarProvider>
+      </AdminLanguageProvider>
     </ThemeProvider>
   );
 }

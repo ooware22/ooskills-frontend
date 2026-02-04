@@ -236,5 +236,135 @@
   "partners": {
     "title": "Trusted by Industry Leaders",
     "subtitle": "We partner with the best to deliver quality education"
+  },
+  "admin": {
+    "common": {
+      "save": "Save Changes",
+      "saved": "Saved!",
+      "saving": "Saving...",
+      "add": "Add",
+      "remove": "Remove",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "search": "Search...",
+      "noResults": "No results found",
+      "loading": "Loading...",
+      "actions": "Actions",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "sectionTitle": "Section Title",
+      "sectionSubtitle": "Section Subtitle",
+      "editingLanguage": "Editing",
+      "selectEditingLanguage": "Select editing language"
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "hero": "Hero Section",
+      "countdown": "Countdown",
+      "features": "Features",
+      "courses": "Courses",
+      "faq": "FAQ",
+      "contact": "Contact & Social",
+      "settings": "Settings",
+      "logout": "Logout",
+      "collapse": "Collapse",
+      "expand": "Expand"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Welcome to the admin panel",
+      "overview": "Overview",
+      "recentActivity": "Recent Activity",
+      "quickActions": "Quick Actions",
+      "totalCourses": "Total Courses",
+      "totalStudents": "Total Students",
+      "totalRevenue": "Total Revenue",
+      "activeUsers": "Active Users"
+    },
+    "hero": {
+      "title": "Hero Section",
+      "subtitle": "Manage the main hero banner",
+      "editContent": "Edit Hero Content",
+      "badge": "Badge Text",
+      "mainTitle": "Main Title",
+      "highlight": "Highlighted Word",
+      "subtitleField": "Subtitle",
+      "primaryCta": "Primary Button",
+      "secondaryCta": "Secondary Button",
+      "preview": "Preview"
+    },
+    "countdown": {
+      "title": "Countdown Timer",
+      "subtitle": "Manage the launch countdown",
+      "editContent": "Edit Countdown",
+      "countdownTitle": "Countdown Title",
+      "countdownSubtitle": "Countdown Subtitle",
+      "launchDate": "Launch Date",
+      "launchTime": "Launch Time",
+      "ctaButton": "CTA Button Text",
+      "showCountdown": "Show Countdown",
+      "hideCountdown": "Hide Countdown"
+    },
+    "features": {
+      "title": "Features / Why Choose Us",
+      "subtitle": "Manage the features cards section",
+      "featureCards": "Feature Cards",
+      "addFeature": "Add Feature",
+      "icon": "Icon",
+      "featureTitle": "Title",
+      "description": "Description",
+      "items": "items"
+    },
+    "courses": {
+      "title": "Courses",
+      "subtitle": "Manage featured courses",
+      "courseCards": "Course Cards",
+      "addCourse": "Add Course",
+      "courseTitle": "Title",
+      "category": "Category",
+      "duration": "Duration",
+      "level": "Level",
+      "imageUrl": "Image URL",
+      "coursesCount": "courses"
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Manage frequently asked questions",
+      "questionsAnswers": "Questions & Answers",
+      "addQuestion": "Add Question",
+      "question": "Question",
+      "answer": "Answer"
+    },
+    "contact": {
+      "title": "Contact & Social",
+      "subtitle": "Manage contact information and social media links",
+      "contactInfo": "Contact Information",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "address": "Address",
+      "socialLinks": "Social Media Links",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "twitter": "Twitter / X",
+      "youtube": "YouTube",
+      "formLabels": "Contact Form Labels",
+      "formTitle": "Section Title",
+      "formSubtitle": "Section Subtitle",
+      "buttonText": "Button Text"
+    },
+    "header": {
+      "searchPlaceholder": "Search...",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "lightMode": "Light",
+      "darkMode": "Dark",
+      "systemMode": "System"
+    }
   }
 }

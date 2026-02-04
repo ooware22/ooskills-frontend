@@ -19,16 +19,18 @@ import {
   XMarkIcon as X,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
+// Navigation items with translation keys
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/hero", label: "Hero Section", icon: Sparkles },
-  { href: "/admin/countdown", label: "Countdown", icon: Clock },
-  { href: "/admin/features", label: "Features", icon: Award },
-  { href: "/admin/courses", label: "Courses", icon: BookOpen },
-  { href: "/admin/faq", label: "FAQ", icon: HelpCircle },
-  { href: "/admin/contact", label: "Contact & Social", icon: Phone },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/admin/hero", labelKey: "hero", icon: Sparkles },
+  { href: "/admin/countdown", labelKey: "countdown", icon: Clock },
+  { href: "/admin/features", labelKey: "features", icon: Award },
+  { href: "/admin/courses", labelKey: "courses", icon: BookOpen },
+  { href: "/admin/faq", labelKey: "faq", icon: HelpCircle },
+  { href: "/admin/contact", labelKey: "contact", icon: Phone },
+  { href: "/admin/settings", labelKey: "settings", icon: Settings },
 ];
 
 // Context for mobile menu and collapse state
@@ -73,8 +75,13 @@ export function MobileMenuButton() {
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { mobileOpen, setMobileOpen, collapsed, setCollapsed } = useSidebar();
+  const { t, locale } = useI18n();
+  const isRtl = locale === "ar";
 
   const closeMobile = () => setMobileOpen(false);
+
+  // Get translated label
+  const getLabel = (key: string) => t(`admin.sidebar.${key}`);
 
   return (
     <>
@@ -89,7 +96,8 @@ export default function AdminSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 start-0 h-screen bg-oxford border-e border-white/10 transition-all duration-300 ease-in-out z-50 flex flex-col shadow-xl overflow-x-hidden",
+          "fixed top-0 h-screen bg-oxford border-white/10 transition-all duration-300 ease-in-out z-50 flex flex-col shadow-xl overflow-x-hidden",
+          isRtl ? "right-0 border-l" : "left-0 border-r",
           // Desktop
           "hidden lg:flex",
           collapsed ? "lg:w-16" : "lg:w-64",
@@ -100,7 +108,10 @@ export default function AdminSidebar() {
         {/* Mobile Close Button */}
         <button
           onClick={closeMobile}
-          className="lg:hidden absolute top-4 end-4 p-1 text-white/60 hover:text-white"
+          className={cn(
+            "lg:hidden absolute top-4 p-1 text-white/60 hover:text-white",
+            isRtl ? "left-4" : "right-4"
+          )}
         >
           <X className="w-5 h-5" />
         </button>
@@ -136,12 +147,13 @@ export default function AdminSidebar() {
         <nav className="flex-1 p-3 space-y-2 overflow-hidden">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
+            const label = getLabel(item.labelKey);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMobile}
-                title={collapsed && !mobileOpen ? item.label : undefined}
+                title={collapsed && !mobileOpen ? label : undefined}
                 className={cn(
                   "flex items-center gap-3 px-3 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 relative group",
                   isActive
@@ -153,15 +165,21 @@ export default function AdminSidebar() {
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 {(!collapsed || mobileOpen) && (
                   <span className="whitespace-nowrap overflow-hidden transition-all duration-300">
-                    {item.label}
+                    {label}
                   </span>
                 )}
 
                 {/* Tooltip for collapsed state */}
                 {collapsed && !mobileOpen && (
-                  <div className="absolute start-full ms-3 px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none">
-                    {item.label}
-                    <div className="absolute top-1/2 -translate-y-1/2 end-full w-2 h-2 bg-oxford border-t border-s border-white/20 rotate-45 -me-[5px]" />
+                  <div className={cn(
+                    "absolute px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none",
+                    isRtl ? "right-full mr-3" : "left-full ml-3"
+                  )}>
+                    {label}
+                    <div className={cn(
+                      "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-oxford border-white/20 rotate-45",
+                      isRtl ? "left-full -ml-[5px] border-t border-r" : "right-full -mr-[5px] border-t border-l"
+                    )} />
                   </div>
                 )}
               </Link>
@@ -173,7 +191,7 @@ export default function AdminSidebar() {
         <div className="p-3 border-t border-white/10 space-y-2">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? getLabel("expand") : getLabel("collapse")}
             className={cn(
               "hidden lg:flex w-full items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group relative",
               collapsed && "justify-center px-2",
@@ -183,35 +201,47 @@ export default function AdminSidebar() {
               <>
                 <Menu className="w-5 h-5" />
                 {/* Tooltip for expand button */}
-                <div className="absolute start-full ms-3 px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none">
-                  Expand
-                  <div className="absolute top-1/2 -translate-y-1/2 end-full w-2 h-2 bg-oxford border-t border-s border-white/20 rotate-45 -me-[5px]" />
+                <div className={cn(
+                  "absolute px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none",
+                  isRtl ? "right-full mr-3" : "left-full ml-3"
+                )}>
+                  {getLabel("expand")}
+                  <div className={cn(
+                    "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-oxford border-white/20 rotate-45",
+                    isRtl ? "left-full -ml-[5px] border-t border-r" : "right-full -mr-[5px] border-t border-l"
+                  )} />
                 </div>
               </>
             ) : (
               <>
-                <ChevronLeft className="w-5 h-5" />
-                <span>Collapse</span>
+                <ChevronLeft className={cn("w-5 h-5", isRtl && "rotate-180")} />
+                <span>{getLabel("collapse")}</span>
               </>
             )}
           </button>
           <Link
             href="/"
             onClick={closeMobile}
-            title={collapsed && !mobileOpen ? "Back to Site" : undefined}
+            title={collapsed && !mobileOpen ? getLabel("logout") : undefined}
             className={cn(
               "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group relative",
               collapsed && !mobileOpen && "justify-center px-2",
             )}
           >
-            <LogOut className="w-5 h-5" />
-            {(!collapsed || mobileOpen) && <span>Back to Site</span>}
+            <LogOut className={cn("w-5 h-5", isRtl && "rotate-180")} />
+            {(!collapsed || mobileOpen) && <span>{getLabel("logout")}</span>}
 
             {/* Tooltip for collapsed state */}
             {collapsed && !mobileOpen && (
-              <div className="absolute start-full ms-3 px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none">
-                Back to Site
-                <div className="absolute top-1/2 -translate-y-1/2 end-full w-2 h-2 bg-oxford border-t border-s border-white/20 rotate-45 -me-[5px]" />
+              <div className={cn(
+                "absolute px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none",
+                isRtl ? "right-full mr-3" : "left-full ml-3"
+              )}>
+                {getLabel("logout")}
+                <div className={cn(
+                  "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-oxford border-white/20 rotate-45",
+                  isRtl ? "left-full -ml-[5px] border-t border-r" : "right-full -mr-[5px] border-t border-l"
+                )} />
               </div>
             )}
           </Link>
