@@ -1,4 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { adminSettingsApi } from "@/services/contentApi";
+import { getErrorMessage } from "@/lib/axios";
+import { CACHE_DURATION, shouldFetch } from "@/lib/cache";
+import type { RootState } from "../index";
 
 // Types
 export type Locale = "fr" | "en" | "ar";
@@ -38,6 +42,7 @@ export interface ContactState {
   loading: boolean;
   saving: boolean;
   error: string | null;
+  lastFetched: number | null;
 }
 
 // Default content
@@ -78,16 +83,16 @@ const defaultContent: Record<Locale, ContactContent> = {
 };
 
 const defaultContactInfo: ContactInfo = {
-  email: "contact@ooskills.com",
-  phone: "+213 555 123 456",
-  address: "Algiers, Algeria",
+  email: "",
+  phone: "",
+  address: "",
 };
 
 const defaultSocialLinks: SocialLinks = {
-  facebook: "https://facebook.com/ooskills",
-  instagram: "https://instagram.com/ooskills",
-  linkedin: "https://linkedin.com/company/ooskills",
-  twitter: "https://twitter.com/ooskills",
+  facebook: "",
+  instagram: "",
+  linkedin: "",
+  twitter: "",
   youtube: "",
 };
 
@@ -98,23 +103,40 @@ const initialState: ContactState = {
   loading: false,
   saving: false,
   error: null,
+  lastFetched: null,
 };
 
 // Async thunks
 export const fetchContactContent = createAsyncThunk(
   "contact/fetchContent",
-  async (_, { rejectWithValue }) => {
+  async (options: { forceRefresh?: boolean } = {}, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const data = await adminSettingsApi.get();
       return {
-        content: defaultContent,
-        contactInfo: defaultContactInfo,
-        socialLinks: defaultSocialLinks,
+        content: defaultContent, // Form labels stay as defaults (frontend-only)
+        contactInfo: {
+          email: data.contact_email || "",
+          phone: data.contact_phone || "",
+          address: data.contact_address || "",
+        },
+        socialLinks: {
+          facebook: data.facebook_url || "",
+          instagram: data.instagram_url || "",
+          linkedin: data.linkedin_url || "",
+          twitter: data.twitter_url || "",
+          youtube: data.youtube_url || "",
+        },
       };
     } catch (error) {
-      return rejectWithValue("Failed to fetch contact content");
+      return rejectWithValue(getErrorMessage(error));
     }
+  },
+  {
+    condition: (options, { getState }) => {
+      if (options?.forceRefresh) return true;
+      const { contact } = getState() as RootState;
+      return shouldFetch(contact.lastFetched, contact.loading, CACHE_DURATION.LONG);
+    },
   }
 );
 
@@ -135,12 +157,20 @@ export const saveContactContent = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log(`[API] Saving contact content for ${locale}:`, { content, contactInfo, socialLinks });
+      // Save contact info and social links to backend
+      await adminSettingsApi.update({
+        contact_email: contactInfo.email,
+        contact_phone: contactInfo.phone,
+        contact_address: contactInfo.address,
+        facebook_url: socialLinks.facebook,
+        instagram_url: socialLinks.instagram,
+        linkedin_url: socialLinks.linkedin,
+        twitter_url: socialLinks.twitter,
+        youtube_url: socialLinks.youtube,
+      });
       return { locale, content, contactInfo, socialLinks };
     } catch (error) {
-      return rejectWithValue("Failed to save contact content");
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -174,6 +204,9 @@ const contactSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    invalidateCache: (state) => {
+      state.lastFetched = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -186,6 +219,7 @@ const contactSlice = createSlice({
         state.content = action.payload.content;
         state.contactInfo = action.payload.contactInfo;
         state.socialLinks = action.payload.socialLinks;
+        state.lastFetched = Date.now();
       })
       .addCase(fetchContactContent.rejected, (state, action) => {
         state.loading = false;
@@ -217,5 +251,17 @@ export const {
   resetContactInfo,
   resetSocialLinks,
   clearError,
+  invalidateCache,
 } = contactSlice.actions;
 export default contactSlice.reducer;
+
+// Selectors
+export const selectContactState = (state: RootState) => state.contact;
+export const selectContactContent = (state: RootState, locale: Locale) => state.contact.content[locale];
+export const selectContactInfo = (state: RootState) => state.contact.contactInfo;
+export const selectSocialLinks = (state: RootState) => state.contact.socialLinks;
+export const selectContactLoading = (state: RootState) => state.contact.loading;
+export const selectContactSaving = (state: RootState) => state.contact.saving;
+export const selectContactError = (state: RootState) => state.contact.error;
+export const selectContactLastFetched = (state: RootState) => state.contact.lastFetched;
+

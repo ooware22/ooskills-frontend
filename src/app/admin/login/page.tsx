@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -9,28 +9,63 @@ import {
   ArrowRightIcon as ArrowRight,
   EyeIcon as Eye,
   EyeSlashIcon as EyeOff,
+  ExclamationTriangleIcon as AlertIcon,
 } from "@heroicons/react/24/outline";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  login,
+  selectIsAuthenticated,
+  selectAuthLoading,
+  selectAuthError,
+  clearError,
+} from "@/store/slices/authSlice";
 
 export default function AdminLogin() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const loading = useAppSelector(selectAuthLoading);
+  const error = useAppSelector(selectAuthError);
+
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const returnUrl = searchParams.get("returnUrl") || "/admin";
+      router.replace(returnUrl);
+    }
+  }, [isAuthenticated, router, searchParams]);
+
+  // Clear error on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    dispatch(clearError());
 
-    // TODO: Replace with actual Django API call
-    // Simulating API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const result = await dispatch(
+      login({
+        email: formData.email,
+        password: formData.password,
+      })
+    );
 
-    // For now, just redirect to admin dashboard
-    router.push("/admin");
+    if (login.fulfilled.match(result)) {
+      const returnUrl = searchParams.get("returnUrl") || "/admin";
+      router.push(returnUrl);
+    }
   };
 
   return (
@@ -72,6 +107,18 @@ export default function AdminLogin() {
           onSubmit={handleSubmit}
           className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8"
         >
+          {/* Error Alert */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-5 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3"
+            >
+              <AlertIcon className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-300">{error}</p>
+            </motion.div>
+          )}
+
           {/* Email */}
           <div className="mb-5">
             <label className="block text-sm font-medium text-white/70 mb-2">
@@ -88,6 +135,7 @@ export default function AdminLogin() {
                 }
                 placeholder="admin@ooskills.com"
                 className="w-full ps-10 pe-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all"
+                disabled={loading}
               />
             </div>
           </div>
@@ -108,6 +156,7 @@ export default function AdminLogin() {
                 }
                 placeholder="••••••••"
                 className="w-full ps-10 pe-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all"
+                disabled={loading}
               />
               <button
                 type="button"

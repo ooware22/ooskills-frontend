@@ -34,8 +34,13 @@ const Twitter = ({ className }: { className?: string }) => (
 );
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
+import type { PublicSiteSettingsData } from "@/types/content";
 
-export default function Contact() {
+interface ContactProps {
+  settings?: PublicSiteSettingsData | null;
+}
+
+export default function Contact({ settings }: ContactProps) {
   const t = useTranslations("contact");
   const [formState, setFormState] = useState<
     "idle" | "loading" | "success" | "error"
@@ -62,11 +67,25 @@ export default function Contact() {
     }
   };
 
+  // Use API data if available, otherwise fall back to i18n
+  const contactEmail = settings?.contact_email || t("info.email");
+  const contactPhone = settings?.contact_phone || t("info.phone");
+  const contactAddress = settings?.contact_address || t("info.address");
+
   const contactInfo = [
-    { icon: Mail, labelKey: "info.email" },
-    { icon: Phone, labelKey: "info.phone" },
-    { icon: MapPin, labelKey: "info.address" },
+    { icon: Mail, label: contactEmail },
+    { icon: Phone, label: contactPhone, isPhone: true },
+    { icon: MapPin, label: contactAddress },
   ];
+
+  // Build social links from API or use static defaults
+  const socialLinks = [
+    { icon: Facebook, href: settings?.facebook_url || "#", label: "Facebook" },
+    { icon: Instagram, href: settings?.instagram_url || "#", label: "Instagram" },
+    { icon: Linkedin, href: settings?.linkedin_url || "#", label: "LinkedIn" },
+    { icon: Twitter, href: settings?.twitter_url || "#", label: "Twitter" },
+  ].filter(social => social.href && social.href !== "#" || !settings);
+
 
   return (
     <section id="contact" className="py-24 relative">
@@ -95,9 +114,9 @@ export default function Contact() {
                   </div>
                   <span
                     className="text-sm text-oxford dark:text-white"
-                    dir={info.labelKey === "info.phone" ? "ltr" : undefined}
+                    dir={info.isPhone ? "ltr" : undefined}
                   >
-                    {t(info.labelKey)}
+                    {info.label}
                   </span>
                 </div>
               ))}
@@ -105,15 +124,12 @@ export default function Contact() {
 
             {/* Social Links */}
             <div className="flex gap-3">
-              {[
-                { icon: Facebook, href: "#", label: "Facebook" },
-                { icon: Instagram, href: "#", label: "Instagram" },
-                { icon: Linkedin, href: "#", label: "LinkedIn" },
-                { icon: Twitter, href: "#", label: "Twitter" },
-              ].map((social, index) => (
+              {socialLinks.map((social, index) => (
                 <a
                   key={index}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
                   className="w-10 h-10 bg-gray-100 dark:bg-oxford-light rounded-lg flex items-center justify-center hover:bg-gold hover:text-oxford dark:hover:bg-gold dark:hover:text-oxford transition-colors duration-200 text-oxford dark:text-white"
                 >

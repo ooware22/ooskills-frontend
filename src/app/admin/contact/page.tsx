@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, CheckIcon as Check, EnvelopeIcon as Mail, PhoneIcon as Phone, MapPinIcon as MapPin, GlobeAltIcon as Globe } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, CheckIcon as Check, EnvelopeIcon as Mail, PhoneIcon as Phone, MapPinIcon as MapPin, GlobeAltIcon as Globe, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
 import { useI18n } from "@/lib/i18n";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchContactContent,
+  saveContactContent,
+  selectContactInfo,
+  selectSocialLinks,
+  selectContactLoading,
+  selectContactSaving,
+  selectContactError,
+  selectContactLastFetched,
+} from "@/store/slices/contactSlice";
 
 // Custom social media icons (Heroicons doesn't include brand icons)
 const Facebook = ({ className }: { className?: string }) => (
@@ -75,36 +86,71 @@ const defaultContent: Record<AdminLocale, ContactFormData> = {
   },
 };
 
-// Contact info and social links are shared across languages
-const defaultSharedInfo = {
-  contactInfo: {
-    email: "contact@ooskills.com",
-    phone: "+213 555 123 456",
-    address: "Algiers, Algeria",
-  },
-  socialLinks: {
-    facebook: "https://facebook.com/ooskills",
-    instagram: "https://instagram.com/ooskills",
-    linkedin: "https://linkedin.com/company/ooskills",
-    twitter: "https://twitter.com/ooskills",
-    youtube: "",
-  },
-};
-
 export default function ContactAdmin() {
   const { editingLocale } = useAdminLanguage();
   const { t } = useI18n();
-  const [saving, setSaving] = useState(false);
+  const dispatch = useAppDispatch();
+  
+  // Redux state from contactSlice
+  const reduxContactInfo = useAppSelector(selectContactInfo);
+  const reduxSocialLinks = useAppSelector(selectSocialLinks);
+  const loading = useAppSelector(selectContactLoading);
+  const saving = useAppSelector(selectContactSaving);
+  const error = useAppSelector(selectContactError);
+  const lastFetched = useAppSelector(selectContactLastFetched);
+  
+  // Local form state
   const [saved, setSaved] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Shared info (same across all languages)
-  const [sharedInfo, setSharedInfo] = useState(defaultSharedInfo);
+  const [sharedInfo, setSharedInfo] = useState({
+    contactInfo: {
+      email: "",
+      phone: "",
+      address: "",
+    },
+    socialLinks: {
+      facebook: "",
+      instagram: "",
+      linkedin: "",
+      twitter: "",
+      youtube: "",
+    },
+  });
   
   // Store content for all languages
   const [allContent, setAllContent] = useState<Record<AdminLocale, ContactFormData>>(defaultContent);
   
   // Current form data based on selected language
   const formData = allContent[editingLocale];
+
+  // Fetch contact info from Redux/backend on mount (with caching)
+  useEffect(() => {
+    dispatch(fetchContactContent({}));
+  }, [dispatch]);
+
+  // Initialize local state from Redux when data is available (after fetch completes)
+  useEffect(() => {
+    if (lastFetched && !isInitialized && !loading) {
+      setSharedInfo({
+        contactInfo: {
+          email: reduxContactInfo.email || "",
+          phone: reduxContactInfo.phone || "",
+          address: reduxContactInfo.address || "",
+        },
+        socialLinks: {
+          facebook: reduxSocialLinks.facebook || "",
+          instagram: reduxSocialLinks.instagram || "",
+          linkedin: reduxSocialLinks.linkedin || "",
+          twitter: reduxSocialLinks.twitter || "",
+          youtube: reduxSocialLinks.youtube || "",
+        },
+      });
+      setIsInitialized(true);
+    }
+  }, [lastFetched, reduxContactInfo, reduxSocialLinks, isInitialized, loading]);
+
 
   const updateFormLabels = (updates: Partial<ContactFormLabels>) => {
     setAllContent(prev => ({
@@ -117,14 +163,42 @@ export default function ContactAdmin() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    console.log(`Saving ${editingLocale} content:`, formData);
-    console.log("Saving shared info:", sharedInfo);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      // Save contact info and social links to backend via Redux
+      await dispatch(saveContactContent({
+        locale: editingLocale,
+        content: formData,
+        contactInfo: sharedInfo.contactInfo,
+        socialLinks: sharedInfo.socialLinks,
+      })).unwrap();
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save contact info:", err);
+    }
   };
+
+  // Loading state
+  if (loading || !isInitialized) {
+    return (
+      <div className="min-h-screen">
+        <AdminHeader 
+          titleKey="admin.contact.title"
+          subtitleKey="admin.contact.subtitle"
+        />
+        <div className="p-6">
+          <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+              <p className="text-silver dark:text-white/50">{t("admin.common.loading")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen">
@@ -134,6 +208,21 @@ export default function ContactAdmin() {
       />
       
       <div className="p-6 space-y-6">
+        {/* Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl flex items-start gap-3"
+          >
+            <ExclamationCircleIcon className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">{t("admin.common.error")}</p>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Contact Information (Shared) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

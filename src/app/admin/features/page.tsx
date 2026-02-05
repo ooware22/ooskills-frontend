@@ -1,137 +1,208 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, CheckIcon as Check, PlusIcon as Plus, TrashIcon as Trash2, Bars2Icon as GripVertical, GlobeAltIcon as Globe } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, CheckIcon as Check, PlusIcon as Plus, TrashIcon as Trash2, Bars2Icon as GripVertical, GlobeAltIcon as Globe, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
 import { useI18n } from "@/lib/i18n";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchFeaturesContent,
+  createFeatureItem,
+  updateFeatureItem,
+  deleteFeatureItem,
+  saveFeaturesSection,
+  selectFeaturesContent,
+  selectFeaturesLoading,
+  selectFeaturesSaving,
+  selectFeaturesError,
+  selectActiveSection,
+} from "@/store/exports";
+import type { FeaturesContent, Feature } from "@/store/slices/featuresSlice";
+import type { Locale } from "@/types/content";
 
 const iconOptions = [
-  "Monitor", "Users", "Award", "Zap", "Clock", "Shield", 
-  "Target", "Rocket", "BookOpen", "Star", "Heart", "CheckCircle"
+  "monitor", "users", "award", "zap", "clock", "shield", 
+  "target", "rocket", "book-open", "star", "heart", "check-circle"
 ];
 
-interface Feature {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
+// Extended feature type to track changes
+interface EditableFeature extends Feature {
+  isNew?: boolean;
+  isDeleted?: boolean;
+  isModified?: boolean;
 }
-
-type FeaturesFormData = {
-  sectionTitle: string;
-  sectionSubtitle: string;
-  features: Feature[];
-};
-
-// Default content per language
-const defaultContent: Record<AdminLocale, FeaturesFormData> = {
-  en: {
-    sectionTitle: "Why Choose OOSkills?",
-    sectionSubtitle: "Everything you need for an exceptional learning experience",
-    features: [
-      { id: "1", icon: "Monitor", title: "Quality Courses", description: "Professionally designed content by industry experts" },
-      { id: "2", icon: "Users", title: "Expert Instructors", description: "Learn from professionals with real experience" },
-      { id: "3", icon: "Award", title: "Certificates", description: "Get recognized certificates upon completion" },
-      { id: "4", icon: "Zap", title: "Learn at Your Pace", description: "Flexible schedules to fit your lifestyle" },
-      { id: "5", icon: "Clock", title: "24/7 Access", description: "Access your courses anytime, anywhere" },
-      { id: "6", icon: "Shield", title: "Lifetime Access", description: "Once enrolled, access content forever" },
-    ],
-  },
-  fr: {
-    sectionTitle: "Pourquoi choisir OOSkills ?",
-    sectionSubtitle: "Tout ce dont vous avez besoin pour une expérience d'apprentissage exceptionnelle",
-    features: [
-      { id: "1", icon: "Monitor", title: "Cours de qualité", description: "Contenu conçu professionnellement par des experts du secteur" },
-      { id: "2", icon: "Users", title: "Instructeurs experts", description: "Apprenez avec des professionnels expérimentés" },
-      { id: "3", icon: "Award", title: "Certificats", description: "Obtenez des certificats reconnus à la fin de chaque cours" },
-      { id: "4", icon: "Zap", title: "Apprenez à votre rythme", description: "Des horaires flexibles adaptés à votre style de vie" },
-      { id: "5", icon: "Clock", title: "Accès 24/7", description: "Accédez à vos cours à tout moment, n'importe où" },
-      { id: "6", icon: "Shield", title: "Accès à vie", description: "Une fois inscrit, accédez au contenu pour toujours" },
-    ],
-  },
-  ar: {
-    sectionTitle: "لماذا تختار OOSkills؟",
-    sectionSubtitle: "كل ما تحتاجه لتجربة تعليمية استثنائية",
-    features: [
-      { id: "1", icon: "Monitor", title: "دورات عالية الجودة", description: "محتوى مصمم باحترافية من قبل خبراء الصناعة" },
-      { id: "2", icon: "Users", title: "مدربون خبراء", description: "تعلم من محترفين ذوي خبرة حقيقية" },
-      { id: "3", icon: "Award", title: "شهادات", description: "احصل على شهادات معترف بها عند الانتهاء" },
-      { id: "4", icon: "Zap", title: "تعلم بالسرعة التي تناسبك", description: "جداول مرنة تتناسب مع نمط حياتك" },
-      { id: "5", icon: "Clock", title: "وصول على مدار الساعة", description: "الوصول إلى دوراتك في أي وقت ومن أي مكان" },
-      { id: "6", icon: "Shield", title: "وصول مدى الحياة", description: "بمجرد التسجيل، الوصول إلى المحتوى للأبد" },
-    ],
-  },
-};
 
 export default function FeaturesAdmin() {
   const { editingLocale } = useAdminLanguage();
   const { t } = useI18n();
-  const [saving, setSaving] = useState(false);
+  const dispatch = useAppDispatch();
+  
+  // Redux state (source of truth from server)
+  const reduxContent = useAppSelector((state) => selectFeaturesContent(state, editingLocale as Locale));
+  const activeSection = useAppSelector(selectActiveSection);
+  const loading = useAppSelector(selectFeaturesLoading);
+  const saving = useAppSelector(selectFeaturesSaving);
+  const error = useAppSelector(selectFeaturesError);
+  
+  // LOCAL form state - completely separate from Redux during editing
+  const [localTitle, setLocalTitle] = useState("");
+  const [localSubtitle, setLocalSubtitle] = useState("");
+  const [localFeatures, setLocalFeatures] = useState<EditableFeature[]>([]);
   const [saved, setSaved] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  // Store content for all languages
-  const [allContent, setAllContent] = useState<Record<AdminLocale, FeaturesFormData>>(defaultContent);
+  // Fetch content on mount - use cache if available
+  useEffect(() => {
+    dispatch(fetchFeaturesContent({}));
+  }, [dispatch]);
   
-  // Current form data based on selected language
-  const formData = allContent[editingLocale];
-
-  const updateSectionTitle = (value: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: { ...prev[editingLocale], sectionTitle: value }
-    }));
-  };
-
-  const updateSectionSubtitle = (value: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: { ...prev[editingLocale], sectionSubtitle: value }
-    }));
-  };
+  // Initialize local state from Redux when BACKEND data loads (check activeSection exists)
+  useEffect(() => {
+    // Only initialize when we have real backend data (activeSection is not null)
+    if (activeSection && reduxContent && !isInitialized && !loading) {
+      setLocalTitle(reduxContent.sectionTitle);
+      setLocalSubtitle(reduxContent.sectionSubtitle);
+      setLocalFeatures(reduxContent.features.map(f => ({ ...f })));
+      setIsInitialized(true);
+    }
+  }, [activeSection, reduxContent, isInitialized, loading]);
+  
+  // Reset local state when locale changes
+  useEffect(() => {
+    if (activeSection && reduxContent && isInitialized) {
+      setLocalTitle(reduxContent.sectionTitle);
+      setLocalSubtitle(reduxContent.sectionSubtitle);
+      setLocalFeatures(reduxContent.features.map(f => ({ ...f })));
+    }
+  }, [editingLocale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    setSaving(true);
-    console.log(`Saving ${editingLocale} content:`, formData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (!activeSection) return;
+    
+    try {
+      // 1. Save section title/subtitle
+      await dispatch(saveFeaturesSection({
+        locale: editingLocale as Locale,
+        title: localTitle,
+        subtitle: localSubtitle,
+      })).unwrap();
+
+      // 2. Process new features
+      const newFeatures = localFeatures.filter(f => f.isNew && !f.isDeleted);
+      for (const feature of newFeatures) {
+        await dispatch(createFeatureItem({
+          locale: editingLocale as Locale,
+          feature: {
+            icon: feature.icon,
+            title: feature.title,
+            description: feature.description,
+          },
+        })).unwrap();
+      }
+
+      // 3. Process modified existing features
+      const modifiedFeatures = localFeatures.filter(f => f.isModified && !f.isNew && !f.isDeleted);
+      for (const feature of modifiedFeatures) {
+        const numericId = parseInt(feature.id);
+        if (!isNaN(numericId)) {
+          await dispatch(updateFeatureItem({
+            locale: editingLocale as Locale,
+            id: numericId,
+            updates: {
+              icon: feature.icon,
+              title: feature.title,
+              description: feature.description,
+            },
+          })).unwrap();
+        }
+      }
+
+      // 4. Process deletions
+      const deletedFeatures = localFeatures.filter(f => f.isDeleted && !f.isNew);
+      for (const feature of deletedFeatures) {
+        const numericId = parseInt(feature.id);
+        if (!isNaN(numericId)) {
+          await dispatch(deleteFeatureItem(numericId)).unwrap();
+        }
+      }
+
+      // 5. Update local state to reflect saved changes (remove deleted, mark new as saved)
+      setLocalFeatures(prev => prev
+        .filter(f => !f.isDeleted) // Remove deleted items
+        .map(f => ({
+          ...f,
+          isNew: false, // Mark new items as saved
+          isModified: false, // Clear modified flag
+        }))
+      );
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save features:", err);
+    }
   };
 
-  const addFeature = () => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        features: [
-          ...prev[editingLocale].features,
-          { id: Date.now().toString(), icon: "Star", title: "New Feature", description: "Description here" }
-        ]
+  const handleAddFeature = () => {
+    const newFeature: EditableFeature = {
+      id: `temp-${Date.now()}`,
+      icon: "star",
+      title: editingLocale === "ar" ? "ميزة جديدة" : editingLocale === "fr" ? "Nouvelle fonctionnalité" : "New Feature",
+      description: editingLocale === "ar" ? "الوصف هنا" : editingLocale === "fr" ? "Description ici" : "Description here",
+      isNew: true,
+    };
+    setLocalFeatures(prev => [...prev, newFeature]);
+  };
+
+  const handleRemoveFeature = (id: string) => {
+    setLocalFeatures(prev => {
+      const feature = prev.find(f => f.id === id);
+      if (!feature) return prev;
+      
+      // If it's a new feature, just remove it from the list
+      if (feature.isNew) {
+        return prev.filter(f => f.id !== id);
       }
+      
+      // Otherwise, mark it as deleted
+      return prev.map(f => f.id === id ? { ...f, isDeleted: true } : f);
+    });
+  };
+
+  const handleUpdateFeature = (id: string, field: keyof Feature, value: string) => {
+    setLocalFeatures(prev => prev.map(f => {
+      if (f.id !== id) return f;
+      return { ...f, [field]: value, isModified: true };
     }));
   };
 
-  const removeFeature = (id: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        features: prev[editingLocale].features.filter(f => f.id !== id)
-      }
-    }));
-  };
+  // Filter out deleted features for display
+  const visibleFeatures = useMemo(() => 
+    localFeatures.filter(f => !f.isDeleted),
+    [localFeatures]
+  );
 
-  const updateFeature = (id: string, field: keyof Feature, value: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        features: prev[editingLocale].features.map(f => f.id === id ? { ...f, [field]: value } : f)
-      }
-    }));
-  };
+  // Loading state
+  if (loading || !isInitialized) {
+    return (
+      <div className="min-h-screen">
+        <AdminHeader 
+          titleKey="admin.features.title"
+          subtitleKey="admin.features.subtitle"
+        />
+        <div className="p-6">
+          <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+              <p className="text-silver dark:text-white/50">{t("admin.common.loading")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -141,6 +212,21 @@ export default function FeaturesAdmin() {
       />
       
       <div className="p-6 space-y-6">
+        {/* Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl flex items-start gap-3"
+          >
+            <ExclamationCircleIcon className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">{t("admin.common.error")}</p>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -161,8 +247,8 @@ export default function FeaturesAdmin() {
               </label>
               <input
                 type="text"
-                value={formData.sectionTitle}
-                onChange={(e) => updateSectionTitle(e.target.value)}
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                 dir={editingLocale === "ar" ? "rtl" : "ltr"}
               />
@@ -173,8 +259,8 @@ export default function FeaturesAdmin() {
               </label>
               <input
                 type="text"
-                value={formData.sectionSubtitle}
-                onChange={(e) => updateSectionSubtitle(e.target.value)}
+                value={localSubtitle}
+                onChange={(e) => setLocalSubtitle(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                 dir={editingLocale === "ar" ? "rtl" : "ltr"}
               />
@@ -198,11 +284,11 @@ export default function FeaturesAdmin() {
                   {adminLocaleLabels[editingLocale]}
                 </span>
               </div>
-              <p className="text-xs text-silver dark:text-white/50">{formData.features.length} {t("admin.features.items")}</p>
+              <p className="text-xs text-silver dark:text-white/50">{visibleFeatures.length} {t("admin.features.items")}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={addFeature}
+                onClick={handleAddFeature}
                 className="px-3 py-2 text-sm font-medium border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -226,12 +312,12 @@ export default function FeaturesAdmin() {
           </div>
 
           <div className="divide-y divide-gray-200 dark:divide-white/10">
-            {formData.features.map((feature) => (
+            {visibleFeatures.map((feature) => (
               <motion.div
                 key={feature.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-4"
+                className={`p-4 ${feature.isNew ? 'bg-green-50/50 dark:bg-green-900/10' : ''}`}
               >
                 <div className="flex items-start gap-4">
                   <div className="mt-2 cursor-grab text-gray-400">
@@ -242,7 +328,7 @@ export default function FeaturesAdmin() {
                       <label className="block text-xs font-medium text-silver mb-1">{t("admin.features.icon")}</label>
                       <select
                         value={feature.icon}
-                        onChange={(e) => updateFeature(feature.id, "icon", e.target.value)}
+                        onChange={(e) => handleUpdateFeature(feature.id, "icon", e.target.value)}
                         className="w-full px-3 py-2 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold"
                       >
                         {iconOptions.map(icon => (
@@ -255,7 +341,7 @@ export default function FeaturesAdmin() {
                       <input
                         type="text"
                         value={feature.title}
-                        onChange={(e) => updateFeature(feature.id, "title", e.target.value)}
+                        onChange={(e) => handleUpdateFeature(feature.id, "title", e.target.value)}
                         className="w-full px-3 py-2 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold"
                         dir={editingLocale === "ar" ? "rtl" : "ltr"}
                       />
@@ -265,14 +351,14 @@ export default function FeaturesAdmin() {
                       <input
                         type="text"
                         value={feature.description}
-                        onChange={(e) => updateFeature(feature.id, "description", e.target.value)}
+                        onChange={(e) => handleUpdateFeature(feature.id, "description", e.target.value)}
                         className="w-full px-3 py-2 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold"
                         dir={editingLocale === "ar" ? "rtl" : "ltr"}
                       />
                     </div>
                   </div>
                   <button
-                    onClick={() => removeFeature(feature.id)}
+                    onClick={() => handleRemoveFeature(feature.id)}
                     className="mt-6 p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />

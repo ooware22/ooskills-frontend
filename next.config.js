@@ -10,6 +10,15 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.worldvectorlogo.com",
       },
+      {
+        protocol: "https",
+        hostname: "ooskills-backend.onrender.com",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+      },
     ],
   },
 };

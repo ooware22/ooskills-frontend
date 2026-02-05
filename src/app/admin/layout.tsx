@@ -7,6 +7,7 @@ import AdminSidebar, {
   useSidebar,
 } from "@/components/admin/AdminSidebar";
 import { AdminLanguageProvider } from "@/contexts/AdminLanguageContext";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar();
@@ -40,11 +41,14 @@ export default function AdminLayout({
 
   return (
     <ThemeProvider>
-      <AdminLanguageProvider>
-        <SidebarProvider>
-          <AdminLayoutContent>{children}</AdminLayoutContent>
-        </SidebarProvider>
-      </AdminLanguageProvider>
+      <AuthGuard requireAdmin>
+        <AdminLanguageProvider>
+          <SidebarProvider>
+            <AdminLayoutContent>{children}</AdminLayoutContent>
+          </SidebarProvider>
+        </AdminLanguageProvider>
+      </AuthGuard>
     </ThemeProvider>
   );
 }
+

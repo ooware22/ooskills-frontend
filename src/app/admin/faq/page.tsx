@@ -1,139 +1,274 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, CheckIcon as Check, PlusIcon as Plus, TrashIcon as Trash2, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp, GlobeAltIcon as Globe } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, CheckIcon as Check, PlusIcon as Plus, TrashIcon as Trash2, ChevronDownIcon as ChevronDown, ChevronUpIcon as ChevronUp, GlobeAltIcon as Globe, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
 import { useI18n } from "@/lib/i18n";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { adminFAQApi } from "@/services/contentApi";
+import {
+  fetchFAQContent,
+  createFAQItem,
+  updateFAQItem,
+  deleteFAQItem,
+  updateFAQSection,
+  selectFAQContent,
+  selectFAQItems,
+  selectFAQLoading,
+  selectFAQSaving,
+  selectFAQError,
+} from "@/store/exports";
+import type { FAQContent, FAQ } from "@/store/slices/faqSlice";
+import type { Locale } from "@/types/content";
 
-interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
-  isOpen?: boolean;
+// Extended FAQ type to track changes
+interface EditableFAQ extends FAQ {
+  isNew?: boolean;
+  isDeleted?: boolean;
+  isModified?: boolean;
 }
-
-type FAQFormData = {
-  sectionTitle: string;
-  sectionSubtitle: string;
-  faqs: FAQ[];
-};
-
-// Default content per language
-const defaultContent: Record<AdminLocale, FAQFormData> = {
-  en: {
-    sectionTitle: "Frequently Asked Questions",
-    sectionSubtitle: "Find answers to common questions about our platform",
-    faqs: [
-      { id: "1", question: "How does OOSkills work?", answer: "OOSkills is an online learning platform that offers courses in various fields. After registration, you can browse our catalog, enroll in courses, and learn at your own pace.", isOpen: true },
-      { id: "2", question: "Are certificates recognized?", answer: "Yes, our certificates are recognized by employers and can be added to your CV and LinkedIn profile to showcase your skills.", isOpen: false },
-      { id: "3", question: "Can I access courses on mobile?", answer: "Absolutely! Our platform is fully responsive and works on all devices - smartphones, tablets, and computers.", isOpen: false },
-      { id: "4", question: "What is the refund policy?", answer: "We offer a 30-day money-back guarantee. If you're not satisfied with a course, you can request a full refund within 30 days of purchase.", isOpen: false },
-      { id: "5", question: "How do I contact support?", answer: "You can reach our support team via email at support@ooskills.com or through the contact form on our website. We respond within 24 hours.", isOpen: false },
-    ],
-  },
-  fr: {
-    sectionTitle: "Questions fréquemment posées",
-    sectionSubtitle: "Trouvez des réponses aux questions courantes sur notre plateforme",
-    faqs: [
-      { id: "1", question: "Comment fonctionne OOSkills ?", answer: "OOSkills est une plateforme d'apprentissage en ligne qui propose des cours dans divers domaines. Après inscription, vous pouvez parcourir notre catalogue, vous inscrire à des cours et apprendre à votre rythme.", isOpen: true },
-      { id: "2", question: "Les certificats sont-ils reconnus ?", answer: "Oui, nos certificats sont reconnus par les employeurs et peuvent être ajoutés à votre CV et profil LinkedIn pour mettre en valeur vos compétences.", isOpen: false },
-      { id: "3", question: "Puis-je accéder aux cours sur mobile ?", answer: "Absolument ! Notre plateforme est entièrement responsive et fonctionne sur tous les appareils - smartphones, tablettes et ordinateurs.", isOpen: false },
-      { id: "4", question: "Quelle est la politique de remboursement ?", answer: "Nous offrons une garantie de remboursement de 30 jours. Si vous n'êtes pas satisfait d'un cours, vous pouvez demander un remboursement complet dans les 30 jours suivant l'achat.", isOpen: false },
-      { id: "5", question: "Comment contacter le support ?", answer: "Vous pouvez joindre notre équipe de support par email à support@ooskills.com ou via le formulaire de contact sur notre site web. Nous répondons sous 24 heures.", isOpen: false },
-    ],
-  },
-  ar: {
-    sectionTitle: "الأسئلة الشائعة",
-    sectionSubtitle: "اعثر على إجابات للأسئلة الشائعة حول منصتنا",
-    faqs: [
-      { id: "1", question: "كيف يعمل OOSkills؟", answer: "OOSkills هي منصة تعليم إلكتروني تقدم دورات في مجالات متعددة. بعد التسجيل، يمكنك تصفح الكتالوج الخاص بنا والتسجيل في الدورات والتعلم بالسرعة التي تناسبك.", isOpen: true },
-      { id: "2", question: "هل الشهادات معترف بها؟", answer: "نعم، شهاداتنا معترف بها من قبل أرباب العمل ويمكن إضافتها إلى سيرتك الذاتية وملفك الشخصي على LinkedIn لإظهار مهاراتك.", isOpen: false },
-      { id: "3", question: "هل يمكنني الوصول إلى الدورات من الجوال؟", answer: "بالتأكيد! منصتنا متجاوبة تمامًا وتعمل على جميع الأجهزة - الهواتف الذكية والأجهزة اللوحية وأجهزة الكمبيوتر.", isOpen: false },
-      { id: "4", question: "ما هي سياسة الاسترداد؟", answer: "نقدم ضمان استرداد الأموال لمدة 30 يومًا. إذا لم تكن راضيًا عن دورة ما، يمكنك طلب استرداد كامل خلال 30 يومًا من الشراء.", isOpen: false },
-      { id: "5", question: "كيف أتواصل مع الدعم؟", answer: "يمكنك الوصول إلى فريق الدعم لدينا عبر البريد الإلكتروني على support@ooskills.com أو من خلال نموذج الاتصال على موقعنا. نرد خلال 24 ساعة.", isOpen: false },
-    ],
-  },
-};
 
 export default function FAQAdmin() {
   const { editingLocale } = useAdminLanguage();
   const { t } = useI18n();
-  const [saving, setSaving] = useState(false);
+  const dispatch = useAppDispatch();
+  
+  // Redux state (source of truth from server)
+  const reduxContent = useAppSelector((state) => selectFAQContent(state, editingLocale as Locale));
+  const items = useAppSelector(selectFAQItems);
+  const loading = useAppSelector(selectFAQLoading);
+  const saving = useAppSelector(selectFAQSaving);
+  const error = useAppSelector(selectFAQError);
+  
+  // LOCAL form state - completely separate from Redux during editing
+  const [localTitle, setLocalTitle] = useState("");
+  const [localSubtitle, setLocalSubtitle] = useState("");
+  const [localFAQs, setLocalFAQs] = useState<EditableFAQ[]>([]);
   const [saved, setSaved] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [activeSectionId, setActiveSectionId] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
-  // Store content for all languages
-  const [allContent, setAllContent] = useState<Record<AdminLocale, FAQFormData>>(defaultContent);
+  // Fetch content and active section on mount
+  useEffect(() => {
+    dispatch(fetchFAQContent({}));
+    // Also fetch the active FAQ section to get its ID
+    adminFAQApi.section.getActive()
+      .then((section) => {
+        setActiveSectionId(section.id);
+        // Use section title/subtitle from backend
+        const locale = editingLocale as Locale;
+        const title = section.title?.[locale] || section.title?.fr || section.title?.en || "";
+        const subtitle = section.subtitle?.[locale] || section.subtitle?.fr || section.subtitle?.en || "";
+        if (title || subtitle) {
+          setLocalTitle(title);
+          setLocalSubtitle(subtitle);
+        }
+      })
+      .catch(() => {
+        // No active section yet - that's okay
+        console.log("No active FAQ section found, will create one on first save");
+      });
+  }, [dispatch, editingLocale]);
   
-  // Current form data based on selected language
-  const formData = allContent[editingLocale];
+  // Initialize local state from Redux when data is available
+  useEffect(() => {
+    // Initialize when we have data and haven't initialized yet
+    if (reduxContent && !isInitialized && !loading) {
+      // Check if we have real backend data (items > 0) or just defaults
+      const hasBackendData = items.length > 0;
+      if (hasBackendData) {
+        // Only set title/subtitle if we don't have them from section API
+        if (!localTitle && !localSubtitle) {
+          setLocalTitle(reduxContent.sectionTitle);
+          setLocalSubtitle(reduxContent.sectionSubtitle);
+        }
+        setLocalFAQs(reduxContent.faqs.map(f => ({ ...f })));
+        setIsInitialized(true);
+      }
+    }
+  }, [items, reduxContent, isInitialized, loading, localTitle, localSubtitle]);
+  
+  // Reset local state when locale changes
+  useEffect(() => {
+    if (items.length > 0 && reduxContent && isInitialized) {
+      // Fetch section title for new locale
+      if (activeSectionId) {
+        adminFAQApi.section.retrieve(activeSectionId)
+          .then((section) => {
+            const locale = editingLocale as Locale;
+            setLocalTitle(section.title?.[locale] || section.title?.fr || "");
+            setLocalSubtitle(section.subtitle?.[locale] || section.subtitle?.fr || "");
+          })
+          .catch(() => {
+            setLocalTitle(reduxContent.sectionTitle);
+            setLocalSubtitle(reduxContent.sectionSubtitle);
+          });
+      } else {
+        setLocalTitle(reduxContent.sectionTitle);
+        setLocalSubtitle(reduxContent.sectionSubtitle);
+      }
+      setLocalFAQs(reduxContent.faqs.map(f => ({ ...f })));
+    }
+  }, [editingLocale]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateSectionTitle = (value: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: { ...prev[editingLocale], sectionTitle: value }
-    }));
-  };
-
-  const updateSectionSubtitle = (value: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: { ...prev[editingLocale], sectionSubtitle: value }
-    }));
-  };
 
   const handleSave = async () => {
-    setSaving(true);
-    console.log(`Saving ${editingLocale} content:`, formData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setIsSaving(true);
+    try {
+      // 0. Save section title/subtitle to backend
+      let sectionId = activeSectionId;
+      const locale = editingLocale as Locale;
+      
+      if (sectionId) {
+        // Update existing section
+        await adminFAQApi.section.update(sectionId, {
+          title: { [locale]: localTitle },
+          subtitle: { [locale]: localSubtitle },
+        });
+      } else {
+        // Create new section if none exists
+        const newSection = await adminFAQApi.section.create({
+          title: { [locale]: localTitle },
+          subtitle: { [locale]: localSubtitle },
+          is_active: true,
+        });
+        sectionId = newSection.id;
+        setActiveSectionId(sectionId);
+      }
+      
+      // Also update Redux state
+      dispatch(updateFAQSection({
+        locale: locale,
+        title: localTitle,
+        subtitle: localSubtitle,
+      }));
+
+      // 1. Process new FAQs
+      const newFAQs = localFAQs.filter(f => f.isNew && !f.isDeleted);
+      for (const faq of newFAQs) {
+        await dispatch(createFAQItem({
+          locale: locale,
+          faq: {
+            question: faq.question,
+            answer: faq.answer,
+          },
+          sectionId: sectionId ?? undefined,
+        })).unwrap();
+      }
+
+      // 2. Process modified existing FAQs
+      const modifiedFAQs = localFAQs.filter(f => f.isModified && !f.isNew && !f.isDeleted);
+      for (const faq of modifiedFAQs) {
+        const numericId = parseInt(faq.id);
+        if (!isNaN(numericId)) {
+          await dispatch(updateFAQItem({
+            locale: locale,
+            id: numericId,
+            updates: {
+              question: faq.question,
+              answer: faq.answer,
+            },
+          })).unwrap();
+        }
+      }
+
+      // 3. Process deletions
+      const deletedFAQs = localFAQs.filter(f => f.isDeleted && !f.isNew);
+      for (const faq of deletedFAQs) {
+        const numericId = parseInt(faq.id);
+        if (!isNaN(numericId)) {
+          await dispatch(deleteFAQItem(numericId)).unwrap();
+        }
+      }
+
+      // 4. Update local state to reflect saved changes (remove deleted, mark new as saved)
+      setLocalFAQs(prev => prev
+        .filter(f => !f.isDeleted) // Remove deleted items
+        .map(f => ({
+          ...f,
+          isNew: false, // Mark new items as saved
+          isModified: false, // Clear modified flag
+        }))
+      );
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save FAQ:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const addFaq = () => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        faqs: [
-          ...prev[editingLocale].faqs,
-          { id: Date.now().toString(), question: "New Question?", answer: "Answer here...", isOpen: true }
-        ]
+  const handleAddFaq = () => {
+    const tempId = `temp-${Date.now()}`;
+    const newFaq: EditableFAQ = {
+      id: tempId,
+      question: editingLocale === "ar" ? "سؤال جديد؟" : editingLocale === "fr" ? "Nouvelle question ?" : "New Question?",
+      answer: editingLocale === "ar" ? "إجابة هنا..." : editingLocale === "fr" ? "Réponse ici..." : "Answer here...",
+      isOpen: true,
+      isNew: true,
+    };
+    setLocalFAQs(prev => [...prev, newFaq]);
+  };
+
+  const handleRemoveFaq = (id: string) => {
+    setLocalFAQs(prev => {
+      const faq = prev.find(f => f.id === id);
+      if (!faq) return prev;
+      
+      // If it's a new FAQ, just remove it from the list
+      if (faq.isNew) {
+        return prev.filter(f => f.id !== id);
       }
+      
+      // Otherwise, mark it as deleted
+      return prev.map(f => f.id === id ? { ...f, isDeleted: true } : f);
+    });
+  };
+
+  const handleUpdateFaq = (id: string, field: keyof FAQ, value: string) => {
+    setLocalFAQs(prev => prev.map(f => {
+      if (f.id !== id) return f;
+      return { ...f, [field]: value, isModified: true };
     }));
   };
 
-  const removeFaq = (id: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        faqs: prev[editingLocale].faqs.filter(f => f.id !== id)
-      }
+  const handleToggleFaq = (id: string) => {
+    setLocalFAQs(prev => prev.map(f => {
+      if (f.id !== id) return f;
+      return { ...f, isOpen: !f.isOpen };
     }));
   };
 
-  const updateFaq = (id: string, field: keyof FAQ, value: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        faqs: prev[editingLocale].faqs.map(f => f.id === id ? { ...f, [field]: value } : f)
-      }
-    }));
-  };
+  // Filter out deleted FAQs for display
+  const visibleFAQs = useMemo(() => 
+    localFAQs.filter(f => !f.isDeleted),
+    [localFAQs]
+  );
 
-  const toggleFaq = (id: string) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: {
-        ...prev[editingLocale],
-        faqs: prev[editingLocale].faqs.map(f => f.id === id ? { ...f, isOpen: !f.isOpen } : f)
-      }
-    }));
-  };
+  // Loading state
+  if (loading || !isInitialized) {
+    return (
+      <div className="min-h-screen">
+        <AdminHeader 
+          titleKey="admin.faq.title"
+          subtitleKey="admin.faq.subtitle"
+        />
+        <div className="p-6">
+          <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+              <p className="text-silver dark:text-white/50">{t("admin.common.loading")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -143,6 +278,21 @@ export default function FAQAdmin() {
       />
       
       <div className="p-6 space-y-6">
+        {/* Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl flex items-start gap-3"
+          >
+            <ExclamationCircleIcon className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">{t("admin.common.error")}</p>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -163,8 +313,8 @@ export default function FAQAdmin() {
               </label>
               <input
                 type="text"
-                value={formData.sectionTitle}
-                onChange={(e) => updateSectionTitle(e.target.value)}
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                 dir={editingLocale === "ar" ? "rtl" : "ltr"}
               />
@@ -175,8 +325,8 @@ export default function FAQAdmin() {
               </label>
               <input
                 type="text"
-                value={formData.sectionSubtitle}
-                onChange={(e) => updateSectionSubtitle(e.target.value)}
+                value={localSubtitle}
+                onChange={(e) => setLocalSubtitle(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                 dir={editingLocale === "ar" ? "rtl" : "ltr"}
               />
@@ -200,11 +350,11 @@ export default function FAQAdmin() {
                   {adminLocaleLabels[editingLocale]}
                 </span>
               </div>
-              <p className="text-xs text-silver dark:text-white/50">{formData.faqs.length} {t("admin.features.items")}</p>
+              <p className="text-xs text-silver dark:text-white/50">{visibleFAQs.length} {t("admin.features.items")}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={addFaq}
+                onClick={handleAddFaq}
                 className="px-3 py-2 text-sm font-medium border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -212,10 +362,10 @@ export default function FAQAdmin() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={isSaving}
                 className="px-4 py-2 text-sm font-medium bg-gold hover:bg-gold-light text-oxford rounded-lg transition-colors flex items-center gap-2 disabled:opacity-70"
               >
-                {saving ? (
+                {isSaving ? (
                   <div className="w-4 h-4 border-2 border-oxford/30 border-t-oxford rounded-full animate-spin" />
                 ) : saved ? (
                   <Check className="w-4 h-4" />
@@ -228,12 +378,12 @@ export default function FAQAdmin() {
           </div>
 
           <div className="divide-y divide-gray-200 dark:divide-white/10">
-            {formData.faqs.map((faq, index) => (
+            {visibleFAQs.map((faq, index) => (
               <motion.div
                 key={faq.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-4"
+                className={`p-4 ${faq.isNew ? 'bg-green-50/50 dark:bg-green-900/10' : ''}`}
               >
                 {/* Question Header */}
                 <div className="flex items-center gap-3 mb-3">
@@ -241,7 +391,7 @@ export default function FAQAdmin() {
                     {index + 1}
                   </span>
                   <button
-                    onClick={() => toggleFaq(faq.id)}
+                    onClick={() => handleToggleFaq(faq.id)}
                     className="flex-1 flex items-center justify-between text-start"
                   >
                     <span className="text-sm font-medium text-oxford dark:text-white" dir={editingLocale === "ar" ? "rtl" : "ltr"}>
@@ -254,7 +404,7 @@ export default function FAQAdmin() {
                     )}
                   </button>
                   <button
-                    onClick={() => removeFaq(faq.id)}
+                    onClick={() => handleRemoveFaq(faq.id)}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -269,7 +419,7 @@ export default function FAQAdmin() {
                       <input
                         type="text"
                         value={faq.question}
-                        onChange={(e) => updateFaq(faq.id, "question", e.target.value)}
+                        onChange={(e) => handleUpdateFaq(faq.id, "question", e.target.value)}
                         className="w-full px-3 py-2 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold"
                         dir={editingLocale === "ar" ? "rtl" : "ltr"}
                       />
@@ -279,7 +429,7 @@ export default function FAQAdmin() {
                       <textarea
                         rows={3}
                         value={faq.answer}
-                        onChange={(e) => updateFaq(faq.id, "answer", e.target.value)}
+                        onChange={(e) => handleUpdateFaq(faq.id, "answer", e.target.value)}
                         className="w-full px-3 py-2 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold resize-none"
                         dir={editingLocale === "ar" ? "rtl" : "ltr"}
                       />

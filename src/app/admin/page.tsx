@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   SparklesIcon as Sparkles,
@@ -12,10 +13,29 @@ import {
   UsersIcon as Users,
   EyeIcon as Eye,
   PencilSquareIcon as Edit3,
+  Cog6ToothIcon as Settings,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchDashboardData, selectDashboardSections } from "@/store/slices/dashboardSlice";
+
+type SectionConfig = {
+  nameKey: string;
+  icon: React.ElementType;
+  href: string;
+};
+
+const sectionConfigs: SectionConfig[] = [
+  { nameKey: "hero", icon: Sparkles, href: "/admin/hero" },
+  { nameKey: "countdown", icon: Clock, href: "/admin/countdown" },
+  { nameKey: "features", icon: Award, href: "/admin/features" },
+  { nameKey: "courses", icon: BookOpen, href: "/admin/courses" },
+  { nameKey: "faq", icon: HelpCircle, href: "/admin/faq" },
+  { nameKey: "contact", icon: Phone, href: "/admin/contact" },
+  { nameKey: "settings", icon: Settings, href: "/admin/settings" },
+];
 
 const stats = [
   { labelKey: "totalCourses", value: "12,458", change: "+12%", icon: Eye },
@@ -23,17 +43,15 @@ const stats = [
   { labelKey: "activeUsers", value: "234", change: "+24%", icon: Users },
 ];
 
-const sections = [
-  { nameKey: "hero", icon: Sparkles, href: "/admin/hero", status: "Published" },
-  { nameKey: "countdown", icon: Clock, href: "/admin/countdown", status: "Active" },
-  { nameKey: "features", icon: Award, href: "/admin/features", status: "6 items" },
-  { nameKey: "courses", icon: BookOpen, href: "/admin/courses", status: "4 items" },
-  { nameKey: "faq", icon: HelpCircle, href: "/admin/faq", status: "5 items" },
-  { nameKey: "contact", icon: Phone, href: "/admin/contact", status: "Published" },
-];
-
 export default function AdminDashboard() {
   const { t } = useI18n();
+  const dispatch = useAppDispatch();
+  const sections = useAppSelector(selectDashboardSections);
+
+  // Fetch data on mount (uses cache if available)
+  useEffect(() => {
+    dispatch(fetchDashboardData());
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen">
@@ -80,37 +98,47 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="divide-y divide-gray-200 dark:divide-white/10">
-            {sections.map((section, index) => (
-              <motion.div
-                key={section.nameKey}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + index * 0.05 }}
-              >
-                <Link
-                  href={section.href}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            {sectionConfigs.map((config, index) => {
+              const section = sections[config.nameKey];
+              return (
+                <motion.div
+                  key={config.nameKey}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.05 }}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-oxford/5 dark:bg-white/5 rounded-lg flex items-center justify-center">
-                      <section.icon className="w-5 h-5 text-oxford dark:text-white" />
+                  <Link
+                    href={config.href}
+                    className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-oxford/5 dark:bg-white/5 rounded-lg flex items-center justify-center">
+                        <config.icon className="w-5 h-5 text-oxford dark:text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-oxford dark:text-white">
+                          {t(`admin.sidebar.${config.nameKey}`)}
+                        </p>
+                        <p className="text-xs text-silver dark:text-white/50 flex items-center gap-2">
+                          {section?.loading ? (
+                            <span className="flex items-center gap-1">
+                              <span className="w-3 h-3 border border-gold/30 border-t-gold rounded-full animate-spin" />
+                              Loading...
+                            </span>
+                          ) : (
+                            section?.status || "..."
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-oxford dark:text-white">
-                        {t(`admin.sidebar.${section.nameKey}`)}
-                      </p>
-                      <p className="text-xs text-silver dark:text-white/50">
-                        {section.status}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-silver dark:text-white/50">{t("admin.common.edit")}</span>
+                      <Edit3 className="w-4 h-4 text-silver dark:text-white/50" />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-silver dark:text-white/50">{t("admin.common.edit")}</span>
-                    <Edit3 className="w-4 h-4 text-silver dark:text-white/50" />
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>

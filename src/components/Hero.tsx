@@ -18,9 +18,25 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import { useTranslations } from "@/lib/i18n";
+import type { PublicHeroData } from "@/types/content";
 
-export default function Hero() {
+interface HeroProps {
+  data?: PublicHeroData | null;
+}
+
+export default function Hero({ data }: HeroProps) {
   const t = useTranslations("hero");
+
+  // Use API data if available, otherwise fall back to i18n
+  const title = data?.title || t("title");
+  const titleHighlight = data?.title_highlight || t("titleHighlight");
+  const subtitle = data?.subtitle || t("subtitle");
+  const badgeText = data?.badge_text || t("badge");
+  const primaryCta = data?.primary_cta_text || t("cta");
+  const secondaryCta = data?.secondary_cta_text || t("ctaSecondary");
+  const cardTitle = data?.card_title || t("illustrationTitle");
+  const cardSubtitle = data?.card_subtitle || t("illustrationSubtitle");
+
 
   return (
     <section
@@ -38,9 +54,9 @@ export default function Hero() {
           >
             {/* Title */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-oxford dark:text-white leading-[1.1] tracking-tight mb-6">
-              {t("title")}{" "}
+              {title}{" "}
               <span className="relative inline-block text-gold">
-                {t("titleHighlight")}
+                {titleHighlight}
                 {/* Creative Animated Underline */}
                 <motion.svg
                   className="absolute -bottom-2 start-0 w-full h-3"
@@ -64,7 +80,7 @@ export default function Hero() {
 
             {/* Subtitle */}
             <p className="text-base md:text-lg text-silver dark:text-gray-400 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              {t("subtitle")}
+              {subtitle}
             </p>
 
             {/* CTAs */}
@@ -73,7 +89,7 @@ export default function Hero() {
                 href="#courses"
                 className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-oxford bg-gold hover:bg-gold-light rounded-lg transition-colors duration-200 shadow-sm"
               >
-                {t("cta")}
+                {primaryCta}
                 <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
               </a>
               <a
@@ -81,7 +97,7 @@ export default function Hero() {
                 className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-oxford dark:text-white border border-oxford/20 dark:border-white/20 hover:bg-oxford/5 dark:hover:bg-white/5 rounded-lg transition-colors duration-200"
               >
                 <Play className="w-4 h-4 me-2" />
-                {t("ctaSecondary")}
+                {secondaryCta}
               </a>
             </div>
 
@@ -181,7 +197,7 @@ export default function Hero() {
                     <Trophy className="w-5 h-5 text-oxford" />
                   </motion.div>
                   <span className="text-xs font-bold text-oxford tracking-wide">
-                    {t("badge")}
+                    {badgeText}
                   </span>
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
@@ -232,10 +248,10 @@ export default function Hero() {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-oxford dark:text-white text-sm mb-0.5">
-                          {t("illustrationTitle")}
+                          {cardTitle}
                         </h3>
                         <p className="text-xs text-gray-500 dark:text-white/40">
-                          {t("illustrationSubtitle")}
+                          {cardSubtitle}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 text-xs">

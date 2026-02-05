@@ -16,6 +16,8 @@ import { useSidebar } from "./AdminSidebar";
 import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
 import { useI18n, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/store/hooks";
+import Image from "next/image";
 
 interface AdminHeaderProps {
   title?: string;
@@ -32,6 +34,15 @@ export default function AdminHeader({ title, subtitle, titleKey, subtitleKey }: 
   const [mounted, setMounted] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const isRtl = locale === "ar";
+  
+  // Get user from auth state
+  const user = useAppSelector((state) => state.auth.user);
+  const userName = user?.first_name && user?.last_name 
+    ? `${user.first_name} ${user.last_name}` 
+    : user?.email || "Admin";
+  const userEmail = user?.email || "admin@example.com";
+  const userAvatar = user?.avatar || null;
+  const userRole = user?.role === "SUPER_ADMIN" ? "Super Admin" : user?.role === "ADMIN" ? "Administrator" : "User";
 
   // Resolved title and subtitle from translation keys or direct props
   const resolvedTitle = titleKey ? t(titleKey) : title || "";
@@ -177,15 +188,27 @@ export default function AdminHeader({ title, subtitle, titleKey, subtitleKey }: 
           )}>
             <div className={cn("hidden md:block", isRtl ? "text-start" : "text-end")}>
               <p className="text-sm font-medium text-oxford dark:text-white">
-                Admin
+                {userName}
               </p>
               <p className="text-xs text-silver dark:text-white/50">
-                Administrator
+                {userEmail}
               </p>
             </div>
-            <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-oxford" />
-            </div>
+            {userAvatar ? (
+              <Image
+                src={userAvatar}
+                alt={userName}
+                width={36}
+                height={36}
+                className="w-9 h-9 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
+                <span className="text-oxford font-semibold text-sm">
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

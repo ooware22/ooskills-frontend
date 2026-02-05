@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useTranslations } from "@/lib/i18n";
+import type { PublicPartnerData } from "@/types/content";
 
-const partners = [
+// Static fallback partners
+const staticPartners = [
   {
     name: "Udemy",
     logo: "https://cdn.worldvectorlogo.com/logos/udemy-1.svg",
@@ -39,8 +41,18 @@ const partners = [
   },
 ];
 
-export default function Partners() {
+interface PartnersProps {
+  data?: PublicPartnerData[] | null;
+}
+
+export default function Partners({ data }: PartnersProps) {
   const t = useTranslations("partners");
+
+  // Use API data if available, otherwise use static fallback
+  const partners = data && data.length > 0 
+    ? data.map(p => ({ name: p.name, logo: p.logo || "" }))
+    : staticPartners;
+
 
   // Duplicate partners for seamless infinite scroll
   const duplicatedPartners = [...partners, ...partners];

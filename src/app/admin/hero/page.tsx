@@ -1,93 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, ArrowPathIcon as RotateCcw, CheckIcon as Check, GlobeAltIcon as Globe } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, ArrowPathIcon as RotateCcw, CheckIcon as Check, GlobeAltIcon as Globe, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
 import { useI18n } from "@/lib/i18n";
-
-type HeroFormData = {
-  badge: string;
-  title: string;
-  titleHighlight: string;
-  subtitle: string;
-  ctaPrimary: string;
-  ctaSecondary: string;
-  illustrationTitle: string;
-  illustrationSubtitle: string;
-};
-
-// Default content per language (will be fetched from API later)
-const defaultContent: Record<AdminLocale, HeroFormData> = {
-  en: {
-    badge: "#1 E-Learning Platform in Algeria",
-    title: "Develop your skills with",
-    titleHighlight: "OOSkills",
-    subtitle: "Access quality training in IT, office tools, and personal development. Learn at your own pace with experts.",
-    ctaPrimary: "Explore Courses",
-    ctaSecondary: "Learn More",
-    illustrationTitle: "Learn. Practice. Succeed.",
-    illustrationSubtitle: "Your journey to excellence starts here",
-  },
-  fr: {
-    badge: "#1 Plateforme E-Learning en Algérie",
-    title: "Développez vos compétences avec",
-    titleHighlight: "OOSkills",
-    subtitle: "Accédez à des formations de qualité en informatique, bureautique et développement personnel. Apprenez à votre rythme avec des experts.",
-    ctaPrimary: "Explorer les cours",
-    ctaSecondary: "En savoir plus",
-    illustrationTitle: "Apprendre. Pratiquer. Réussir.",
-    illustrationSubtitle: "Votre parcours vers l'excellence commence ici",
-  },
-  ar: {
-    badge: "#1 منصة التعليم الإلكتروني في الجزائر",
-    title: "طوّر مهاراتك مع",
-    titleHighlight: "OOSkills",
-    subtitle: "احصل على تدريب عالي الجودة في تكنولوجيا المعلومات وأدوات المكتب والتنمية الشخصية. تعلم بالسرعة التي تناسبك مع الخبراء.",
-    ctaPrimary: "استكشف الدورات",
-    ctaSecondary: "اعرف المزيد",
-    illustrationTitle: "تعلم. تدرب. انجح.",
-    illustrationSubtitle: "رحلتك نحو التميز تبدأ هنا",
-  },
-};
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { 
+  fetchHeroContent, 
+  saveHeroContent,
+  updateHeroContent,
+  resetHeroContent,
+  selectHeroContent,
+  selectHeroLoading,
+  selectHeroSaving,
+  selectHeroError,
+} from "@/store/exports";
+import type { HeroContent } from "@/store/slices/heroSlice";
+import type { Locale } from "@/types/content";
 
 export default function HeroAdmin() {
   const { editingLocale } = useAdminLanguage();
   const { t, locale } = useI18n();
-  const [saving, setSaving] = useState(false);
+  const dispatch = useAppDispatch();
+  
+  // Redux state
+  const heroContent = useAppSelector((state) => selectHeroContent(state, editingLocale as Locale));
+  const loading = useAppSelector(selectHeroLoading);
+  const saving = useAppSelector(selectHeroSaving);
+  const error = useAppSelector(selectHeroError);
+  
+  // Local state for save feedback
   const [saved, setSaved] = useState(false);
-  const isRtl = locale === "ar";
   
-  // Store content for all languages
-  const [allContent, setAllContent] = useState<Record<AdminLocale, HeroFormData>>(defaultContent);
+  // Fetch hero content on mount
+  useEffect(() => {
+    dispatch(fetchHeroContent({}));
+  }, [dispatch]);
   
-  // Current form data based on selected language
-  const formData = allContent[editingLocale];
+  // Current form data from Redux
+  const formData: HeroContent = heroContent;
 
-  const updateFormData = (updates: Partial<HeroFormData>) => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: { ...prev[editingLocale], ...updates }
-    }));
+  const updateFormData = (updates: Partial<HeroContent>) => {
+    dispatch(updateHeroContent({ locale: editingLocale as Locale, updates }));
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    // TODO: Replace with actual Django API call to save content for the current locale
-    console.log(`Saving ${editingLocale} content:`, formData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      await dispatch(saveHeroContent({ 
+        locale: editingLocale as Locale, 
+        content: formData 
+      })).unwrap();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save hero content:", err);
+    }
   };
 
   const handleReset = () => {
-    setAllContent(prev => ({
-      ...prev,
-      [editingLocale]: defaultContent[editingLocale]
-    }));
+    dispatch(resetHeroContent(editingLocale as Locale));
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <AdminHeader 
+          titleKey="admin.hero.title"
+          subtitleKey="admin.hero.subtitle"
+        />
+        <div className="p-6">
+          <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+              <p className="text-silver dark:text-white/50">{t("admin.common.loading")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -97,6 +91,21 @@ export default function HeroAdmin() {
       />
       
       <div className="p-6">
+        {/* Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl flex items-start gap-3"
+          >
+            <ExclamationCircleIcon className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">{t("admin.common.error")}</p>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+            </div>
+          </motion.div>
+        )}
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

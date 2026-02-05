@@ -1,3 +1,5 @@
+"use client";
+
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Countdown from "@/components/Countdown";
@@ -8,20 +10,23 @@ import HowItWorks from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import { useLandingPage } from "@/hooks/useLandingPage";
 
 export default function Home() {
+  const { data, isLoading, error } = useLandingPage();
+
   return (
     <>
       <Header />
       <main>
-        <Hero />
+        <Hero data={data?.hero} />
         <Countdown />
-        <Features />
+        <Features data={data?.features} />
         <Categories />
         <Courses />
         <HowItWorks />
-        <FAQ />
-        <Contact />
+        <FAQ data={data?.faq} />
+        <Contact settings={data?.settings} />
       </main>
       <Footer />
     </>
