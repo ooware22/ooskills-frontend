@@ -335,5 +335,59 @@
       "darkMode": "Sombre",
       "systemMode": "Système"
     }
+  },
+  "auth": {
+    "signin": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous pour continuer votre parcours d'apprentissage",
+      "email": "Adresse email",
+      "emailPlaceholder": "vous@exemple.com",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submit": "Se connecter",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "signupLink": "S'inscrire",
+      "or": "ou"
+    },
+    "signup": {
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez OOSkills et commencez votre parcours d'apprentissage",
+      "avatar": "Photo",
+      "firstName": "Prénom",
+      "firstNamePlaceholder": "Jean",
+      "lastName": "Nom",
+      "lastNamePlaceholder": "Dupont",
+      "email": "Adresse email",
+      "emailPlaceholder": "vous@exemple.com",
+      "phone": "Numéro de téléphone",
+      "phonePlaceholder": "0XX XX XX XX XX",
+      "wilaya": "Wilaya",
+      "wilayaPlaceholder": "Sélectionner une wilaya",
+      "wilayaSearch": "Rechercher une wilaya...",
+      "wilayaNotFound": "Aucune wilaya trouvée",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Confirmer le mot de passe",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "passwordStrength": {
+        "weak": "Faible",
+        "fair": "Moyen",
+        "good": "Bon",
+        "strong": "Fort",
+        "tooShort": "Trop court"
+      },
+      "referralCode": "Code de parrainage",
+      "referralCodePlaceholder": "Entrer le code de parrainage",
+      "referralCodeOptional": "(optionnel)",
+      "newsletter": "S'abonner à notre newsletter pour les mises à jour, conseils et offres exclusives",
+      "submit": "Créer un compte",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "signinLink": "Se connecter",
+      "or": "ou",
+      "required": "*"
+    },
+    "copyright": "© 2026 OOSkills. Tous droits réservés."
   }
 }

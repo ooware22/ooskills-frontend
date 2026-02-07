@@ -209,13 +209,13 @@ export default function Header() {
 
             {/* CTA Buttons */}
             <Link
-              href="#"
+              href="/auth/signin"
               className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors"
             >
               {t("login")}
             </Link>
             <Link
-              href="#"
+              href="/auth/signup"
               className="px-4 py-2 text-sm font-medium text-oxford bg-gold hover:bg-gold-light rounded-lg transition-colors"
             >
               {t("signup")}
@@ -276,13 +276,15 @@ export default function Header() {
               </div>
               <div className="flex gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
                 <Link
-                  href="#"
+                  href="/auth/signin"
+                  onClick={() => setIsOpen(false)}
                   className="flex-1 text-center py-2.5 text-sm font-medium border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
                   {t("login")}
                 </Link>
                 <Link
-                  href="#"
+                  href="/auth/signup"
+                  onClick={() => setIsOpen(false)}
                   className="flex-1 text-center py-2.5 text-sm font-medium bg-gold text-oxford rounded-lg hover:bg-gold-light transition-colors"
                 >
                   {t("signup")}

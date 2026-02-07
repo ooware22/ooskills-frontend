@@ -366,5 +366,59 @@
       "darkMode": "Dark",
       "systemMode": "System"
     }
+  },
+  "auth": {
+    "signin": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to continue your learning journey",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign Up",
+      "or": "or"
+    },
+    "signup": {
+      "title": "Create Account",
+      "subtitle": "Join OOSkills and start your learning journey",
+      "avatar": "Add Photo",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Doe",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "phone": "Phone Number",
+      "phonePlaceholder": "0XX XX XX XX XX",
+      "wilaya": "Wilaya",
+      "wilayaPlaceholder": "Select wilaya",
+      "wilayaSearch": "Search wilaya...",
+      "wilayaNotFound": "No wilaya found",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Confirm Password",
+      "passwordMismatch": "Passwords don't match",
+      "passwordStrength": {
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong",
+        "tooShort": "Too short"
+      },
+      "referralCode": "Referral Code",
+      "referralCodePlaceholder": "Enter referral code",
+      "referralCodeOptional": "(optional)",
+      "newsletter": "Subscribe to our newsletter for updates, tips, and exclusive offers",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signinLink": "Sign In",
+      "or": "or",
+      "required": "*"
+    },
+    "copyright": "© 2026 OOSkills. All rights reserved."
   }
 }

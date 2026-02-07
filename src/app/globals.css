@@ -85,6 +85,15 @@ html {
   scroll-padding-top: 80px;
 }
 
+/* Auth pages - prevent all scrolling */
+.auth-page,
+.auth-page html,
+.auth-page body {
+  overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
