@@ -35,12 +35,17 @@ export default function FAQAdmin() {
   const { t } = useI18n();
   const dispatch = useAppDispatch();
   
-  // Redux state (source of truth from server)
-  const reduxContent = useAppSelector((state) => selectFAQContent(state, editingLocale as Locale));
+  // Redux state (source of truth from server) - select all content, derive for locale
+  const allContent = useAppSelector((state) => state.faq.content);
   const items = useAppSelector(selectFAQItems);
   const loading = useAppSelector(selectFAQLoading);
   const saving = useAppSelector(selectFAQSaving);
   const error = useAppSelector(selectFAQError);
+  
+  // Derive content for current editing locale - ensures immediate update when locale changes
+  const reduxContent = useMemo(() => {
+    return allContent[editingLocale as Locale];
+  }, [allContent, editingLocale]);
   
   // LOCAL form state - completely separate from Redux during editing
   const [localTitle, setLocalTitle] = useState("");
@@ -91,7 +96,7 @@ export default function FAQAdmin() {
     }
   }, [items, reduxContent, isInitialized, loading, localTitle, localSubtitle]);
   
-  // Reset local state when locale changes
+  // Reset local state when locale changes - now reduxContent is already the correct locale
   useEffect(() => {
     if (items.length > 0 && reduxContent && isInitialized) {
       // Fetch section title for new locale
@@ -112,7 +117,7 @@ export default function FAQAdmin() {
       }
       setLocalFAQs(reduxContent.faqs.map(f => ({ ...f })));
     }
-  }, [editingLocale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [editingLocale, activeSectionId, items.length, reduxContent, isInitialized]);
 
 
   const handleSave = async () => {

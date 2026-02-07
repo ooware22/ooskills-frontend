@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { DocumentCheckIcon as Save, ArrowPathIcon as RotateCcw, CheckIcon as Check, GlobeAltIcon as Globe, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
@@ -25,11 +25,16 @@ export default function HeroAdmin() {
   const { t, locale } = useI18n();
   const dispatch = useAppDispatch();
   
-  // Redux state
-  const heroContent = useAppSelector((state) => selectHeroContent(state, editingLocale as Locale));
+  // Redux state - select all content and derive for current locale
+  const allContent = useAppSelector((state) => state.hero.content);
   const loading = useAppSelector(selectHeroLoading);
   const saving = useAppSelector(selectHeroSaving);
   const error = useAppSelector(selectHeroError);
+  
+  // Derive content for current editing locale - this ensures immediate update when locale changes
+  const heroContent = useMemo(() => {
+    return allContent[editingLocale as Locale];
+  }, [allContent, editingLocale]);
   
   // Local state for save feedback
   const [saved, setSaved] = useState(false);

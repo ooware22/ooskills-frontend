@@ -98,10 +98,11 @@ const ENDPOINTS = {
 export const publicApi = {
     /**
      * Get aggregated landing page data (single request for entire homepage)
+     * Uses timestamp parameter to ensure fresh data from server (cache-busting)
      */
     getLandingPage: async (lang: Locale = 'fr') => {
         const response = await axiosClient.get<PublicLandingPageData>(
-            `${ENDPOINTS.public.landing}?lang=${lang}`
+            `${ENDPOINTS.public.landing}?lang=${lang}&_t=${Date.now()}`
         );
         return response.data;
     },

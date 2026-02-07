@@ -39,12 +39,17 @@ export default function FeaturesAdmin() {
   const { t } = useI18n();
   const dispatch = useAppDispatch();
   
-  // Redux state (source of truth from server)
-  const reduxContent = useAppSelector((state) => selectFeaturesContent(state, editingLocale as Locale));
+  // Redux state (source of truth from server) - select all content, derive for locale
+  const allContent = useAppSelector((state) => state.features.content);
   const activeSection = useAppSelector(selectActiveSection);
   const loading = useAppSelector(selectFeaturesLoading);
   const saving = useAppSelector(selectFeaturesSaving);
   const error = useAppSelector(selectFeaturesError);
+  
+  // Derive content for current editing locale - ensures immediate update when locale changes
+  const reduxContent = useMemo(() => {
+    return allContent[editingLocale as Locale];
+  }, [allContent, editingLocale]);
   
   // LOCAL form state - completely separate from Redux during editing
   const [localTitle, setLocalTitle] = useState("");
@@ -69,14 +74,14 @@ export default function FeaturesAdmin() {
     }
   }, [activeSection, reduxContent, isInitialized, loading]);
   
-  // Reset local state when locale changes
+  // Reset local state when locale changes - now reduxContent is already the correct locale
   useEffect(() => {
     if (activeSection && reduxContent && isInitialized) {
       setLocalTitle(reduxContent.sectionTitle);
       setLocalSubtitle(reduxContent.sectionSubtitle);
       setLocalFeatures(reduxContent.features.map(f => ({ ...f })));
     }
-  }, [editingLocale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [editingLocale, activeSection, reduxContent, isInitialized]);
 
   const handleSave = async () => {
     if (!activeSection) return;
