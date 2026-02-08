@@ -10,6 +10,7 @@ import partnersReducer from "./slices/partnersSlice";
 import testimonialsReducer from "./slices/testimonialsSlice";
 import siteSettingsReducer from "./slices/siteSettingsSlice";
 import dashboardReducer from "./slices/dashboardSlice";
+import usersReducer from "./slices/usersSlice";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +30,9 @@ export const store = configureStore({
     countdown: countdownReducer,
     courses: coursesReducer,
     contact: contactReducer,
+
+    // Admin user management
+    adminUsers: usersReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
