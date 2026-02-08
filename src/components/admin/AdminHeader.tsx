@@ -41,7 +41,7 @@ export default function AdminHeader({ title, subtitle, titleKey, subtitleKey }: 
     ? `${user.first_name} ${user.last_name}` 
     : user?.email || "Admin";
   const userEmail = user?.email || "admin@example.com";
-  const userAvatar = user?.avatar || null;
+  const userAvatar = user?.avatar_display_url || null;
   const userRole = user?.role === "SUPER_ADMIN" ? "Super Admin" : user?.role === "ADMIN" ? "Administrator" : "User";
 
   // Resolved title and subtitle from translation keys or direct props

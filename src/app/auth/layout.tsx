@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export default function AuthLayout({
   children,
@@ -28,8 +29,10 @@ export default function AuthLayout({
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {children}
-    </div>
+    <ToastProvider>
+      <div className="fixed inset-0 overflow-hidden">
+        {children}
+      </div>
+    </ToastProvider>
   );
 }

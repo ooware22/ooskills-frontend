@@ -47,7 +47,22 @@ const onRefreshFailed = () => {
 // REQUEST INTERCEPTOR
 // =============================================================================
 
+const PUBLIC_ENDPOINTS = [
+    '/auth/login/',
+    '/auth/register/',
+    '/auth/verify-email/',
+    '/auth/resend-verification/',
+    '/auth/token/refresh/',
+    '/auth/token/verify/',
+    '/public/',
+];
+
 const addAuthHeader = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    // Skip auth header for public endpoints
+    const url = config.url || '';
+    const isPublic = PUBLIC_ENDPOINTS.some((ep) => url.includes(ep));
+    if (isPublic) return config;
+
     // Get auth token from localStorage (only on client side)
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('auth_token');

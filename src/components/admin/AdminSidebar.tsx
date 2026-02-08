@@ -3,7 +3,8 @@
 import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
 import {
   Squares2X2Icon as LayoutDashboard,
   SparklesIcon as Sparkles,
@@ -23,6 +24,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
+import { useAppDispatch } from "@/store/hooks";
+import { clearCredentials } from "@/store/slices/authSlice";
 
 // Types for nav items
 type NavLink = {
@@ -118,9 +121,17 @@ function SidebarTooltip({ label, isRtl }: { label: string; isRtl: boolean }) {
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const { mobileOpen, setMobileOpen, collapsed, setCollapsed } = useSidebar();
   const { t, locale } = useI18n();
   const isRtl = locale === "ar";
+
+  const handleLogout = () => {
+    closeMobile();
+    dispatch(clearCredentials());
+    router.push("/");
+  };
 
   // Track which groups are open
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -340,19 +351,18 @@ export default function AdminSidebar() {
               </>
             )}
           </button>
-          <Link
-            href="/"
-            onClick={closeMobile}
+          <button
+            onClick={handleLogout}
             title={!isExpanded ? getLabel("logout") : undefined}
             className={cn(
-              "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group relative",
+              "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group relative",
               !isExpanded && "justify-center px-2",
             )}
           >
             <LogOut className={cn("w-5 h-5", isRtl && "rotate-180")} />
             {isExpanded && <span>{getLabel("logout")}</span>}
             {!isExpanded && <SidebarTooltip label={getLabel("logout")} isRtl={isRtl} />}
-          </Link>
+          </button>
         </div>
       </aside>
     </>

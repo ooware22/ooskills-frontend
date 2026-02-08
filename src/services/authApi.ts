@@ -91,9 +91,24 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
 /**
  * Register a new user
  * Returns tokens and user data
+ * Always uses FormData since backend only accepts multipart/form-data
  */
 export const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await axiosClient.post<RegisterResponse>(ENDPOINTS.register, data);
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+            if (key === 'newsletter_subscribed') {
+                formData.append(key, value ? 'true' : 'false');
+            } else {
+                formData.append(key, value as string | Blob);
+            }
+        }
+    });
+
+    const response = await axiosClient.post<RegisterResponse>(ENDPOINTS.register, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
     const { tokens } = response.data;
 
     // Store tokens

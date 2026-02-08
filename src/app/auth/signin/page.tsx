@@ -23,14 +23,16 @@ import {
   clearError,
 } from "@/store/slices/authSlice";
 import { useTranslations, useI18n } from "@/lib/i18n";
+import { useToast } from "@/components/ui/Toast";
 
 export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const t = useTranslations("auth.signin");
   const tCommon = useTranslations("auth");
-  const { dir } = useI18n();
+  const { dir, locale } = useI18n();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -75,8 +77,15 @@ export default function SignIn() {
     );
 
     if (login.fulfilled.match(result)) {
+      showToast(
+        locale === "ar" ? "تم تسجيل الدخول بنجاح!" : locale === "fr" ? "Connexion réussie !" : "Logged in successfully!",
+        "success"
+      );
       const returnUrl = searchParams.get("returnUrl") || "/";
-      router.push(returnUrl);
+      setTimeout(() => router.push(returnUrl), 1500);
+    } else {
+      const errorMsg = (result.payload as string) || (locale === "ar" ? "فشل تسجيل الدخول" : locale === "fr" ? "Échec de la connexion" : "Login failed");
+      showToast(errorMsg, "error");
     }
   };
 

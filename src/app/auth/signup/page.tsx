@@ -32,6 +32,7 @@ import {
 } from "@/store/slices/authSlice";
 import { WILAYAS } from "@/constants/wilayas";
 import { useTranslations, useI18n } from "@/lib/i18n";
+import { useToast } from "@/components/ui/Toast";
 
 const STEPS = ["personal", "contact", "security"] as const;
 type Step = typeof STEPS[number];
@@ -39,6 +40,7 @@ type Step = typeof STEPS[number];
 export default function SignUp() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("auth.signup");
   const tCommon = useTranslations("auth");
@@ -56,6 +58,8 @@ export default function SignUp() {
   const [wilayaOpen, setWilayaOpen] = useState(false);
   const [wilayaSearch, setWilayaSearch] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -86,12 +90,12 @@ export default function SignUp() {
     return locale === "ar" ? wilaya.nameAr : wilaya.name;
   };
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (but not right after registration)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !registrationSuccess) {
       router.replace("/");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, registrationSuccess, router]);
 
   // Clear error on unmount
   useEffect(() => {
@@ -115,6 +119,7 @@ export default function SignUp() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
@@ -128,6 +133,10 @@ export default function SignUp() {
     dispatch(clearError());
 
     if (formData.password !== formData.password_confirm) {
+      showToast(
+        locale === "ar" ? "كلمات المرور غير متطابقة" : locale === "fr" ? "Les mots de passe ne correspondent pas" : "Passwords do not match",
+        "error"
+      );
       return;
     }
 
@@ -142,11 +151,15 @@ export default function SignUp() {
         wilaya: formData.wilaya || undefined,
         referral_code: formData.referral_code || undefined,
         newsletter_subscribed: formData.newsletter_subscribed,
+        avatar: avatarFile,
       })
     );
 
     if (register.fulfilled.match(result)) {
-      router.push("/");
+      setRegistrationSuccess(true);
+    } else {
+      const errorMsg = (result.payload as string) || (locale === "ar" ? "فشل إنشاء الحساب" : locale === "fr" ? "Échec de la création du compte" : "Registration failed");
+      showToast(errorMsg, "error");
     }
   };
 
@@ -223,6 +236,69 @@ export default function SignUp() {
       <div className={`absolute top-1/4 -left-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/10" : "bg-gold/20"}`} />
       <div className={`absolute bottom-1/4 -right-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/5" : "bg-oxford/5"}`} />
 
+      {/* Registration Success Overlay */}
+      {registrationSuccess && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="relative w-full max-w-md px-4 sm:px-0 z-10"
+        >
+          <div className={`backdrop-blur-xl rounded-2xl border p-8 sm:p-10 shadow-2xl text-center ${
+            isDark 
+              ? "bg-white/5 border-white/10" 
+              : "bg-white/80 border-gray-200"
+          }`}>
+            {/* Success Icon */}
+            <div className="mx-auto mb-5 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <Mail className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" />
+            </div>
+
+            <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}>
+              {locale === "ar" ? "تم إنشاء حسابك بنجاح!" : locale === "fr" ? "Compte créé avec succès !" : "Account Created Successfully!"}
+            </h2>
+
+            <p className={`text-sm sm:text-base mb-2 ${isDark ? "text-white/60" : "text-oxford/60"}`}>
+              {locale === "ar"
+                ? "لقد أرسلنا رابط التفعيل إلى بريدك الإلكتروني"
+                : locale === "fr"
+                  ? "Nous avons envoyé un lien d'activation à votre adresse e-mail"
+                  : "We've sent an activation link to your email"}
+            </p>
+
+            <p className={`text-sm sm:text-base font-semibold mb-6 ${isDark ? "text-gold" : "text-gold"}`}>
+              {formData.email}
+            </p>
+
+            <p className={`text-xs sm:text-sm mb-6 ${isDark ? "text-white/40" : "text-oxford/50"}`}>
+              {locale === "ar"
+                ? "يرجى التحقق من بريدك الإلكتروني والنقر على رابط التفعيل لتفعيل حسابك."
+                : locale === "fr"
+                  ? "Veuillez vérifier votre e-mail et cliquer sur le lien d'activation pour activer votre compte."
+                  : "Please check your email and click the activation link to activate your account."}
+            </p>
+
+            <Link
+              href="/auth/signin"
+              className="inline-flex items-center gap-2 px-6 py-2.5 text-sm bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg transition-all shadow-md shadow-gold/20"
+            >
+              {locale === "ar" ? "تسجيل الدخول" : locale === "fr" ? "Se connecter" : "Go to Sign In"}
+              <ArrowRight className={`w-3.5 h-3.5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+            </Link>
+
+            <p className={`text-[10px] sm:text-xs mt-6 ${isDark ? "text-white/30" : "text-oxford/40"}`}>
+              {locale === "ar"
+                ? "لم تتلقَ البريد الإلكتروني؟ تحقق من مجلد الرسائل غير المرغوب فيها."
+                : locale === "fr"
+                  ? "Vous n'avez pas reçu l'e-mail ? Vérifiez votre dossier spam."
+                  : "Didn't receive the email? Check your spam folder."}
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Registration Form */}
+      {!registrationSuccess && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -855,6 +931,7 @@ export default function SignUp() {
           {tCommon("copyright")}
         </p>
       </motion.div>
+      )}
     </div>
   );
 }

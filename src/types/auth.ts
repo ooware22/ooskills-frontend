@@ -80,6 +80,7 @@ export interface RegisterRequest {
     wilaya?: string;
     referral_code?: string;
     newsletter_subscribed?: boolean;
+    avatar?: File | null;
 }
 
 /** Password change request */
