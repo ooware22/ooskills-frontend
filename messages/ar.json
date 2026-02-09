@@ -431,6 +431,34 @@
       "or": "أو",
       "required": "*"
     },
+    "forgotPassword": {
+      "title": "نسيت كلمة المرور",
+      "subtitle": "أدخل بريدك الإلكتروني لتلقي رابط إعادة التعيين",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "you@example.com",
+      "submit": "إرسال الرابط",
+      "sending": "جاري الإرسال...",
+      "successTitle": "تم إرسال البريد!",
+      "successMessage": "إذا كان هذا البريد موجوداً، فقد تم إرسال رابط إعادة التعيين. تحقق من صندوق الوارد.",
+      "backToLogin": "العودة لتسجيل الدخول",
+      "tryAgain": "حاول مرة أخرى"
+    },
+    "resetPassword": {
+      "title": "كلمة مرور جديدة",
+      "subtitle": "اختر كلمة مرور جديدة لحسابك",
+      "newPassword": "كلمة المرور الجديدة",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "إعادة تعيين كلمة المرور",
+      "submitting": "جاري إعادة التعيين...",
+      "successTitle": "تمت إعادة تعيين كلمة المرور!",
+      "successMessage": "تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.",
+      "goToLogin": "الذهاب لتسجيل الدخول",
+      "invalidToken": "رابط غير صالح أو منتهي الصلاحية",
+      "invalidTokenMessage": "رابط إعادة التعيين هذا غير صالح أو منتهي الصلاحية. يرجى تقديم طلب جديد.",
+      "requestNew": "تقديم طلب جديد"
+    },
     "copyright": "© 2026 OOSkills. جميع الحقوق محفوظة."
   }
 }

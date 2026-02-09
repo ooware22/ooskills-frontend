@@ -83,6 +83,13 @@ export interface RegisterRequest {
     avatar?: File | null;
 }
 
+/** Social login request payload */
+export interface SocialLoginRequest {
+    provider: 'google' | 'facebook';
+    code: string;
+    redirect_uri: string;
+}
+
 /** Password change request */
 export interface ChangePasswordRequest {
     old_password: string;

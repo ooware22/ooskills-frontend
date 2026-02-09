@@ -46,6 +46,30 @@ export default function SignIn() {
     password: "",
   });
 
+  const handleSocialLogin = (provider: 'google' | 'facebook') => {
+    const redirectUri = `${window.location.origin}/auth/callback/${provider}`;
+
+    if (provider === 'google') {
+      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${googleClientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code` +
+        `&scope=${encodeURIComponent('openid email profile')}` +
+        `&access_type=offline` +
+        `&prompt=consent`;
+      window.location.href = url;
+    } else {
+      const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+      const url = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${facebookAppId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&scope=email` +
+        `&response_type=code`;
+      window.location.href = url;
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -237,9 +261,9 @@ export default function SignIn() {
                 {t("rememberMe")}
               </span>
             </label>
-            <a href="#" className="text-xs sm:text-sm text-gold hover:underline">
+            <Link href="/auth/forgot-password" className="text-xs sm:text-sm text-gold hover:underline">
               {t("forgotPassword")}
-            </a>
+            </Link>
           </div>
 
           {/* Submit */}
@@ -275,6 +299,7 @@ export default function SignIn() {
             {/* Google */}
             <button
               type="button"
+              onClick={() => handleSocialLogin('google')}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isDark 
                   ? "bg-white/10 hover:bg-white/20 border border-white/10" 
@@ -293,6 +318,7 @@ export default function SignIn() {
             {/* Facebook */}
             <button
               type="button"
+              onClick={() => handleSocialLogin('facebook')}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isDark 
                   ? "bg-white/10 hover:bg-white/20 border border-white/10" 

@@ -252,6 +252,7 @@ export default function UsersPage() {
       if (createUser.fulfilled.match(result)) {
         showToast(tu("userAdded"));
         closeModal();
+        doFetch();
       }
     } else if (modalMode === "edit" && selectedUser) {
       const payload: AdminUserUpdatePayload = {
@@ -274,6 +275,7 @@ export default function UsersPage() {
       if (updateUser.fulfilled.match(result)) {
         showToast(tu("userUpdated"));
         closeModal();
+        doFetch();
       }
     }
   };
@@ -284,6 +286,7 @@ export default function UsersPage() {
       if (deleteUser.fulfilled.match(result)) {
         showToast(tu("userDeleted"));
         closeModal();
+        doFetch();
       }
     }
   };
@@ -291,22 +294,22 @@ export default function UsersPage() {
   // Action handlers
   const handleActivate = async (user: AdminUser) => {
     const result = await dispatch(activateUser(user.id));
-    if (activateUser.fulfilled.match(result)) showToast("User activated");
+    if (activateUser.fulfilled.match(result)) { showToast("User activated"); doFetch(); }
   };
 
   const handleSuspend = async (user: AdminUser) => {
     const result = await dispatch(suspendUser(user.id));
-    if (suspendUser.fulfilled.match(result)) showToast("User suspended");
+    if (suspendUser.fulfilled.match(result)) { showToast("User suspended"); doFetch(); }
   };
 
   const handlePromoteAdmin = async (user: AdminUser) => {
     const result = await dispatch(promoteUserAdmin(user.id));
-    if (promoteUserAdmin.fulfilled.match(result)) showToast("User promoted to admin");
+    if (promoteUserAdmin.fulfilled.match(result)) { showToast("User promoted to admin"); doFetch(); }
   };
 
   const handlePromoteInstructor = async (user: AdminUser) => {
     const result = await dispatch(promoteUserInstructor(user.id));
-    if (promoteUserInstructor.fulfilled.match(result)) showToast("User promoted to instructor");
+    if (promoteUserInstructor.fulfilled.match(result)) { showToast("User promoted to instructor"); doFetch(); }
   };
 
   return (

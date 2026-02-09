@@ -433,6 +433,34 @@
       "or": "ou",
       "required": "*"
     },
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "subtitle": "Entrez votre adresse email pour recevoir un lien de réinitialisation",
+      "email": "Adresse email",
+      "emailPlaceholder": "vous@exemple.com",
+      "submit": "Envoyer le lien",
+      "sending": "Envoi en cours...",
+      "successTitle": "Email envoyé !",
+      "successMessage": "Si cet email existe, un lien de réinitialisation a été envoyé. Vérifiez votre boîte de réception.",
+      "backToLogin": "Retour à la connexion",
+      "tryAgain": "Réessayer"
+    },
+    "resetPassword": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Choisissez un nouveau mot de passe pour votre compte",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "Réinitialiser le mot de passe",
+      "submitting": "Réinitialisation...",
+      "successTitle": "Mot de passe réinitialisé !",
+      "successMessage": "Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.",
+      "goToLogin": "Aller à la connexion",
+      "invalidToken": "Lien invalide ou expiré",
+      "invalidTokenMessage": "Ce lien de réinitialisation est invalide ou a expiré. Veuillez faire une nouvelle demande.",
+      "requestNew": "Faire une nouvelle demande"
+    },
     "copyright": "© 2026 OOSkills. Tous droits réservés."
   }
 }

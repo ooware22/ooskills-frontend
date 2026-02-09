@@ -464,6 +464,34 @@
       "or": "or",
       "required": "*"
     },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email address to receive a reset link",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send Reset Link",
+      "sending": "Sending...",
+      "successTitle": "Email Sent!",
+      "successMessage": "If this email exists, a reset link has been sent. Check your inbox.",
+      "backToLogin": "Back to Login",
+      "tryAgain": "Try Again"
+    },
+    "resetPassword": {
+      "title": "New Password",
+      "subtitle": "Choose a new password for your account",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "Reset Password",
+      "submitting": "Resetting...",
+      "successTitle": "Password Reset!",
+      "successMessage": "Your password has been changed successfully. You can now sign in.",
+      "goToLogin": "Go to Login",
+      "invalidToken": "Invalid or Expired Link",
+      "invalidTokenMessage": "This reset link is invalid or has expired. Please make a new request.",
+      "requestNew": "Request New Link"
+    },
     "copyright": "© 2026 OOSkills. All rights reserved."
   }
 }

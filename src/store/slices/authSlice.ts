@@ -19,6 +19,7 @@ import type {
     AuthState,
     LoginRequest,
     RegisterRequest,
+    SocialLoginRequest,
 } from "@/types/auth";
 
 // =============================================================================
@@ -103,6 +104,28 @@ export const register = createAsyncThunk(
 
             return {
                 user: response.user,
+                tokens: response.tokens,
+            };
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
+/**
+ * Social login with Google or Facebook
+ */
+export const socialLogin = createAsyncThunk(
+    "auth/socialLogin",
+    async (data: SocialLoginRequest, { rejectWithValue }) => {
+        try {
+            const response = await authApi.socialLogin(data);
+
+            // Fetch full profile after social login
+            const fullUser = await authApi.getProfile();
+
+            return {
+                user: fullUser,
                 tokens: response.tokens,
             };
         } catch (error) {
@@ -250,6 +273,23 @@ const authSlice = createSlice({
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        // Social Login
+        builder
+            .addCase(socialLogin.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(socialLogin.fulfilled, (state, action) => {
+                state.user = action.payload.user;
+                state.tokens = action.payload.tokens;
+                state.isAuthenticated = true;
+                state.loading = false;
+                state.error = null;
+            })
+            .addCase(socialLogin.rejected, (state, action) => {
                 state.error = action.payload as string;
             });
 

@@ -11,6 +11,7 @@ import type {
     LoginResponse,
     RegisterRequest,
     RegisterResponse,
+    SocialLoginRequest,
     TokenRefreshResponse,
     User,
     ProfileUpdateRequest,
@@ -26,6 +27,7 @@ import type {
 const ENDPOINTS = {
     login: '/auth/login/',
     register: '/auth/register/',
+    socialLogin: '/auth/social-login/',
     refresh: '/auth/token/refresh/',
     verify: '/auth/token/verify/',
     profile: '/auth/me/',
@@ -109,6 +111,20 @@ export const register = async (data: RegisterRequest): Promise<RegisterResponse>
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 
+    const { tokens } = response.data;
+
+    // Store tokens
+    setTokens(tokens.access, tokens.refresh);
+
+    return response.data;
+};
+
+/**
+ * Social login with Google or Facebook
+ * Exchanges authorization code for tokens
+ */
+export const socialLogin = async (data: SocialLoginRequest): Promise<RegisterResponse> => {
+    const response = await axiosClient.post<RegisterResponse>(ENDPOINTS.socialLogin, data);
     const { tokens } = response.data;
 
     // Store tokens
@@ -214,6 +230,7 @@ export const logout = async (): Promise<void> => {
 export const authApi = {
     login,
     register,
+    socialLogin,
     refreshAccessToken,
     verifyToken,
     getProfile,
