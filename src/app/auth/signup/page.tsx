@@ -279,10 +279,10 @@ export default function SignUp() {
             </p>
 
             <Link
-              href="/auth/signin"
+              href="/"
               className="inline-flex items-center gap-2 px-6 py-2.5 text-sm bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg transition-all shadow-md shadow-gold/20"
             >
-              {locale === "ar" ? "تسجيل الدخول" : locale === "fr" ? "Se connecter" : "Go to Sign In"}
+              {locale === "ar" ? "الذهاب إلى الصفحة الرئيسية" : locale === "fr" ? "Aller à la page d'accueil" : "Go to Home Page"}
               <ArrowRight className={`w-3.5 h-3.5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
             </Link>
 

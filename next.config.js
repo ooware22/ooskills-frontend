@@ -27,6 +27,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "pbwxwhkkjkshcsugaubp.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "platform-lookaside.fbsbx.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
 };

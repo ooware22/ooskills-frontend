@@ -267,7 +267,7 @@ const authSlice = createSlice({
             .addCase(register.fulfilled, (state, action) => {
                 state.user = action.payload.user;
                 state.tokens = action.payload.tokens;
-                state.isAuthenticated = true;
+                state.isAuthenticated = false; // Don't auto-authenticate - user must verify email first
                 state.loading = false;
                 state.error = null;
             })
