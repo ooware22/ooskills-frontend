@@ -5,6 +5,7 @@ import { ArrowRightIcon as ArrowRight, ClockIcon as Clock, ChartBarIcon as BarCh
 import { StarIcon as Star } from "@heroicons/react/24/solid";
 import { useTranslations } from "@/lib/i18n";
 import Image from "next/image";
+import Link from "next/link";
 
 const courseKeys = ["excel", "web", "python", "communication"];
 
@@ -105,13 +106,13 @@ export default function Courses() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-center mt-12"
         >
-          <a 
-            href="#" 
+          <Link 
+            href="/courses" 
             className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-oxford hover:bg-oxford-light dark:bg-white dark:text-oxford dark:hover:bg-gray-100 rounded-lg transition-colors duration-200"
           >
             {t("viewAll")}
             <ArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" />
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

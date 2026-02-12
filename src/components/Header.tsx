@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -26,6 +27,8 @@ export default function Header() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { locale, setLocale, dir } = useI18n();
   const t = useTranslations("nav");
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -66,6 +69,23 @@ export default function Header() {
     { href: "#contact", label: t("contact") },
   ];
 
+  const handleNavClick = useCallback((e: React.MouseEvent, hash: string) => {
+    e.preventDefault();
+    const sectionId = hash.replace("#", "");
+
+    if (pathname === "/") {
+      // Already on home — just smooth scroll
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Navigate to home first, then scroll
+      router.push("/");
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+      }, 400);
+    }
+    setIsOpen(false);
+  }, [pathname, router]);
+
   return (
     <header
       className={cn(
@@ -78,7 +98,7 @@ export default function Header() {
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#hero" className="flex items-center">
+          <a href="#hero" onClick={(e) => handleNavClick(e, "#hero")} className="flex items-center cursor-pointer">
             {mounted ? (
               <Image
                 src={
@@ -110,6 +130,7 @@ export default function Header() {
               <a
                 key={link.href}
                 href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
                 className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
               >
                 {link.label}
@@ -207,6 +228,14 @@ export default function Header() {
             {/* Separator */}
             <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1" />
 
+            {/* My Courses*/}
+            <Link
+              href="/my-courses"
+              className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+            >
+              {t("myCourses")}
+            </Link>
+
             {/* CTA Buttons */}
             <Link
               href="/auth/signin"
@@ -239,12 +268,19 @@ export default function Header() {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="px-3 py-2.5 text-sm font-medium text-oxford dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
                 >
                   {link.label}
                 </a>
               ))}
+              <Link
+                href="/my-courses"
+                onClick={() => setIsOpen(false)}
+                className="px-3 py-2.5 text-sm font-medium text-gold rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+              >
+                {t("myCourses")}
+              </Link>
               <div className="flex items-center gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
                 {/* Language buttons */}
                 <div className="flex gap-1">

@@ -363,7 +363,8 @@ export default function UsersPage() {
             <select
               value={filters.role}
               onChange={(e) => dispatch(setFilters({ role: e.target.value }))}
-              className="px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors cursor-pointer"
+              className="px-4 py-2.5 pr-10 appearance-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors cursor-pointer bg-no-repeat bg-[length:16px_16px]"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239ca3af'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center' }}
             >
               <option value="all">{tu("allRoles")}</option>
               <option value="USER">{tu("roleStudent")}</option>
@@ -376,7 +377,8 @@ export default function UsersPage() {
             <select
               value={filters.status}
               onChange={(e) => dispatch(setFilters({ status: e.target.value }))}
-              className="px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors cursor-pointer"
+              className="px-4 py-2.5 pr-10 appearance-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors cursor-pointer bg-no-repeat bg-[length:16px_16px]"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239ca3af'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center' }}
             >
               <option value="all">{tu("allStatuses")}</option>
               <option value="ACTIVE">{tu("statusActive")}</option>
@@ -705,9 +707,9 @@ export default function UsersPage() {
                       { label: "Dernière modification", value: selectedUser.updated_at ? new Date(selectedUser.updated_at).toLocaleDateString() : "—" },
                       { label: "Supabase ID", value: selectedUser.supabase_id ? selectedUser.supabase_id.substring(0, 8) + "..." : "—" },
                     ].map((item) => (
-                      <div key={item.label} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                      <div key={item.label} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl overflow-hidden min-w-0">
                         <p className="text-xs text-silver dark:text-white/40 mb-1">{item.label}</p>
-                        <p className="text-sm font-medium text-oxford dark:text-white">{item.value}</p>
+                        <p className="text-sm font-medium text-oxford dark:text-white truncate" title={String(item.value)}>{item.value}</p>
                       </div>
                     ))}
                   </div>
