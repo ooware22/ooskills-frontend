@@ -228,12 +228,12 @@ export default function Header() {
             {/* Separator */}
             <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1" />
 
-            {/* My Courses*/}
+            {/* My Dashboard */}
             <Link
-              href="/my-courses"
+              href="/dashboard"
               className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
             >
-              {t("myCourses")}
+              {t("myDashboard")}
             </Link>
 
             {/* CTA Buttons */}
@@ -275,11 +275,11 @@ export default function Header() {
                 </a>
               ))}
               <Link
-                href="/my-courses"
+                href="/dashboard"
                 onClick={() => setIsOpen(false)}
                 className="px-3 py-2.5 text-sm font-medium text-gold rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
               >
-                {t("myCourses")}
+                {t("myDashboard")}
               </Link>
               <div className="flex items-center gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
                 {/* Language buttons */}

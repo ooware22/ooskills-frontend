@@ -240,3 +240,30 @@ export type { SiteSettings, SiteSettingsState } from "./slices/siteSettingsSlice
 // =============================================================================
 
 export type { Locale } from "@/types/content";
+
+// =============================================================================
+// ADMIN CATEGORIES SLICE EXPORTS
+// =============================================================================
+
+export {
+  default as adminCategoriesReducer,
+  fetchCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  clearError as clearCategoriesError,
+} from "./slices/adminCategoriesSlice";
+
+// =============================================================================
+// ADMIN COURSES MANAGEMENT SLICE EXPORTS
+// =============================================================================
+
+export {
+  default as adminCoursesManagementReducer,
+  fetchAdminCourses,
+  createAdminCourse,
+  updateAdminCourse,
+  deleteAdminCourse,
+  setFilters as setAdminCoursesFilters,
+  clearError as clearAdminCoursesError,
+} from "./slices/adminCoursesManagementSlice";

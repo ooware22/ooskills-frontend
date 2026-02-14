@@ -21,6 +21,8 @@ import {
   XMarkIcon as X,
   GlobeAltIcon as Globe,
   UsersIcon as Users,
+  AcademicCapIcon as AcademicCap,
+  TagIcon as Tag,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -62,6 +64,15 @@ const navItems: NavItem[] = [
     ],
   },
   { type: "link", href: "/admin/users", labelKey: "users", icon: Users },
+  {
+    type: "group",
+    labelKey: "courseManagement",
+    icon: AcademicCap,
+    children: [
+      { href: "/admin/course-management", labelKey: "coursesList", icon: BookOpen },
+      { href: "/admin/course-categories", labelKey: "categoriesList", icon: Tag },
+    ],
+  },
 ];
 
 // Context for mobile menu and collapse state
