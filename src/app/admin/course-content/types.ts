@@ -32,7 +32,7 @@ export interface LessonContent {
 export interface AdminLesson {
   id: string;
   title: string;
-  type: "slide" | "audio";
+  type: "slide" | "video" | "text" | "audio";
   sequence: number;
   duration_seconds: number;
   audioUrl: string | null;
@@ -64,7 +64,7 @@ export interface AdminQuiz {
 export interface AdminSection {
   id: string;
   title: string;
-  type: "teaser" | "module";
+  type: "teaser" | "introduction" | "module" | "conclusion";
   sequence: number;
   audioFileIndex: number;
   lessons: number;

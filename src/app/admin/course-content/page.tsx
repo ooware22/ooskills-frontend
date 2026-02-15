@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PlusIcon as Plus,
@@ -21,18 +21,35 @@ import {
   MinusCircleIcon,
   QuestionMarkCircleIcon,
   BookOpenIcon,
+  CodeBracketIcon,
+  PencilIcon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { MOCK_SECTIONS } from "./mockData";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/store";
+import {
+  fetchSections,
+  createSection,
+  updateSection,
+  deleteSection as deleteSectionThunk,
+  createLesson,
+  updateLesson,
+  deleteLesson as deleteLessonThunk,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz as deleteQuizThunk,
+} from "@/store/slices/adminCourseContentSlice";
+import { fetchAdminCourses } from "@/store/slices/adminCoursesManagementSlice";
 import type {
   AdminSection,
-  AdminLesson,
-  AdminQuiz,
-  QuizQuestion,
+  AdminSectionLesson,
+  AdminSectionQuiz,
+} from "@/services/adminSectionsApi";
+import type {
   Speaker,
   SectionModalMode,
   LessonModalMode,
@@ -50,11 +67,21 @@ const uid = () => crypto.randomUUID();
 
 export default function CourseContentPage() {
   const { t } = useI18n();
+  const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const courseId = searchParams.get("courseId") || "";
 
-  // Sections state (fully local)
-  const [sections, setSections] = useState<AdminSection[]>(MOCK_SECTIONS);
+  // Resolve course slug from courses state
+  const courseSlug = useSelector((state: RootState) => {
+    const course = state.adminCoursesManagement.courses.find((c) => c.id === courseId);
+    return course?.slug || "";
+  });
+
+  // Redux state for sections (includes nested lessons)
+  const { sections, loading, saving, error } = useSelector(
+    (state: RootState) => state.adminCourseContent
+  );
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   // Toast
@@ -64,27 +91,44 @@ export default function CourseContentPage() {
   // Translation helper
   const tc = (key: string) => t(`admin.courseContent.${key}`);
 
+  // Fetch courses on mount (needed for slug resolution after page refresh)
+  useEffect(() => {
+    dispatch(fetchAdminCourses({}));
+  }, [dispatch]);
+
+  // Fetch sections when course slug resolves
+  useEffect(() => {
+    if (courseSlug) {
+      dispatch(fetchSections(courseSlug));
+    }
+  }, [dispatch, courseSlug]);
+
   // ─── SECTION MODALS ───
   const [sectionModal, setSectionModal] = useState<SectionModalMode>(null);
   const [selectedSection, setSelectedSection] = useState<AdminSection | null>(null);
-  const [sectionForm, setSectionForm] = useState({ title: "", type: "module" as "teaser" | "module" });
+  const [sectionForm, setSectionForm] = useState({ title: "", type: "module" as "teaser" | "introduction" | "module" | "conclusion" });
 
   // ─── LESSON MODALS ───
   const [lessonModal, setLessonModal] = useState<LessonModalMode>(null);
-  const [selectedLesson, setSelectedLesson] = useState<AdminLesson | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<AdminSectionLesson | null>(null);
   const [lessonParentId, setLessonParentId] = useState<string>("");
   const [lessonForm, setLessonForm] = useState({
-    title: "", type: "audio" as "slide" | "audio", duration_seconds: 0, slide_type: "bullet_points",
+    title: "", type: "audio" as "slide" | "video" | "text" | "audio", duration_seconds: 0, slide_type: "bullet_points",
     speakers: [] as Speaker[],
   });
   const audioInputRef = useRef<HTMLInputElement>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
 
+  // Narrator input mode: manual (one-by-one) or json (paste array)
+  const [narratorMode, setNarratorMode] = useState<"manual" | "json">("manual");
+  const [narratorJson, setNarratorJson] = useState("");
+  const [narratorJsonError, setNarratorJsonError] = useState<string | null>(null);
+
   // ─── QUIZ MODALS ───
   const [quizModal, setQuizModal] = useState<QuizModalMode>(null);
   const [quizParentId, setQuizParentId] = useState<string>("");
-  const [quizForm, setQuizForm] = useState<AdminQuiz>({
+  const [quizForm, setQuizForm] = useState<AdminSectionQuiz>({
     id: "", title: "", intro_text: "", questions: [], pass_threshold: 70, max_attempts: 3, xp_reward: 10,
   });
 
@@ -106,26 +150,35 @@ export default function CourseContentPage() {
 
   const closeSectionModal = () => { setSectionModal(null); setSelectedSection(null); };
 
-  const saveSection = () => {
+  const saveSection = async () => {
     if (sectionModal === "add") {
-      const newSection: AdminSection = {
-        id: uid(), title: sectionForm.title, type: sectionForm.type,
-        sequence: sections.length + 1, audioFileIndex: sections.length + 1,
-        lessons: 0, duration: "0min", lessons_list: [], quiz: null,
-      };
-      setSections([...sections, newSection]);
-      showToast(tc("sectionAdded"));
+      const result = await dispatch(createSection({
+        course: courseId,
+        title: sectionForm.title,
+        type: sectionForm.type,
+        sequence: sections.length + 1,
+      }));
+      if (createSection.fulfilled.match(result)) {
+        showToast(tc("sectionAdded"));
+      }
     } else if (sectionModal === "edit" && selectedSection) {
-      setSections(sections.map((s) => s.id === selectedSection.id ? { ...s, title: sectionForm.title, type: sectionForm.type } : s));
-      showToast(tc("sectionUpdated"));
+      const result = await dispatch(updateSection({
+        id: selectedSection.id,
+        data: { title: sectionForm.title, type: sectionForm.type },
+      }));
+      if (updateSection.fulfilled.match(result)) {
+        showToast(tc("sectionUpdated"));
+      }
     }
     closeSectionModal();
   };
 
-  const deleteSection = () => {
+  const handleDeleteSection = async () => {
     if (selectedSection) {
-      setSections(sections.filter((s) => s.id !== selectedSection.id));
-      showToast(tc("sectionDeleted"));
+      const result = await dispatch(deleteSectionThunk(selectedSection.id));
+      if (deleteSectionThunk.fulfilled.match(result)) {
+        showToast(tc("sectionDeleted"));
+      }
     }
     closeSectionModal();
   };
@@ -138,24 +191,27 @@ export default function CourseContentPage() {
     setLessonParentId(sectionId);
     setLessonForm({ title: "", type: "audio", duration_seconds: 0, slide_type: "bullet_points", speakers: [] });
     setAudioFile(null); setAudioPreview(null);
+    setNarratorMode("manual"); setNarratorJson(""); setNarratorJsonError(null);
     setLessonModal("add");
   };
 
-  const openEditLesson = (sectionId: string, lesson: AdminLesson) => {
+  const openEditLesson = (sectionId: string, lesson: AdminSectionLesson) => {
     setLessonParentId(sectionId); setSelectedLesson(lesson);
+    const speakers = lesson.content?.narration_script?.speakers || [];
     setLessonForm({
       title: lesson.title, type: lesson.type, duration_seconds: lesson.duration_seconds,
-      slide_type: lesson.slide_type, speakers: lesson.content.narration_script?.speakers || [],
+      slide_type: lesson.slide_type, speakers,
     });
     setAudioFile(null); setAudioPreview(lesson.audioUrl);
+    setNarratorMode("manual"); setNarratorJson(speakers.length ? JSON.stringify(speakers, null, 2) : ""); setNarratorJsonError(null);
     setLessonModal("edit");
   };
 
-  const openViewLesson = (sectionId: string, lesson: AdminLesson) => {
+  const openViewLesson = (sectionId: string, lesson: AdminSectionLesson) => {
     setLessonParentId(sectionId); setSelectedLesson(lesson); setLessonModal("view");
   };
 
-  const openDeleteLesson = (sectionId: string, lesson: AdminLesson) => {
+  const openDeleteLesson = (sectionId: string, lesson: AdminSectionLesson) => {
     setLessonParentId(sectionId); setSelectedLesson(lesson); setLessonModal("delete");
   };
 
@@ -166,40 +222,52 @@ export default function CourseContentPage() {
     if (file) { setAudioFile(file); setAudioPreview(URL.createObjectURL(file)); }
   };
 
-  const saveLesson = () => {
-    const newLesson: AdminLesson = {
-      id: lessonModal === "edit" && selectedLesson ? selectedLesson.id : uid(),
-      title: lessonForm.title, type: lessonForm.type, sequence: 0,
-      duration_seconds: lessonForm.duration_seconds,
-      audioUrl: audioPreview, slide_type: lessonForm.slide_type,
-      content: {
-        visual_content: selectedLesson?.content.visual_content || {},
-        narration_script: { mode: "multi_speaker", speakers: lessonForm.speakers },
-      },
+  const saveLesson = async () => {
+    const section = sections.find((s) => s.id === lessonParentId);
+    const content = {
+      visual_content: selectedLesson?.content.visual_content || {},
+      narration_script: { mode: "multi_speaker", speakers: lessonForm.speakers },
     };
 
-    setSections(sections.map((s) => {
-      if (s.id !== lessonParentId) return s;
-      let list: AdminLesson[];
-      if (lessonModal === "add") {
-        list = [...s.lessons_list, { ...newLesson, sequence: s.lessons_list.length }];
-      } else {
-        list = s.lessons_list.map((l) => l.id === newLesson.id ? newLesson : l);
+    if (lessonModal === "add") {
+      const result = await dispatch(createLesson({
+        section: lessonParentId,
+        title: lessonForm.title,
+        type: lessonForm.type,
+        sequence: section ? section.lessons_list.length : 0,
+        duration_seconds: lessonForm.duration_seconds,
+        slide_type: lessonForm.slide_type,
+        content,
+        audioFile: audioFile || undefined,
+      }));
+      if (createLesson.fulfilled.match(result)) {
+        showToast(tc("lessonAdded"));
       }
-      return { ...s, lessons_list: list, lessons: list.length };
-    }));
-    showToast(lessonModal === "add" ? tc("lessonAdded") : tc("lessonUpdated"));
+    } else if (lessonModal === "edit" && selectedLesson) {
+      const result = await dispatch(updateLesson({
+        id: selectedLesson.id,
+        data: {
+          title: lessonForm.title,
+          type: lessonForm.type,
+          duration_seconds: lessonForm.duration_seconds,
+          slide_type: lessonForm.slide_type,
+          content,
+          audioFile: audioFile || undefined,
+        },
+      }));
+      if (updateLesson.fulfilled.match(result)) {
+        showToast(tc("lessonUpdated"));
+      }
+    }
     closeLessonModal();
   };
 
-  const deleteLesson = () => {
+  const handleDeleteLesson = async () => {
     if (selectedLesson) {
-      setSections(sections.map((s) => {
-        if (s.id !== lessonParentId) return s;
-        const list = s.lessons_list.filter((l) => l.id !== selectedLesson.id);
-        return { ...s, lessons_list: list, lessons: list.length };
-      }));
-      showToast(tc("lessonDeleted"));
+      const result = await dispatch(deleteLessonThunk({ id: selectedLesson.id, sectionId: lessonParentId }));
+      if (deleteLessonThunk.fulfilled.match(result)) {
+        showToast(tc("lessonDeleted"));
+      }
     }
     closeLessonModal();
   };
@@ -211,11 +279,36 @@ export default function CourseContentPage() {
   };
   const removeSpeaker = (idx: number) => setLessonForm({ ...lessonForm, speakers: lessonForm.speakers.filter((_, i) => i !== idx) });
 
+  // JSON narrator helpers
+  const handleNarratorJsonChange = (raw: string) => {
+    setNarratorJson(raw);
+    if (!raw.trim()) { setNarratorJsonError(null); setLessonForm({ ...lessonForm, speakers: [] }); return; }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) { setNarratorJsonError("Must be a JSON array"); return; }
+      const valid = parsed.every((s: Record<string, unknown>) => typeof s.text === "string" && typeof s.speaker === "string");
+      if (!valid) { setNarratorJsonError('Each item needs at least "text" and "speaker" fields'); return; }
+      const speakers: Speaker[] = parsed.map((s: Record<string, string>) => ({ text: s.text || "", emotion: s.emotion || "", speaker: s.speaker || "" }));
+      setNarratorJsonError(null);
+      setLessonForm({ ...lessonForm, speakers });
+    } catch {
+      setNarratorJsonError("Invalid JSON syntax");
+    }
+  };
+
+  const switchNarratorMode = (mode: "manual" | "json") => {
+    if (mode === "json" && narratorMode === "manual" && lessonForm.speakers.length > 0) {
+      setNarratorJson(JSON.stringify(lessonForm.speakers, null, 2));
+    }
+    setNarratorJsonError(null);
+    setNarratorMode(mode);
+  };
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // QUIZ CRUD
+  // QUIZ CRUD (stays local — no separate API)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const openQuizEditor = (sectionId: string, quiz: AdminQuiz | null) => {
+  const openQuizEditor = (sectionId: string, quiz: AdminSectionQuiz | null) => {
     setQuizParentId(sectionId);
     if (quiz) {
       setQuizForm({ ...quiz }); setQuizModal("edit");
@@ -227,24 +320,88 @@ export default function CourseContentPage() {
 
   const closeQuizModal = () => { setQuizModal(null); };
 
-  const saveQuiz = () => {
-    setSections(sections.map((s) => s.id === quizParentId ? { ...s, quiz: { ...quizForm } } : s));
-    showToast(quizModal === "add" ? tc("quizAdded") : tc("quizUpdated"));
+  const saveQuiz = async () => {
+    const questions = quizForm.questions.map((q, i) => ({
+      ...(q.id ? { id: q.id } : {}),
+      type: q.type,
+      question: q.question,
+      options: q.options,
+      correct_answer: q.correct_answer,
+      explanation: q.explanation,
+      difficulty: q.difficulty,
+      category: q.category,
+      sequence: i,
+    }));
+
+    if (quizModal === "add") {
+      const result = await dispatch(createQuiz({
+        quiz: {
+          section: quizParentId,
+          title: quizForm.title,
+          intro_text: quizForm.intro_text,
+          pass_threshold: quizForm.pass_threshold,
+          max_attempts: quizForm.max_attempts,
+          xp_reward: quizForm.xp_reward,
+        },
+        questions,
+      }));
+      if (createQuiz.fulfilled.match(result)) {
+        showToast(tc("quizAdded"));
+      }
+    } else if (quizModal === "edit" && quizForm.id) {
+      const result = await dispatch(updateQuiz({
+        id: quizForm.id,
+        data: {
+          title: quizForm.title,
+          intro_text: quizForm.intro_text,
+          pass_threshold: quizForm.pass_threshold,
+          max_attempts: quizForm.max_attempts,
+          xp_reward: quizForm.xp_reward,
+        },
+        questions,
+      }));
+      if (updateQuiz.fulfilled.match(result)) {
+        showToast(tc("quizUpdated"));
+      }
+    }
     closeQuizModal();
   };
 
-  const deleteQuiz = (sectionId: string) => {
-    setSections(sections.map((s) => s.id === sectionId ? { ...s, quiz: null } : s));
-    showToast(tc("quizDeleted"));
+  const handleDeleteQuiz = async (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (section?.quiz) {
+      const result = await dispatch(deleteQuizThunk({ id: section.quiz.id, sectionId }));
+      if (deleteQuizThunk.fulfilled.match(result)) {
+        showToast(tc("quizDeleted"));
+      }
+    }
   };
 
   // Question helpers
-  const addQuestion = () => setQuizForm({
-    ...quizForm, questions: [...quizForm.questions, {
-      id: uid(), type: "multiple_choice", question: "", options: ["", "", "", ""],
-      correct_answer: 1, explanation: "", difficulty: "easy", category: "general",
-    }],
-  });
+  const addQuestion = (questionType: string = "multiple_choice") => {
+    const defaultOptions: Record<string, string[]> = {
+      multiple_choice: ["", "", "", ""],
+      true_false: ["Vrai", "Faux"],
+      scenario: ["", "", ""],
+    };
+    setQuizForm({
+      ...quizForm, questions: [...quizForm.questions, {
+        id: uid(), type: questionType, question: "", options: defaultOptions[questionType] || ["", "", "", ""],
+        correct_answer: 1, explanation: "", difficulty: "easy", category: "general",
+      }],
+    });
+  };
+
+  const changeQuestionType = (qIdx: number, newType: string) => {
+    const defaultOptions: Record<string, string[]> = {
+      multiple_choice: ["", "", "", ""],
+      true_false: ["Vrai", "Faux"],
+      scenario: ["", "", ""],
+    };
+    const q = [...quizForm.questions];
+    q[qIdx] = { ...q[qIdx], type: newType, options: defaultOptions[newType] || ["", "", "", ""], correct_answer: 1 };
+    setQuizForm({ ...quizForm, questions: q });
+  };
 
   const updateQuestion = (idx: number, field: string, val: unknown) => {
     const q = [...quizForm.questions]; q[idx] = { ...q[idx], [field]: val }; setQuizForm({ ...quizForm, questions: q });
@@ -279,8 +436,24 @@ export default function CourseContentPage() {
           </button>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12 flex flex-col items-center gap-3">
+            <ArrowPathIcon className="w-8 h-8 text-gold animate-spin" />
+            <p className="text-sm text-silver dark:text-white/50">Loading sections...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-200 dark:border-red-500/20 p-4 flex items-center gap-3">
+            <ExclamationTriangleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />
+            <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+          </div>
+        )}
+
         {/* Empty State */}
-        {sections.length === 0 && (
+        {!loading && sections.length === 0 && !error && (
           <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
             <BookOpenIcon className="w-12 h-12 text-gray-300 dark:text-white/20 mx-auto mb-3" />
             <p className="text-sm text-silver dark:text-white/50">{tc("noSections")}</p>
@@ -288,7 +461,7 @@ export default function CourseContentPage() {
         )}
 
         {/* Sections */}
-        {sections.map((section, sIdx) => {
+        {!loading && sections.map((section, sIdx) => {
           const isExpanded = expandedSections.has(section.id);
           return (
             <motion.div key={section.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: sIdx * 0.05 }}
@@ -374,7 +547,7 @@ export default function CourseContentPage() {
                           ) : (
                             <div className="flex items-center gap-1">
                               <button onClick={() => openQuizEditor(section.id, section.quiz)} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => deleteQuiz(section.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleDeleteQuiz(section.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-3.5 h-3.5" /></button>
                             </div>
                           )}
                         </div>
@@ -422,7 +595,7 @@ export default function CourseContentPage() {
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button onClick={closeSectionModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={deleteSection} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors">{t("admin.common.delete")}</button>
+                    <button onClick={handleDeleteSection} disabled={saving} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">{saving ? "..." : t("admin.common.delete")}</button>
                   </div>
                 </div>
               ) : (
@@ -430,14 +603,14 @@ export default function CourseContentPage() {
                   <div><label className={LabelClass}>{tc("sectionTitle")} <span className="text-red-500">*</span></label>
                     <input type="text" value={sectionForm.title} onChange={(e) => setSectionForm({ ...sectionForm, title: e.target.value })} className={InputClass} /></div>
                   <div><label className={LabelClass}>{tc("sectionType")}</label>
-                    <select value={sectionForm.type} onChange={(e) => setSectionForm({ ...sectionForm, type: e.target.value as "teaser" | "module" })}
+                    <select value={sectionForm.type} onChange={(e) => setSectionForm({ ...sectionForm, type: e.target.value as "teaser" | "introduction" | "module" | "conclusion" })}
                       className={cn(InputClass, "cursor-pointer")}>
-                      <option value="module" className="text-black">Module</option><option value="teaser" className="text-black">Teaser</option>
+                      <option value="module" className="text-black">Module</option><option value="teaser" className="text-black">Teaser</option><option value="introduction" className="text-black">Introduction</option><option value="conclusion" className="text-black">Conclusion</option>
                     </select></div>
                   <div className="flex gap-3 pt-3">
                     <button onClick={closeSectionModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={saveSection} disabled={!sectionForm.title} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
-                      {sectionModal === "add" ? tc("addSection") : t("admin.common.save")}
+                    <button onClick={saveSection} disabled={!sectionForm.title || saving} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
+                      {saving ? "..." : (sectionModal === "add" ? tc("addSection") : t("admin.common.save"))}
                     </button>
                   </div>
                 </div>
@@ -480,7 +653,7 @@ export default function CourseContentPage() {
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button onClick={closeLessonModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={deleteLesson} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors">{t("admin.common.delete")}</button>
+                    <button onClick={handleDeleteLesson} disabled={saving} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">{saving ? "..." : t("admin.common.delete")}</button>
                   </div>
                 </div>
               )}
@@ -507,7 +680,7 @@ export default function CourseContentPage() {
                       <audio controls src={selectedLesson.audioUrl} className="w-full" />
                     </div>
                   )}
-                  {selectedLesson.content.narration_script?.speakers?.length > 0 && (
+                  {selectedLesson.content?.narration_script?.speakers?.length > 0 && (
                     <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
                       <p className="text-xs text-silver dark:text-white/40 mb-2">{tc("narrationScript")}</p>
                       <div className="space-y-2">
@@ -531,8 +704,8 @@ export default function CourseContentPage() {
                     <div><label className={LabelClass}>{tc("lessonTitle")} <span className="text-red-500">*</span></label>
                       <input type="text" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className={InputClass} /></div>
                     <div><label className={LabelClass}>{tc("lessonType")}</label>
-                      <select value={lessonForm.type} onChange={(e) => setLessonForm({ ...lessonForm, type: e.target.value as "slide" | "audio" })} className={cn(InputClass, "cursor-pointer")}>
-                        <option value="audio" className="text-black">Audio</option><option value="slide" className="text-black">Slide</option>
+                      <select value={lessonForm.type} onChange={(e) => setLessonForm({ ...lessonForm, type: e.target.value as "slide" | "video" | "text" | "audio" })} className={cn(InputClass, "cursor-pointer")}>
+                        <option value="audio" className="text-black">Audio</option><option value="slide" className="text-black">Slide</option><option value="video" className="text-black">Video</option><option value="text" className="text-black">Text</option>
                       </select></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -557,28 +730,76 @@ export default function CourseContentPage() {
 
                   {/* Narration Script */}
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-2">
                       <label className={LabelClass}>{tc("narrationScript")}</label>
-                      <button type="button" onClick={addSpeaker} className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"><PlusCircleIcon className="w-4 h-4" /> {tc("addSpeaker")}</button>
+                      <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 rounded-lg p-0.5">
+                        <button type="button" onClick={() => switchNarratorMode("manual")}
+                          className={cn("flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                            narratorMode === "manual" ? "bg-white dark:bg-white/10 text-gold shadow-sm" : "text-silver dark:text-white/40 hover:text-oxford dark:hover:text-white/70"
+                          )}>
+                          <PencilIcon className="w-3.5 h-3.5" /> Manual
+                        </button>
+                        <button type="button" onClick={() => switchNarratorMode("json")}
+                          className={cn("flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                            narratorMode === "json" ? "bg-white dark:bg-white/10 text-gold shadow-sm" : "text-silver dark:text-white/40 hover:text-oxford dark:hover:text-white/70"
+                          )}>
+                          <CodeBracketIcon className="w-3.5 h-3.5" /> JSON
+                        </button>
+                      </div>
                     </div>
-                    <div className="space-y-3">
-                      {lessonForm.speakers.map((sp, i) => (
-                        <div key={i} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input placeholder={tc("speakerName")} value={sp.speaker} onChange={(e) => updateSpeaker(i, "speaker", e.target.value)} className={cn(InputClass, "flex-1")} />
-                            <input placeholder={tc("emotion")} value={sp.emotion} onChange={(e) => updateSpeaker(i, "emotion", e.target.value)} className={cn(InputClass, "w-32")} />
-                            <button onClick={() => removeSpeaker(i)} className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><MinusCircleIcon className="w-4 h-4" /></button>
-                          </div>
-                          <textarea rows={2} placeholder={tc("speakerText")} value={sp.text} onChange={(e) => updateSpeaker(i, "text", e.target.value)} className={cn(InputClass, "resize-none")} />
+
+                    {narratorMode === "manual" ? (
+                      /* ── Manual mode ── */
+                      <>
+                        <div className="flex justify-end mb-2">
+                          <button type="button" onClick={addSpeaker} className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"><PlusCircleIcon className="w-4 h-4" /> {tc("addSpeaker")}</button>
                         </div>
-                      ))}
-                    </div>
+                        <div className="space-y-3">
+                          {lessonForm.speakers.map((sp, i) => (
+                            <div key={i} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl space-y-2">
+                              <div className="flex items-center gap-2">
+                                <input placeholder={tc("speakerName")} value={sp.speaker} onChange={(e) => updateSpeaker(i, "speaker", e.target.value)} className={cn(InputClass, "flex-1")} />
+                                <input placeholder={tc("emotion")} value={sp.emotion} onChange={(e) => updateSpeaker(i, "emotion", e.target.value)} className={cn(InputClass, "w-32")} />
+                                <button onClick={() => removeSpeaker(i)} className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><MinusCircleIcon className="w-4 h-4" /></button>
+                              </div>
+                              <textarea rows={2} placeholder={tc("speakerText")} value={sp.text} onChange={(e) => updateSpeaker(i, "text", e.target.value)} className={cn(InputClass, "resize-none")} />
+                            </div>
+                          ))}
+                          {lessonForm.speakers.length === 0 && (
+                            <p className="text-xs text-silver dark:text-white/30 text-center py-4">No speakers yet. Click &quot;Add Speaker&quot; or switch to JSON mode to paste data.</p>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      /* ── JSON mode ── */
+                      <div className="space-y-2">
+                        <textarea
+                          rows={10}
+                          value={narratorJson}
+                          onChange={(e) => handleNarratorJsonChange(e.target.value)}
+                          placeholder={`[\n  {\n    "speaker": "أَسْمَاءْ",\n    "text": "مَرْحَبًا بِكُمْ...",\n    "emotion": "enthousiaste"\n  },\n  {\n    "speaker": "نَبِيلْ",\n    "text": "التَّوَاصُلُ الْفَعَّالُ...",\n    "emotion": "pédagogue"\n  }\n]`}
+                          className={cn(InputClass, "resize-none font-mono text-xs !leading-relaxed", narratorJsonError && "!border-red-400 !ring-red-400/50")}
+                        />
+                        {narratorJsonError && (
+                          <div className="flex items-center gap-1.5 text-xs text-red-500">
+                            <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                            {narratorJsonError}
+                          </div>
+                        )}
+                        {!narratorJsonError && narratorJson.trim() && (
+                          <div className="flex items-center gap-1.5 text-xs text-emerald-500">
+                            <CheckCircleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                            {lessonForm.speakers.length} speaker(s) parsed successfully
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-3 pt-3">
                     <button onClick={closeLessonModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={saveLesson} disabled={!lessonForm.title} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
-                      {lessonModal === "add" ? tc("addLesson") : t("admin.common.save")}
+                    <button onClick={saveLesson} disabled={!lessonForm.title || saving} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
+                      {saving ? "..." : (lessonModal === "add" ? tc("addLesson") : t("admin.common.save"))}
                     </button>
                   </div>
                 </div>
@@ -618,7 +839,7 @@ export default function CourseContentPage() {
                 {/* Questions */}
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">{tc("questions")} ({quizForm.questions.length})</p>
-                  <button type="button" onClick={addQuestion} className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"><PlusCircleIcon className="w-4 h-4" /> {tc("addQuestion")}</button>
+                  <button type="button" onClick={() => addQuestion()} className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"><PlusCircleIcon className="w-4 h-4" /> {tc("addQuestion")}</button>
                 </div>
                 <div className="space-y-4">
                   {quizForm.questions.map((q, qIdx) => (
@@ -626,28 +847,59 @@ export default function CourseContentPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-silver dark:text-white/50">Q{qIdx + 1}</span>
                         <div className="flex items-center gap-2">
+                          <select value={q.type} onChange={(e) => changeQuestionType(qIdx, e.target.value)} className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white">
+                            <option value="multiple_choice" className="text-black">QCM</option>
+                            <option value="true_false" className="text-black">Vrai / Faux</option>
+                            <option value="scenario" className="text-black">Scénario</option>
+                          </select>
                           <select value={q.difficulty} onChange={(e) => updateQuestion(qIdx, "difficulty", e.target.value)} className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white">
                             <option value="easy" className="text-black">Easy</option><option value="medium" className="text-black">Medium</option><option value="hard" className="text-black">Hard</option>
                           </select>
                           <button onClick={() => removeQuestion(qIdx)} className="p-1 text-red-400 hover:text-red-500 transition-colors"><MinusCircleIcon className="w-4 h-4" /></button>
                         </div>
                       </div>
-                      <div><label className={LabelClass}>{tc("questionText")}</label>
-                        <input type="text" value={q.question} onChange={(e) => updateQuestion(qIdx, "question", e.target.value)} className={InputClass} /></div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {q.options.map((opt, oIdx) => (
-                          <div key={oIdx} className="relative">
-                            <input type="text" value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
-                              className={cn(InputClass, q.correct_answer === oIdx + 1 && "ring-2 ring-emerald-500/50 border-emerald-500")} placeholder={`Option ${oIdx + 1}`} />
-                            <button type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx + 1)}
-                              className={cn("absolute end-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                                q.correct_answer === oIdx + 1 ? "border-emerald-500 bg-emerald-500" : "border-gray-300 dark:border-white/20 hover:border-emerald-400"
-                              )}>
-                              {q.correct_answer === oIdx + 1 && <CheckCircleIcon className="w-3 h-3 text-white" />}
-                            </button>
-                          </div>
-                        ))}
+
+                      {/* Question text */}
+                      <div><label className={LabelClass}>{q.type === "scenario" ? tc("scenarioDescription") || "Scenario Description" : tc("questionText")}</label>
+                        {q.type === "scenario" ? (
+                          <textarea rows={3} value={q.question} onChange={(e) => updateQuestion(qIdx, "question", e.target.value)} className={cn(InputClass, "resize-none")} placeholder="Describe the scenario situation..." />
+                        ) : (
+                          <input type="text" value={q.question} onChange={(e) => updateQuestion(qIdx, "question", e.target.value)} className={InputClass} />
+                        )}
                       </div>
+
+                      {/* Options — adapt to question type */}
+                      {q.type === "true_false" ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {["Vrai", "Faux"].map((label, oIdx) => (
+                            <button key={oIdx} type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx + 1)}
+                              className={cn("px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all",
+                                q.correct_answer === oIdx + 1
+                                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                  : "border-gray-200 dark:border-white/10 text-oxford dark:text-white hover:border-gray-300 dark:hover:border-white/20"
+                              )}>
+                              {q.correct_answer === oIdx + 1 && <CheckCircleIcon className="w-4 h-4 inline mr-1.5" />}
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          {q.options.map((opt, oIdx) => (
+                            <div key={oIdx} className="relative">
+                              <input type="text" value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
+                                className={cn(InputClass, q.correct_answer === oIdx + 1 && "ring-2 ring-emerald-500/50 border-emerald-500")} placeholder={q.type === "scenario" ? `Response ${oIdx + 1}` : `Option ${oIdx + 1}`} />
+                              <button type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx + 1)}
+                                className={cn("absolute end-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                                  q.correct_answer === oIdx + 1 ? "border-emerald-500 bg-emerald-500" : "border-gray-300 dark:border-white/20 hover:border-emerald-400"
+                                )}>
+                                {q.correct_answer === oIdx + 1 && <CheckCircleIcon className="w-3 h-3 text-white" />}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div><label className={LabelClass}>{tc("explanation")}</label>
                         <input type="text" value={q.explanation} onChange={(e) => updateQuestion(qIdx, "explanation", e.target.value)} className={InputClass} /></div>
                     </div>

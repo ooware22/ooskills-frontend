@@ -2,7 +2,8 @@
  * Admin Courses Management API Service
  *
  * Typed API functions for admin course management endpoints.
- * Follows the same pattern as adminUsersApi.ts.
+ * Connects to Django formation CourseViewSet at /api/formation/courses/.
+ * Backend uses slug as lookup field for retrieve/update/delete.
  */
 
 import axiosClient from '@/lib/axios';
@@ -56,7 +57,7 @@ export interface AdminCourseCreatePayload {
     whatYouLearn: string[];
     language: string;
     certificate: boolean;
-    image?: string;
+    image?: File | string;
 }
 
 export interface AdminCourseUpdatePayload {
@@ -72,7 +73,7 @@ export interface AdminCourseUpdatePayload {
     whatYouLearn?: string[];
     language?: string;
     certificate?: boolean;
-    image?: string;
+    image?: File | string;
 }
 
 export interface CourseListParams {
@@ -89,11 +90,42 @@ interface PaginatedResponse<T> {
     results: T[];
 }
 
+/** Extract array from response - handles both paginated and direct array responses */
+function extractResults<T>(data: T[] | PaginatedResponse<T>): { results: T[]; count: number } {
+    if (Array.isArray(data)) {
+        return { results: data, count: data.length };
+    }
+    if (data && 'results' in data) {
+        return { results: data.results, count: data.count };
+    }
+    return { results: [], count: 0 };
+}
+
+/** Build FormData from a payload when it contains a File (for image upload) */
+function buildFormData(data: Record<string, unknown>): FormData | Record<string, unknown> {
+    const hasFile = Object.values(data).some((v) => v instanceof File);
+    if (!hasFile) return data;
+
+    const fd = new FormData();
+    for (const [key, value] of Object.entries(data)) {
+        if (value === undefined || value === null) continue;
+        if (value instanceof File) {
+            fd.append(key, value);
+        } else if (Array.isArray(value)) {
+            // JSON-encode arrays so DRF can parse them
+            fd.append(key, JSON.stringify(value));
+        } else {
+            fd.append(key, String(value));
+        }
+    }
+    return fd;
+}
+
 // =============================================================================
 // API
 // =============================================================================
 
-const ENDPOINT = '/admin/courses/';
+const ENDPOINT = '/formation/courses/';
 
 const adminCoursesManagementApi = {
     /**
@@ -109,15 +141,15 @@ const adminCoursesManagementApi = {
         const qs = queryParams.toString();
         const url = qs ? `${ENDPOINT}?${qs}` : ENDPOINT;
 
-        const response = await axiosClient.get<PaginatedResponse<AdminCourse>>(url);
-        return response.data;
+        const response = await axiosClient.get<AdminCourse[] | PaginatedResponse<AdminCourse>>(url);
+        return extractResults(response.data);
     },
 
     /**
-     * Get a single course by ID
+     * Get a single course by slug
      */
-    retrieve: async (id: string) => {
-        const response = await axiosClient.get<AdminCourse>(`${ENDPOINT}${id}/`);
+    retrieve: async (slug: string) => {
+        const response = await axiosClient.get<AdminCourse>(`${ENDPOINT}${slug}/`);
         return response.data;
     },
 
@@ -125,23 +157,27 @@ const adminCoursesManagementApi = {
      * Create a new course
      */
     create: async (data: AdminCourseCreatePayload) => {
-        const response = await axiosClient.post<AdminCourse>(ENDPOINT, data);
+        const body = buildFormData(data as unknown as Record<string, unknown>);
+        const headers = body instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined;
+        const response = await axiosClient.post<AdminCourse>(ENDPOINT, body, { headers });
         return response.data;
     },
 
     /**
-     * Update a course
+     * Update a course (by slug)
      */
-    update: async (id: string, data: AdminCourseUpdatePayload) => {
-        const response = await axiosClient.patch<AdminCourse>(`${ENDPOINT}${id}/`, data);
+    update: async (slug: string, data: AdminCourseUpdatePayload) => {
+        const body = buildFormData(data as unknown as Record<string, unknown>);
+        const headers = body instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined;
+        const response = await axiosClient.patch<AdminCourse>(`${ENDPOINT}${slug}/`, body, { headers });
         return response.data;
     },
 
     /**
-     * Delete a course
+     * Delete a course (by slug)
      */
-    delete: async (id: string) => {
-        await axiosClient.delete(`${ENDPOINT}${id}/`);
+    delete: async (slug: string) => {
+        await axiosClient.delete(`${ENDPOINT}${slug}/`);
     },
 };
 

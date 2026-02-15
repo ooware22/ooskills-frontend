@@ -13,7 +13,9 @@ import dashboardReducer from "./slices/dashboardSlice";
 import usersReducer from "./slices/usersSlice";
 import adminCategoriesReducer from "./slices/adminCategoriesSlice";
 import adminCoursesManagementReducer from "./slices/adminCoursesManagementSlice";
+import adminCourseContentReducer from "./slices/adminCourseContentSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
+import publicCoursesReducer from "./slices/publicCoursesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -40,9 +42,13 @@ export const store = configureStore({
     // Admin course & category management
     adminCategories: adminCategoriesReducer,
     adminCoursesManagement: adminCoursesManagementReducer,
+    adminCourseContent: adminCourseContentReducer,
 
     // Student enrollment
     enrollment: enrollmentReducer,
+
+    // Public course browsing
+    publicCourses: publicCoursesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

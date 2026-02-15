@@ -1,6 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import adminCategoriesApi from "@/services/adminCategoriesApi";
 import type { AdminCategory, AdminCategoryCreatePayload, AdminCategoryUpdatePayload } from "@/services/adminCategoriesApi";
+import { getErrorMessage } from "@/lib/axios";
+import { CACHE_DURATION, shouldFetch } from "@/lib/cache";
+import type { RootState } from "@/store";
 
 // =============================================================================
 // TYPES
@@ -12,38 +15,21 @@ interface AdminCategoriesState {
     loading: boolean;
     saving: boolean;
     error: string | null;
+    lastFetched: number | null;
 }
 
 // =============================================================================
-// MOCK DATA
+// INITIAL STATE
 // =============================================================================
 
-const mockCategories: AdminCategory[] = [
-    {
-        id: "51877b61-8a37-49cf-ae7d-6447be37a768",
-        name: { ar: "اللغات", en: "Languages", fr: "Langues" },
-        slug: "languages",
-        icon: "star",
-    },
-    {
-        id: "a2b3c4d5-e6f7-8901-2345-6789abcdef01",
-        name: { ar: "البرمجة", en: "Programming", fr: "Programmation" },
-        slug: "programming",
-        icon: "code",
-    },
-    {
-        id: "b3c4d5e6-f7a8-9012-3456-789abcdef012",
-        name: { ar: "الأعمال", en: "Business", fr: "Affaires" },
-        slug: "business",
-        icon: "briefcase",
-    },
-    {
-        id: "c4d5e6f7-a8b9-0123-4567-89abcdef0123",
-        name: { ar: "التصميم", en: "Design", fr: "Design" },
-        slug: "design",
-        icon: "palette",
-    },
-];
+const initialState: AdminCategoriesState = {
+    categories: [],
+    totalCount: 0,
+    loading: false,
+    saving: false,
+    error: null,
+    lastFetched: null,
+};
 
 // =============================================================================
 // ASYNC THUNKS
@@ -51,14 +37,20 @@ const mockCategories: AdminCategory[] = [
 
 export const fetchCategories = createAsyncThunk(
     "adminCategories/fetchAll",
-    async (_, { rejectWithValue }) => {
+    async (options: { forceRefresh?: boolean } | void, { rejectWithValue }) => {
         try {
-            const response = await adminCategoriesApi.list();
-            return response;
-        } catch {
-            // Fallback to mock data
-            return { count: mockCategories.length, next: null, previous: null, results: mockCategories };
+            const data = await adminCategoriesApi.list();
+            return data;
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
         }
+    },
+    {
+        condition(options, { getState }) {
+            const { adminCategories } = getState() as RootState;
+            if (options?.forceRefresh) return !adminCategories.loading;
+            return shouldFetch(adminCategories.lastFetched, adminCategories.loading, CACHE_DURATION.MEDIUM);
+        },
     }
 );
 
@@ -67,37 +59,39 @@ export const createCategory = createAsyncThunk(
     async (data: AdminCategoryCreatePayload, { rejectWithValue }) => {
         try {
             return await adminCategoriesApi.create(data);
-        } catch {
-            // Mock: add locally
-            const newCat: AdminCategory = {
-                id: crypto.randomUUID(),
-                ...data,
-            };
-            return newCat;
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
 
 export const updateCategory = createAsyncThunk(
     "adminCategories/update",
-    async ({ id, data }: { id: string; data: AdminCategoryUpdatePayload }, { rejectWithValue }) => {
+    async ({ id, data }: { id: string; data: AdminCategoryUpdatePayload }, { getState, rejectWithValue }) => {
         try {
-            return await adminCategoriesApi.update(id, data);
-        } catch {
-            return { id, ...data } as AdminCategory;
+            // Find the category to get its slug for the API call
+            const { adminCategories } = getState() as RootState;
+            const category = adminCategories.categories.find((c) => c.id === id);
+            const slug = category?.slug || id;
+            return await adminCategoriesApi.update(slug, data);
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
 
 export const deleteCategory = createAsyncThunk(
     "adminCategories/delete",
-    async (id: string, { rejectWithValue }) => {
+    async (id: string, { getState, rejectWithValue }) => {
         try {
-            await adminCategoriesApi.delete(id);
+            // Find the category to get its slug for the API call
+            const { adminCategories } = getState() as RootState;
+            const category = adminCategories.categories.find((c) => c.id === id);
+            const slug = category?.slug || id;
+            await adminCategoriesApi.delete(slug);
             return id;
-        } catch {
-            // Mock: allow delete locally
-            return id;
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
@@ -106,20 +100,15 @@ export const deleteCategory = createAsyncThunk(
 // SLICE
 // =============================================================================
 
-const initialState: AdminCategoriesState = {
-    categories: mockCategories,
-    totalCount: mockCategories.length,
-    loading: false,
-    saving: false,
-    error: null,
-};
-
 const adminCategoriesSlice = createSlice({
     name: "adminCategories",
     initialState,
     reducers: {
         clearError(state) {
             state.error = null;
+        },
+        invalidateCache(state) {
+            state.lastFetched = null;
         },
     },
     extraReducers: (builder) => {
@@ -133,6 +122,7 @@ const adminCategoriesSlice = createSlice({
                 state.loading = false;
                 state.categories = action.payload.results;
                 state.totalCount = action.payload.count;
+                state.lastFetched = Date.now();
             })
             .addCase(fetchCategories.rejected, (state, action) => {
                 state.loading = false;
@@ -141,6 +131,7 @@ const adminCategoriesSlice = createSlice({
             // Create
             .addCase(createCategory.pending, (state) => {
                 state.saving = true;
+                state.error = null;
             })
             .addCase(createCategory.fulfilled, (state, action) => {
                 state.saving = false;
@@ -154,6 +145,7 @@ const adminCategoriesSlice = createSlice({
             // Update
             .addCase(updateCategory.pending, (state) => {
                 state.saving = true;
+                state.error = null;
             })
             .addCase(updateCategory.fulfilled, (state, action) => {
                 state.saving = false;
@@ -169,6 +161,7 @@ const adminCategoriesSlice = createSlice({
             // Delete
             .addCase(deleteCategory.pending, (state) => {
                 state.saving = true;
+                state.error = null;
             })
             .addCase(deleteCategory.fulfilled, (state, action) => {
                 state.saving = false;
@@ -182,5 +175,5 @@ const adminCategoriesSlice = createSlice({
     },
 });
 
-export const { clearError } = adminCategoriesSlice.actions;
+export const { clearError, invalidateCache } = adminCategoriesSlice.actions;
 export default adminCategoriesSlice.reducer;

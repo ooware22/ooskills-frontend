@@ -17,6 +17,8 @@ import {
   ArrowPathIcon,
   PlusCircleIcon,
   MinusCircleIcon,
+  ArrowUpTrayIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
@@ -104,6 +106,9 @@ export default function CourseManagementPage() {
 
   // Form state
   const [formData, setFormData] = useState<CourseForm>(emptyForm);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Translation helper
   const tc = (key: string) => t(`admin.courseManagement.${key}`);
@@ -158,7 +163,11 @@ export default function CourseManagementPage() {
   };
 
   // Modal CRUD
-  const resetForm = () => setFormData(emptyForm);
+  const resetForm = () => {
+    setFormData(emptyForm);
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   const openAdd = () => {
     resetForm();
@@ -182,6 +191,8 @@ export default function CourseManagementPage() {
       certificate: course.certificate,
       image: course.image,
     });
+    setImageFile(null);
+    setImagePreview(course.image || null);
     setModalMode("edit");
   };
 
@@ -230,7 +241,7 @@ export default function CourseManagementPage() {
       whatYouLearn: formData.whatYouLearn.filter(Boolean),
       language: formData.language,
       certificate: formData.certificate,
-      image: formData.image,
+      image: imageFile || formData.image,
     };
 
     if (modalMode === "add") {
@@ -428,7 +439,7 @@ export default function CourseManagementPage() {
                           {course.students.toLocaleString()}
                         </td>
                         <td className="px-5 py-4 text-sm text-gray-600 dark:text-white/60">
-                          {course.modules.length}
+                          {course.modules?.length ?? 0}
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -784,15 +795,51 @@ export default function CourseManagementPage() {
                     />
                   </div>
 
-                  {/* Image URL */}
+                  {/* Image Upload */}
                   <div>
                     <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">{tc("image")}</label>
-                    <input
-                      type="text"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-                    />
+                    <div className="space-y-3">
+                      {/* Preview */}
+                      {imagePreview && (
+                        <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => { setImageFile(null); setImagePreview(null); setFormData({ ...formData, image: "" }); }}
+                            className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-lg hover:bg-black/80 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      {/* Upload Button */}
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 border border-dashed border-gray-300 dark:border-white/20 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => imageInputRef.current?.click()}
+                          className="flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors"
+                        >
+                          <ArrowUpTrayIcon className="w-4 h-4" />
+                          {imagePreview ? tc("changeImage") || "Change Image" : tc("uploadImage") || "Upload Image"}
+                        </button>
+                        <span className="text-xs text-silver dark:text-white/40 truncate">
+                          {imageFile?.name || (imagePreview ? "Current image" : "No file selected")}
+                        </span>
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setImageFile(file);
+                              setImagePreview(URL.createObjectURL(file));
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Certificate */}

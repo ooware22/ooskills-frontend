@@ -2,7 +2,8 @@
  * Admin Categories API Service
  *
  * Typed API functions for admin category management endpoints.
- * Follows the same pattern as adminUsersApi.ts.
+ * Connects to Django formation CategoryViewSet at /api/formation/categories/.
+ * Backend uses slug as lookup field for retrieve/update/delete.
  */
 
 import axiosClient from '@/lib/axios';
@@ -43,26 +44,37 @@ interface PaginatedResponse<T> {
     results: T[];
 }
 
+/** Extract array from response - handles both paginated and direct array responses */
+function extractResults<T>(data: T[] | PaginatedResponse<T>): { results: T[]; count: number } {
+    if (Array.isArray(data)) {
+        return { results: data, count: data.length };
+    }
+    if (data && 'results' in data) {
+        return { results: data.results, count: data.count };
+    }
+    return { results: [], count: 0 };
+}
+
 // =============================================================================
 // API
 // =============================================================================
 
-const ENDPOINT = '/admin/categories/';
+const ENDPOINT = '/formation/categories/';
 
 const adminCategoriesApi = {
     /**
      * List all categories
      */
     list: async () => {
-        const response = await axiosClient.get<PaginatedResponse<AdminCategory>>(ENDPOINT);
-        return response.data;
+        const response = await axiosClient.get<AdminCategory[] | PaginatedResponse<AdminCategory>>(ENDPOINT);
+        return extractResults(response.data);
     },
 
     /**
-     * Get a single category by ID
+     * Get a single category by slug
      */
-    retrieve: async (id: string) => {
-        const response = await axiosClient.get<AdminCategory>(`${ENDPOINT}${id}/`);
+    retrieve: async (slug: string) => {
+        const response = await axiosClient.get<AdminCategory>(`${ENDPOINT}${slug}/`);
         return response.data;
     },
 
@@ -75,18 +87,18 @@ const adminCategoriesApi = {
     },
 
     /**
-     * Update an existing category
+     * Update an existing category (by slug)
      */
-    update: async (id: string, data: AdminCategoryUpdatePayload) => {
-        const response = await axiosClient.patch<AdminCategory>(`${ENDPOINT}${id}/`, data);
+    update: async (slug: string, data: AdminCategoryUpdatePayload) => {
+        const response = await axiosClient.patch<AdminCategory>(`${ENDPOINT}${slug}/`, data);
         return response.data;
     },
 
     /**
-     * Delete a category
+     * Delete a category (by slug)
      */
-    delete: async (id: string) => {
-        await axiosClient.delete(`${ENDPOINT}${id}/`);
+    delete: async (slug: string) => {
+        await axiosClient.delete(`${ENDPOINT}${slug}/`);
     },
 };
 
