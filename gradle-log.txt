@@ -1,0 +1,25 @@
+﻿java : 
+At line:1 char:1
++ java -jar "c:\DEV\ooskills-frontend\android\gradle\wrapper\gradle-wra ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+A problem occurred configuring root project 'android'.
+> Could not resolve all artifacts for configuration 'classpath'.
+   > Could not download gradle-8.13.0.jar 
+(com.android.tools.build:gradle:8.13.0)
+      > Could not get resource 'https://dl.google.com/dl/android/maven2/com/andr
+oid/tools/build/gradle/8.13.0/gradle-8.13.0.jar'.
+         > Tag mismatch
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 5s

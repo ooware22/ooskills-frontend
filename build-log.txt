@@ -1,0 +1,83 @@
+﻿node.exe : ÔÜá Invalid next.config.js options detected: 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\Islem Charaf Eddine\Ap ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ÔÜá Invalid nex...ions detect 
+   ed: :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ÔÜá     Unrecognized key(s) in object: 'turbo' at "experimental"
+ÔÜá See more info here: 
+https://nextjs.org/docs/messages/invalid-next-config
+ÔÜá Warning: Next.js inferred your workspace root, but it may not be 
+correct.
+ We detected multiple lockfiles and selected the directory of 
+C:\DEV\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or 
+consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turb
+opack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\DEV\ooskills-frontend\package-lock.json
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  ? turbo (invalid experimental key)
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 4.4s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/79) ...
+  Generating static pages using 7 workers (19/79) 
+  Generating static pages using 7 workers (39/79) 
+  Generating static pages using 7 workers (59/79) 
+Ô£ô Generating static pages using 7 workers (79/79) in 681.9ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ Ôùï /admin
+Ôö£ Ôùï /admin/contact
+Ôö£ Ôùï /admin/countdown
+Ôö£ Ôùï /admin/course-categories
+Ôö£ Ôùï /admin/course-content
+Ôö£ Ôùï /admin/course-management
+Ôö£ Ôùï /admin/courses
+Ôö£ Ôùï /admin/faq
+Ôö£ Ôùï /admin/features
+Ôö£ Ôùï /admin/hero
+Ôö£ Ôùï /admin/login
+Ôö£ Ôùï /admin/settings
+Ôö£ Ôùï /admin/users
+Ôö£ ÔùÅ /auth/callback/[provider]
+Ôöé Ôö£ /auth/callback/google
+Ôöé Ôöö /auth/callback/facebook
+Ôö£ Ôùï /auth/forgot-password
+Ôö£ Ôùï /auth/signin
+Ôö£ Ôùï /auth/signup
+Ôö£ Ôùï /courses
+Ôö£ ÔùÅ /courses/[id]
+Ôöé Ôö£ /courses/1
+Ôöé Ôö£ /courses/2
+Ôöé Ôö£ /courses/3
+Ôöé Ôöö [+22 more paths]
+Ôö£ ÔùÅ /courses/[id]/learn
+Ôöé Ôö£ /courses/1/learn
+Ôöé Ôö£ /courses/2/learn
+Ôöé Ôö£ /courses/3/learn
+Ôöé Ôöö [+22 more paths]
+Ôö£ Ôùï /dashboard
+Ôö£ Ôùï /dashboard/catalogue
+Ôö£ Ôùï /dashboard/my-courses
+Ôö£ Ôùï /dashboard/settings
+Ôö£ Ôùï /my-courses
+Ôö£ Ôùï /reset-password
+Ôöö Ôùï /verify-email
+
+
+Ôùï  (Static)  prerendered as static content
+ÔùÅ  (SSG)     prerendered as static HTML (uses generateStaticParams)
+
