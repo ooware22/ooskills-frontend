@@ -57,6 +57,10 @@ export interface Slide {
   duration_seconds: number;
   visual_content: SlideVisualContent;
   narration_script: NarrationScript;
+  /** Audio URL from the API (Supabase storage) — used instead of static audio when present */
+  apiAudioUrl?: string;
+  /** Lesson UUID from the API — used for saving progress to backend */
+  apiLessonId?: string;
 }
 
 export interface QuizQuestion {
@@ -418,8 +422,23 @@ const courseContentMap: Record<number, CourseContent> = {
   25: medicalSpanishCourse,
 };
 
+// Map from URL slug → static courseId for content lookup
+const slugToCourseId: Record<string, number> = {
+  'medical-spanish-vocabulary': 25,
+  'الاسبانية-الطبية': 25,
+};
+
 export function getCourseContent(courseId: number): CourseContent | null {
   return courseContentMap[courseId] || null;
+}
+
+export function getCourseContentBySlug(slug: string): CourseContent | null {
+  const id = slugToCourseId[slug];
+  if (id !== undefined) return courseContentMap[id] || null;
+  // Fallback: try parsing as number (legacy)
+  const numId = Number(slug);
+  if (!isNaN(numId)) return courseContentMap[numId] || null;
+  return null;
 }
 
 // Calculate total slide count for any course content

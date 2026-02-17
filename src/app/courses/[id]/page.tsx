@@ -5,15 +5,16 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useEnrollment } from "@/hooks/useEnrollment";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import EnrollDialog from "@/components/EnrollDialog";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchCourseDetail,
   clearCourseDetail,
 } from "@/store/slices/publicCoursesSlice";
+import { fetchMyEnrollments } from "@/store/slices/enrollmentSlice";
 import {
   ArrowLeftIcon,
   ClockIcon,
@@ -49,24 +50,31 @@ export default function CourseDetailPage({
   const { courseDetail: course, courseDetailLoading, courseDetailError } =
     useAppSelector((s) => s.publicCourses);
 
-  const { isEnrolled, enroll } = useEnrollment();
+  const { enrollments } = useAppSelector((s) => s.enrollment);
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
-  const enrolled = course ? isEnrolled(course.id) : false;
-  const [enrolling, setEnrolling] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Check if user is enrolled in this course (compare by slug)
+  const enrolled = enrollments.some((e) => e.course_slug === slug);
 
   useEffect(() => {
     dispatch(fetchCourseDetail(slug));
+    if (isAuthenticated) {
+      dispatch(fetchMyEnrollments());
+    }
     return () => {
       dispatch(clearCourseDetail());
     };
-  }, [dispatch, slug]);
+  }, [dispatch, slug, isAuthenticated]);
 
   const handleEnroll = useCallback(() => {
-    if (!course) return;
-    setEnrolling(true);
-    enroll(course.id);
-    setTimeout(() => setEnrolling(false), 600);
-  }, [course, enroll]);
+    if (!isAuthenticated) {
+      router.push("/signin");
+      return;
+    }
+    setDialogOpen(true);
+  }, [isAuthenticated, router]);
 
   const handleStart = useCallback(() => {
     router.push(`/courses/${slug}/learn`);
@@ -101,9 +109,6 @@ export default function CourseDetailPage({
 
   /** Get localised category name */
   const categoryLabel = (categorySlug: string) => {
-    // The detail endpoint returns category as a slug string.
-    // We just capitalise it as a fallback — a future improvement could
-    // fetch categories and map, but slug is readable enough for now.
     return categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1);
   };
 
@@ -381,14 +386,20 @@ export default function CourseDetailPage({
                 <div className="mb-5">
                   <div className="flex items-baseline gap-3 mb-1">
                     <span className="text-3xl font-bold text-oxford dark:text-white whitespace-nowrap">
-                      {course.price.toLocaleString()}&nbsp;{t("currency")}
+                      {course.price === 0
+                        ? t("free") || "Free"
+                        : `${course.price.toLocaleString()}\u00A0${t("currency")}`}
                     </span>
-                    <span className="text-lg text-silver line-through whitespace-nowrap">
-                      {course.originalPrice.toLocaleString()}&nbsp;{t("currency")}
-                    </span>
-                    <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-md">
-                      {discount}% {t("off")}
-                    </span>
+                    {course.price > 0 && (
+                      <span className="text-lg text-silver line-through whitespace-nowrap">
+                        {course.originalPrice.toLocaleString()}&nbsp;{t("currency")}
+                      </span>
+                    )}
+                    {course.price > 0 && discount > 0 && (
+                      <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-md">
+                        {discount}% {t("off")}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -410,10 +421,9 @@ export default function CourseDetailPage({
                 ) : (
                   <button
                     onClick={handleEnroll}
-                    disabled={enrolling}
-                    className="w-full py-3.5 bg-gold hover:bg-gold/90 text-oxford font-semibold rounded-xl transition-colors mb-3 text-sm disabled:opacity-60"
+                    className="w-full py-3.5 bg-gold hover:bg-gold/90 text-oxford font-semibold rounded-xl transition-colors mb-3 text-sm"
                   >
-                    {enrolling ? "..." : t("enrollNow")}
+                    {t("enrollNow")}
                   </button>
                 )}
                 <button className="w-full py-3.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
@@ -477,6 +487,18 @@ export default function CourseDetailPage({
         </div>
       </main>
       <Footer />
+
+      {/* Enrollment Dialog */}
+      {course && (
+        <EnrollDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          courseId={String(course.id)}
+          courseTitle={course.title}
+          coursePrice={course.price}
+          courseOriginalPrice={course.originalPrice}
+        />
+      )}
     </>
   );
 }

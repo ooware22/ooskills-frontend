@@ -648,6 +648,7 @@
     "sidebar": {
       "dashboard": "Tableau de bord",
       "myCourses": "Mes formations",
+      "certificates": "Certificats",
       "settings": "Paramètres",
       "logout": "Se déconnecter",
       "collapse": "Réduire",
@@ -670,7 +671,10 @@
       "lastLesson": "Dernière leçon",
       "lessons": "leçons",
       "recentActivity": "Activité récente",
-      "recentActivityDesc": "Votre dernière activité d'apprentissage"
+      "recentActivityDesc": "Votre dernière activité d'apprentissage",
+      "noCoursesYet": "Aucune formation pour le moment. Commencez à apprendre !",
+      "browseCatalog": "Parcourir le catalogue",
+      "noActivity": "Aucune activité récente"
     },
     "myCourses": {
       "title": "Mes formations",
@@ -684,7 +688,18 @@
       "continueCourse": "Continuer",
       "startCourse": "Commencer",
       "reviewCourse": "Revoir",
-      "noCourses": "Aucune formation ne correspond à vos filtres."
+      "noCourses": "Aucune formation ne correspond à vos filtres.",
+      "viewCertificate": "Voir le certificat",
+      "certified": "Certifié",
+      "enrolledOn": "Inscrit le",
+      "progress": "Progression"
+    },
+    "certificates": {
+      "title": "Mes Certificats",
+      "subtitle": "Consultez et partagez vos certificats obtenus",
+      "empty": "Aucun certificat pour le moment",
+      "emptyDesc": "Terminez un cours et réussissez son quiz pour obtenir votre premier certificat !",
+      "share": "Partager"
     },
     "catalogue": {
       "title": "Catalogue",

@@ -679,6 +679,7 @@
     "sidebar": {
       "dashboard": "Dashboard",
       "myCourses": "My Courses",
+      "certificates": "Certificates",
       "settings": "Settings",
       "logout": "Log out",
       "collapse": "Collapse",
@@ -701,7 +702,10 @@
       "lastLesson": "Last lesson",
       "lessons": "lessons",
       "recentActivity": "Recent Activity",
-      "recentActivityDesc": "Your latest learning activity"
+      "recentActivityDesc": "Your latest learning activity",
+      "noCoursesYet": "No courses yet. Start learning!",
+      "browseCatalog": "Browse catalog",
+      "noActivity": "No recent activity"
     },
     "myCourses": {
       "title": "My Courses",
@@ -715,7 +719,18 @@
       "continueCourse": "Continue",
       "startCourse": "Start Course",
       "reviewCourse": "Review",
-      "noCourses": "No courses found matching your filters."
+      "noCourses": "No courses found matching your filters.",
+      "viewCertificate": "View Certificate",
+      "certified": "Certified",
+      "enrolledOn": "Enrolled on",
+      "progress": "Progress"
+    },
+    "certificates": {
+      "title": "My Certificates",
+      "subtitle": "View and share your earned certificates",
+      "empty": "No certificates yet",
+      "emptyDesc": "Complete a course and pass its quiz to earn your first certificate!",
+      "share": "Share"
     },
     "catalogue": {
       "title": "Catalogue",

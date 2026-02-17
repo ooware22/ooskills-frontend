@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,21 +13,74 @@ import {
   XMarkIcon,
   CheckCircleIcon,
   PlusIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
-import { useTranslations } from "@/lib/i18n";
-import { allCourses, categoryList, formatStudents } from "@/data/courses";
+import { useTranslations, useI18n } from "@/lib/i18n";
+import { categoryList } from "@/data/courses";
 import StudentHeader from "@/components/student/StudentHeader";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { enrollCourse } from "@/store/slices/enrollmentSlice";
+import { enrollInCourse, fetchMyEnrollments } from "@/store/slices/enrollmentSlice";
+import {
+  fetchPublicCourses,
+  fetchPublicCategories,
+} from "@/store/slices/publicCoursesSlice";
+import EnrollDialog from "@/components/EnrollDialog";
+
+/** Format large student counts */
+function formatStudents(n: number) {
+  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
+}
 
 export default function CataloguePage() {
   const t = useTranslations("coursesPage");
   const tc = useTranslations("categories");
   const dispatch = useAppDispatch();
-  const enrollments = useAppSelector((state) => state.enrollment.enrollments);
-  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.courseId)), [enrollments]);
 
+  // API courses
+  const { courses: apiCourses, categories: apiCategories, loading } = useAppSelector(
+    (s) => s.publicCourses,
+  );
+
+  // Enrollments
+  const enrollments = useAppSelector((state) => state.enrollment.enrollments);
+  const enrolledIds = useMemo(
+    () => new Set(enrollments.map((e) => e.course_slug)),
+    [enrollments],
+  );
+
+  // Fetch courses + enrollments on mount
+  useEffect(() => {
+    dispatch(fetchPublicCourses(undefined));
+    dispatch(fetchPublicCategories());
+    dispatch(fetchMyEnrollments());
+  }, [dispatch]);
+
+  // Enroll dialog
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogCourse, setDialogCourse] = useState<{
+    id: string;
+    title: string;
+    price: number;
+    originalPrice: number;
+  } | null>(null);
+
+  const openEnrollDialog = (
+    e: React.MouseEvent,
+    course: { id: string | number; title: string; price: number; originalPrice: number },
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDialogCourse({
+      id: String(course.id),
+      title: course.title,
+      price: course.price,
+      originalPrice: course.originalPrice,
+    });
+    setDialogOpen(true);
+  };
+
+  // Local filter / sort state
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
@@ -36,23 +89,29 @@ export default function CataloguePage() {
 
   const levelLabel = (level: string) => {
     switch (level) {
-      case "beginner": return t("beginner");
-      case "intermediate": return t("intermediate");
-      case "advanced": return t("advanced");
-      default: return level;
+      case "beginner":
+        return t("beginner");
+      case "intermediate":
+        return t("intermediate");
+      case "advanced":
+        return t("advanced");
+      default:
+        return level;
     }
   };
 
+  // Category counts from API courses
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allCourses.forEach((c) => {
+    apiCourses.forEach((c) => {
       counts[c.category] = (counts[c.category] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [apiCourses]);
 
+  // Client-side filter + sort
   const filteredCourses = useMemo(() => {
-    let courses = [...allCourses];
+    let courses = [...apiCourses];
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -72,21 +131,19 @@ export default function CataloguePage() {
         courses.sort((a, b) => b.students - a.students);
         break;
       case "newest":
-        courses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        courses.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        );
         break;
       case "highestRated":
-        courses.sort((a, b) => b.rating - a.rating);
+        courses.sort(
+          (a, b) => parseFloat(b.rating) - parseFloat(a.rating),
+        );
         break;
     }
 
     return courses;
-  }, [search, selectedCategory, selectedLevel, sortBy]);
-
-  const handleEnroll = (e: React.MouseEvent, courseId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dispatch(enrollCourse(courseId));
-  };
+  }, [apiCourses, search, selectedCategory, selectedLevel, sortBy]);
 
   return (
     <div className="min-h-screen">
@@ -127,7 +184,9 @@ export default function CataloguePage() {
             <AdjustmentsHorizontalIcon className="w-5 h-5" />
             {t("allCategories")}
             {selectedCategory && (
-              <span className="px-2 py-0.5 bg-gold/10 text-gold rounded-full text-xs">1</span>
+              <span className="px-2 py-0.5 bg-gold/10 text-gold rounded-full text-xs">
+                1
+              </span>
             )}
           </button>
 
@@ -143,7 +202,10 @@ export default function CataloguePage() {
               </h3>
 
               <button
-                onClick={() => { setSelectedCategory(null); setMobileFiltersOpen(false); }}
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setMobileFiltersOpen(false);
+                }}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
                   !selectedCategory
                     ? "bg-gold/10 text-gold dark:bg-gold/15"
@@ -151,7 +213,7 @@ export default function CataloguePage() {
                 }`}
               >
                 <span>{t("allCategories")}</span>
-                <span className="text-xs opacity-60">{allCourses.length}</span>
+                <span className="text-xs opacity-60">{apiCourses.length}</span>
               </button>
 
               <div className="space-y-0.5">
@@ -171,9 +233,15 @@ export default function CataloguePage() {
                           : "text-silver hover:text-oxford dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-gold" : ""}`} />
-                      <span className="flex-1 text-start">{tc(`items.${cat.key}`)}</span>
-                      <span className="text-xs opacity-60">{categoryCounts[cat.key] || 0}</span>
+                      <Icon
+                        className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-gold" : ""}`}
+                      />
+                      <span className="flex-1 text-start">
+                        {tc(`items.${cat.key}`)}
+                      </span>
+                      <span className="text-xs opacity-60">
+                        {categoryCounts[cat.key] || 0}
+                      </span>
                     </button>
                   );
                 })}
@@ -186,7 +254,9 @@ export default function CataloguePage() {
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
               <p className="text-sm text-silver dark:text-gray-400">
-                <span className="font-semibold text-oxford dark:text-white">{filteredCourses.length}</span>{" "}
+                <span className="font-semibold text-oxford dark:text-white">
+                  {filteredCourses.length}
+                </span>{" "}
                 {t("coursesFound")}
               </p>
 
@@ -196,7 +266,11 @@ export default function CataloguePage() {
                   value={selectedLevel}
                   onChange={(e) => setSelectedLevel(e.target.value)}
                   className="px-3 py-2 bg-white dark:bg-oxford-light border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gold/30 appearance-none cursor-pointer pr-8"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center' }}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 0.5rem center",
+                  }}
                 >
                   <option value="all">{t("allLevels")}</option>
                   <option value="beginner">{t("beginner")}</option>
@@ -209,7 +283,11 @@ export default function CataloguePage() {
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-3 py-2 bg-white dark:bg-oxford-light border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gold/30 appearance-none cursor-pointer pr-8"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center' }}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 0.5rem center",
+                  }}
                 >
                   <option value="popular">{t("popular")}</option>
                   <option value="newest">{t("newest")}</option>
@@ -220,7 +298,24 @@ export default function CataloguePage() {
 
             {/* Course Grid */}
             <AnimatePresence mode="wait">
-              {filteredCourses.length > 0 ? (
+              {loading ? (
+                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-white dark:bg-oxford-light rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden animate-pulse"
+                    >
+                      <div className="aspect-video bg-gray-200 dark:bg-white/5" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-5 w-20 bg-gray-200 dark:bg-white/5 rounded-full" />
+                        <div className="h-5 w-3/4 bg-gray-200 dark:bg-white/5 rounded" />
+                        <div className="h-4 w-1/2 bg-gray-200 dark:bg-white/5 rounded" />
+                        <div className="h-10 w-full bg-gray-200 dark:bg-white/5 rounded-xl" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredCourses.length > 0 ? (
                 <motion.div
                   key={`${selectedCategory}-${selectedLevel}-${sortBy}-${search}`}
                   initial={{ opacity: 0 }}
@@ -230,11 +325,11 @@ export default function CataloguePage() {
                   className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6"
                 >
                   {filteredCourses.map((course, index) => {
-                    const isEnrolled = enrolledIds.has(course.id);
+                    const isEnrolled = enrolledIds.has(course.slug);
                     return (
                       <Link
                         key={course.id}
-                        href={`/courses/${course.id}`}
+                        href={`/courses/${course.slug}`}
                         className="block"
                       >
                         <motion.div
@@ -245,12 +340,18 @@ export default function CataloguePage() {
                         >
                           {/* Thumbnail */}
                           <div className="aspect-video bg-gray-100 dark:bg-oxford relative overflow-hidden">
-                            <Image
-                              src={course.image}
-                              alt={course.title}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                            />
+                            {course.image ? (
+                              <Image
+                                src={course.image}
+                                alt={course.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-oxford/60 to-oxford flex items-center justify-center">
+                                <AcademicCapIcon className="w-12 h-12 text-gold/40" />
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             {/* Enrolled badge */}
                             {isEnrolled && (
@@ -263,7 +364,7 @@ export default function CataloguePage() {
                           {/* Content */}
                           <div className="p-5 flex-1 flex flex-col">
                             <div className="inline-block px-2.5 py-1 bg-gold/10 dark:bg-gold/15 text-gold text-xs font-medium rounded-full mb-3 self-start group-hover:bg-gold group-hover:text-oxford transition-colors duration-300">
-                              {tc(`items.${course.category}`)}
+                              {course.level}
                             </div>
 
                             <h3 className="font-semibold text-oxford dark:text-white mb-3 line-clamp-2 group-hover:text-gold transition-colors duration-300 leading-snug">
@@ -273,7 +374,9 @@ export default function CataloguePage() {
                             <div className="flex items-center gap-4 text-xs text-silver mb-4">
                               <div className="flex items-center gap-1">
                                 <ClockIcon className="w-3.5 h-3.5" />
-                                <span>{course.duration} {t("hours")}</span>
+                                <span>
+                                  {course.duration} {t("hours")}
+                                </span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <ChartBarIcon className="w-3.5 h-3.5" />
@@ -285,9 +388,11 @@ export default function CataloguePage() {
                               <div className="flex items-center gap-1">
                                 <StarIcon className="w-3.5 h-3.5 fill-gold text-gold" />
                                 <span className="text-xs font-medium text-oxford dark:text-white">
-                                  {course.rating}
+                                  {parseFloat(course.rating).toFixed(1)}
                                 </span>
-                                <span className="text-xs text-silver">({course.reviews})</span>
+                                <span className="text-xs text-silver">
+                                  ({course.reviews})
+                                </span>
                               </div>
                               <div className="flex items-center gap-1 text-xs text-silver">
                                 <UserGroupIcon className="w-3.5 h-3.5" />
@@ -304,7 +409,7 @@ export default function CataloguePage() {
                                 </span>
                               ) : (
                                 <button
-                                  onClick={(e) => handleEnroll(e, course.id)}
+                                  onClick={(e) => openEnrollDialog(e, course)}
                                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-gold text-oxford hover:bg-gold-light transition-colors duration-200"
                                 >
                                   <PlusIcon className="w-4 h-4" />
@@ -337,6 +442,18 @@ export default function CataloguePage() {
           </div>
         </div>
       </div>
+
+      {/* Enroll Dialog */}
+      {dialogCourse && (
+        <EnrollDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          courseId={dialogCourse.id}
+          courseTitle={dialogCourse.title}
+          coursePrice={dialogCourse.price}
+          courseOriginalPrice={dialogCourse.originalPrice}
+        />
+      )}
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   ChevronLeftIcon as ChevronLeft,
   Bars3Icon as Menu,
   XMarkIcon as X,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -24,6 +25,7 @@ import { clearCredentials } from "@/store/slices/authSlice";
 const navItems = [
   { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/dashboard/my-courses", labelKey: "myCourses", icon: BookOpen },
+  { href: "/dashboard/certificates", labelKey: "certificates", icon: TrophyIcon },
   { href: "/dashboard/catalogue", labelKey: "catalogue", icon: Search },
   { href: "/dashboard/settings", labelKey: "settings", icon: Settings },
 ];

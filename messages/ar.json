@@ -648,6 +648,7 @@
     "sidebar": {
       "dashboard": "لوحة التحكم",
       "myCourses": "دوراتي",
+      "certificates": "الشهادات",
       "settings": "الإعدادات",
       "logout": "تسجيل الخروج",
       "collapse": "تصغير",
@@ -670,7 +671,10 @@
       "lastLesson": "آخر درس",
       "lessons": "دروس",
       "recentActivity": "النشاط الأخير",
-      "recentActivityDesc": "آخر نشاطاتك التعليمية"
+      "recentActivityDesc": "آخر نشاطاتك التعليمية",
+      "noCoursesYet": "لا توجد دورات بعد. ابدأ التعلّم!",
+      "browseCatalog": "تصفّح الكتالوج",
+      "noActivity": "لا يوجد نشاط أخير"
     },
     "myCourses": {
       "title": "دوراتي",
@@ -684,7 +688,18 @@
       "continueCourse": "متابعة",
       "startCourse": "بدء الدورة",
       "reviewCourse": "مراجعة",
-      "noCourses": "لا توجد دورات مطابقة للفلاتر."
+      "noCourses": "لا توجد دورات مطابقة للفلاتر.",
+      "viewCertificate": "عرض الشهادة",
+      "certified": "معتمد",
+      "enrolledOn": "مسجل في",
+      "progress": "التقدم"
+    },
+    "certificates": {
+      "title": "شهاداتي",
+      "subtitle": "استعرض وشارك الشهادات التي حصلت عليها",
+      "empty": "لا توجد شهادات بعد",
+      "emptyDesc": "أكمل دورة وانجح في الاختبار للحصول على أول شهادة!",
+      "share": "مشاركة"
     },
     "catalogue": {
       "title": "الكتالوج",

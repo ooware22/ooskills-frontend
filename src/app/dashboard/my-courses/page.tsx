@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,75 +8,128 @@ import {
   BookOpenIcon,
   PlayCircleIcon,
   CheckCircleIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
-  ClockIcon,
-  ChartBarIcon,
+  AcademicCapIcon,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
 import { cn } from "@/lib/utils";
 import { useI18n, useTranslations } from "@/lib/i18n";
-import { allCourses, formatStudents, type Course } from "@/data/courses";
 import StudentHeader from "@/components/student/StudentHeader";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  fetchMyEnrollments,
+  fetchMyCertificates,
+} from "@/store/slices/enrollmentSlice";
+import type { Enrollment, Certificate } from "@/store/slices/enrollmentSlice";
 
-type CourseFilter = "all" | "in-progress" | "completed" | "not-started";
+function normalizeImg(src: string | undefined | null): string | null {
+  if (!src) return null;
+  if (src.startsWith("http") || src.startsWith("/")) return src;
+  return `/${src}`;
+}
+
+type CourseFilter = "all" | "active" | "completed" | "cancelled";
 
 export default function MyCoursesPage() {
   const { t } = useI18n();
   const tp = useTranslations("coursesPage");
   const tc = (key: string) => t(`student.myCourses.${key}`);
+  const dispatch = useAppDispatch();
 
-  const enrollments = useAppSelector((state) => state.enrollment.enrollments);
+  const { enrollments, enrollmentsLoading, certificates } = useAppSelector(
+    (state) => state.enrollment,
+  );
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [filter, setFilter] = useState<CourseFilter>("all");
   const [search, setSearch] = useState("");
 
-  // Join enrollment data with course data
-  const enrolledCourses = useMemo(() => {
-    return enrollments
-      .map((enrollment) => {
-        const course = allCourses.find((c) => c.id === enrollment.courseId);
-        if (!course) return null;
-        return { ...course, enrollment };
-      })
-      .filter(Boolean) as (Course & { enrollment: (typeof enrollments)[0] })[];
-  }, [enrollments]);
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchMyEnrollments());
+      dispatch(fetchMyCertificates());
+    }
+  }, [dispatch, isAuthenticated]);
 
+  // Map course UUIDs to certificate status
+  const certMap = useMemo(() => {
+    const map = new Map<string, Certificate>();
+    for (const c of certificates) {
+      map.set(c.course, c);
+    }
+    return map;
+  }, [certificates]);
+
+  // Filter & search
   const filteredCourses = useMemo(() => {
-    return enrolledCourses.filter((course) => {
-      const matchesFilter = filter === "all" || course.enrollment.status === filter;
-      const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase());
+    return enrollments.filter((e) => {
+      const matchesFilter = filter === "all" || e.status === filter;
+      const matchesSearch = (e.course_title || "")
+        .toLowerCase()
+        .includes(search.toLowerCase());
       return matchesFilter && matchesSearch;
     });
-  }, [enrolledCourses, filter, search]);
+  }, [enrollments, filter, search]);
 
-  const counts = useMemo(() => ({
-    all: enrolledCourses.length,
-    "in-progress": enrolledCourses.filter(c => c.enrollment.status === "in-progress").length,
-    completed: enrolledCourses.filter(c => c.enrollment.status === "completed").length,
-    "not-started": enrolledCourses.filter(c => c.enrollment.status === "not-started").length,
-  }), [enrolledCourses]);
+  const counts = useMemo(
+    () => ({
+      all: enrollments.length,
+      active: enrollments.filter((e) => e.status === "active").length,
+      completed: enrollments.filter((e) => e.status === "completed").length,
+      cancelled: enrollments.filter((e) => e.status === "cancelled").length,
+    }),
+    [enrollments],
+  );
 
   const filterOptions: { key: CourseFilter; labelKey: string }[] = [
     { key: "all", labelKey: "all" },
-    { key: "in-progress", labelKey: "inProgress" },
+    { key: "active", labelKey: "inProgress" },
     { key: "completed", labelKey: "completed" },
-    { key: "not-started", labelKey: "notStarted" },
+    { key: "cancelled", labelKey: "cancelled" },
   ];
 
-  const levelLabel = (level: string) => {
-    switch (level) {
-      case "beginner": return tp("beginner");
-      case "intermediate": return tp("intermediate");
-      case "advanced": return tp("advanced");
-      default: return level;
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "active":
+        return tc("inProgress");
+      case "completed":
+        return tc("completed");
+      case "cancelled":
+        return tc("cancelled") || "Cancelled";
+      default:
+        return status;
     }
   };
 
-  const totalLessons = (course: Course) => {
-    return course.modules.reduce((sum, m) => sum + m.lessons, 0);
-  };
+  // ── Loading skeleton ─────────────────────────────────────────────────
+  if (enrollmentsLoading && enrollments.length === 0) {
+    return (
+      <div className="min-h-screen">
+        <StudentHeader
+          titleKey="student.myCourses.title"
+          subtitleKey="student.myCourses.subtitle"
+        />
+        <div className="p-6">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-oxford-light rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden animate-pulse"
+              >
+                <div className="aspect-video bg-gray-200 dark:bg-white/10" />
+                <div className="p-5 space-y-3">
+                  <div className="h-5 w-3/4 bg-gray-200 dark:bg-white/10 rounded" />
+                  <div className="h-3 w-1/2 bg-gray-200 dark:bg-white/10 rounded" />
+                  <div className="h-2 w-full bg-gray-200 dark:bg-white/10 rounded" />
+                  <div className="h-9 w-full bg-gray-200 dark:bg-white/10 rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -93,7 +146,10 @@ export default function MyCoursesPage() {
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
         >
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 rounded-xl p-1 overflow-x-auto max-w-full scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div
+            className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 rounded-xl p-1 overflow-x-auto max-w-full scrollbar-none"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {filterOptions.map((opt) => (
               <button
                 key={opt.key}
@@ -102,12 +158,14 @@ export default function MyCoursesPage() {
                   "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
                   filter === opt.key
                     ? "bg-white dark:bg-oxford-light text-oxford dark:text-white shadow-sm"
-                    : "text-silver dark:text-white/50 hover:text-oxford dark:hover:text-white"
+                    : "text-silver dark:text-white/50 hover:text-oxford dark:hover:text-white",
                 )}
               >
                 <span className="hidden sm:inline">{tc(opt.labelKey)}</span>
-                <span className="sm:hidden">{tc(opt.labelKey).split(' ')[0]}</span>
-                {' '}({counts[opt.key]})
+                <span className="sm:hidden">
+                  {tc(opt.labelKey).split(" ")[0]}
+                </span>{" "}
+                ({counts[opt.key]})
               </button>
             ))}
           </div>
@@ -128,13 +186,13 @@ export default function MyCoursesPage() {
         {/* Course Grid */}
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
-            {filteredCourses.map((course, index) => {
-              const total = totalLessons(course);
-              const enrollment = course.enrollment;
+            {filteredCourses.map((enrollment, index) => {
+              const progress = parseFloat(enrollment.progress) || 0;
+              const hasCert = certMap.has(enrollment.course);
 
               return (
                 <motion.div
-                  key={course.id}
+                  key={enrollment.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -144,74 +202,89 @@ export default function MyCoursesPage() {
                 >
                   {/* Thumbnail */}
                   <div className="aspect-video bg-gray-100 dark:bg-oxford relative overflow-hidden">
-                    <Image
-                      src={course.image}
-                      alt={course.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                    />
+                    {normalizeImg(enrollment.course_image) ? (
+                      <Image
+                        src={normalizeImg(enrollment.course_image)!}
+                        alt={enrollment.course_title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gold/20 via-oxford/60 to-oxford flex items-center justify-center">
+                        <AcademicCapIcon className="w-12 h-12 text-gold/40" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     {/* Status Badge */}
-                    <span className={cn(
-                      "absolute top-3 end-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm",
-                      enrollment.status === "completed" && "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
-                      enrollment.status === "in-progress" && "bg-amber-500/20 text-amber-300 border border-amber-500/30",
-                      enrollment.status === "not-started" && "bg-white/20 text-white/70 border border-white/20",
-                    )}>
-                      {tc(enrollment.status === "in-progress" ? "inProgress" : enrollment.status === "completed" ? "completed" : "notStarted")}
+                    <span
+                      className={cn(
+                        "absolute top-3 end-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm",
+                        enrollment.status === "completed" &&
+                          "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+                        enrollment.status === "active" &&
+                          "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+                        enrollment.status === "cancelled" &&
+                          "bg-red-500/20 text-red-300 border border-red-500/30",
+                      )}
+                    >
+                      {statusLabel(enrollment.status)}
                     </span>
+
+                    {/* Certificate Badge */}
+                    {hasCert && (
+                      <span className="absolute top-3 start-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm bg-gold/20 text-gold border border-gold/30 flex items-center gap-1">
+                        <TrophyIcon className="w-3 h-3" />
+                        {tc("certified") || "Certified"}
+                      </span>
+                    )}
                   </div>
 
                   {/* Content */}
                   <div className="p-5">
                     <h3 className="font-semibold text-oxford dark:text-white mb-3 line-clamp-2 group-hover:text-gold transition-colors duration-300 leading-snug">
-                      {course.title}
+                      {enrollment.course_title}
                     </h3>
 
-                    <div className="flex items-center gap-4 text-xs text-silver mb-4">
-                      <div className="flex items-center gap-1">
-                        <ClockIcon className="w-3.5 h-3.5" />
-                        <span>{course.duration}h</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <ChartBarIcon className="w-3.5 h-3.5" />
-                        <span>{levelLabel(course.level)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <StarIcon className="w-3.5 h-3.5 fill-gold text-gold" />
-                        <span className="text-oxford dark:text-white font-medium">{course.rating}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-xs text-silver mb-4">
+                      <span>
+                        {tc("enrolledOn") || "Enrolled"}{" "}
+                        {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                      </span>
                     </div>
 
                     {/* Progress */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs mb-1.5">
                         <span className="text-silver dark:text-white/50">
-                          {enrollment.completedLessons}/{total} {tc("lessonsCompleted")}
+                          {tc("progress") || "Progress"}
                         </span>
-                        <span className="font-semibold text-gold">{enrollment.progress}%</span>
+                        <span className="font-semibold text-gold">
+                          {Math.round(progress)}%
+                        </span>
                       </div>
                       <div className="h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                         <div
                           className={cn(
                             "h-full rounded-full transition-all duration-700",
-                            enrollment.status === "completed" ? "bg-emerald-500" : "bg-gold"
+                            enrollment.status === "completed"
+                              ? "bg-emerald-500"
+                              : "bg-gold",
                           )}
-                          style={{ width: `${enrollment.progress}%` }}
+                          style={{ width: `${progress}%` }}
                         />
                       </div>
                     </div>
 
                     {/* Action Button */}
                     <Link
-                      href={`/courses/${course.id}/learn`}
+                      href={`/courses/${enrollment.course_slug}/learn`}
                       className={cn(
                         "flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                         enrollment.status === "completed"
                           ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-                          : enrollment.status === "not-started"
-                          ? "bg-gold text-oxford hover:bg-gold-light"
-                          : "bg-gold/10 text-gold hover:bg-gold/20"
+                          : enrollment.status === "cancelled"
+                            ? "bg-gray-100 dark:bg-white/5 text-silver dark:text-white/50 pointer-events-none"
+                            : "bg-gold/10 text-gold hover:bg-gold/20",
                       )}
                     >
                       {enrollment.status === "completed" ? (
@@ -219,10 +292,10 @@ export default function MyCoursesPage() {
                           <CheckCircleIcon className="w-4 h-4" />
                           {tc("reviewCourse")}
                         </>
-                      ) : enrollment.status === "not-started" ? (
+                      ) : enrollment.status === "cancelled" ? (
                         <>
-                          <PlayCircleIcon className="w-4 h-4" />
-                          {tc("startCourse")}
+                          <BookOpenIcon className="w-4 h-4" />
+                          {tc("cancelled") || "Cancelled"}
                         </>
                       ) : (
                         <>
@@ -231,6 +304,16 @@ export default function MyCoursesPage() {
                         </>
                       )}
                     </Link>
+                    {/* View Certificate link */}
+                    {hasCert && (
+                      <Link
+                        href="/dashboard/certificates"
+                        className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xs font-medium bg-gold/10 text-gold hover:bg-gold/20 transition-all duration-200 mt-2"
+                      >
+                        <TrophyIcon className="w-3.5 h-3.5" />
+                        {tc("viewCertificate") || "View Certificate"}
+                      </Link>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -246,13 +329,15 @@ export default function MyCoursesPage() {
             className="text-center py-16"
           >
             <BookOpenIcon className="w-12 h-12 text-silver/30 dark:text-white/10 mx-auto mb-4" />
-            <p className="text-silver dark:text-white/50 mb-4">{tc("noCourses")}</p>
-            {enrolledCourses.length === 0 && (
+            <p className="text-silver dark:text-white/50 mb-4">
+              {tc("noCourses")}
+            </p>
+            {enrollments.length === 0 && (
               <Link
-                href="/dashboard/catalogue"
+                href="/courses"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gold text-oxford rounded-xl text-sm font-medium hover:bg-gold-light transition-colors"
               >
-                Browse Catalogue
+                {tc("browseCatalog") || "Browse Courses"}
               </Link>
             )}
           </motion.div>
