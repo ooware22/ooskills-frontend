@@ -606,7 +606,9 @@
     "tryDifferent": "حاول تعديل الفلاتر أو استعلام البحث",
     "backToHome": "العودة للرئيسية",
     "students": "طالب",
-    "hours": "ساعات"
+    "hours": "ساعات",
+    "enrolled": "مسجّل",
+    "enrollNow": "سجّل الآن"
   },
   "courseDetail": {
     "backToCourses": "العودة للدورات",
@@ -623,7 +625,6 @@
     "language": "اللغة",
     "certificate": "الشهادة",
     "lastUpdated": "آخر تحديث",
-    "enrolled": "المسجلين",
     "rating": "التقييم",
     "yes": "نعم",
     "no": "لا",
@@ -642,7 +643,17 @@
     "courseProgress": "التقدّم",
     "noCoursesYet": "لم تسجّل في أي دورة بعد.",
     "browseCatalog": "تصفّح الدورات",
-    "myCourses": "دوراتي"
+    "myCourses": "دوراتي",
+    "rating_section": {
+      "title": "التقييمات والمراجعات",
+      "reviewsCount": "مراجعات",
+      "rateThisCourse": "قيّم هذه الدورة",
+      "reviewPlaceholder": "شارك تجربتك (اختياري)...",
+      "submitRating": "إرسال التقييم",
+      "submitting": "جاري الإرسال...",
+      "submitted": "تم إرسال التقييم!",
+      "noReviews": "لا توجد مراجعات بعد. كن أول من يقيّم!"
+    }
   },
   "student": {
     "sidebar": {
@@ -692,7 +703,9 @@
       "viewCertificate": "عرض الشهادة",
       "certified": "معتمد",
       "enrolledOn": "مسجل في",
-      "progress": "التقدم"
+      "progress": "التقدم",
+      "cancelled": "ملغى",
+      "browseCatalog": "تصفّح الدورات"
     },
     "certificates": {
       "title": "شهاداتي",

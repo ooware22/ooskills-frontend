@@ -131,4 +131,39 @@ const publicCoursesApi = {
     },
 };
 
+export interface CourseRatingItem {
+    id: string;
+    user: string;
+    course: string;
+    rating: number;
+    review_text: string;
+    user_name: string;
+    created_at: string;
+}
+
+const ratingApi = {
+    /** Get all ratings for a course */
+    getCourseRatings: async (slug: string): Promise<CourseRatingItem[]> => {
+        const response = await axiosClient.get<CourseRatingItem[]>(
+            `${COURSES_ENDPOINT}${slug}/ratings/`
+        );
+        return response.data;
+    },
+
+    /** Submit or update a rating for a course (must be enrolled) */
+    submitCourseRating: async (
+        slug: string,
+        rating: number,
+        review_text: string = ''
+    ): Promise<CourseRatingItem> => {
+        const response = await axiosClient.post<CourseRatingItem>(
+            `${COURSES_ENDPOINT}${slug}/rate/`,
+            { rating, review_text }
+        );
+        return response.data;
+    },
+};
+
+export { ratingApi };
 export default publicCoursesApi;
+

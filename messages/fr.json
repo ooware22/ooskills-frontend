@@ -606,7 +606,9 @@
     "tryDifferent": "Essayez d'ajuster vos filtres ou votre recherche",
     "backToHome": "Retour à l'accueil",
     "students": "étudiants",
-    "hours": "heures"
+    "hours": "heures",
+    "enrolled": "Inscrit",
+    "enrollNow": "S'inscrire"
   },
   "courseDetail": {
     "backToCourses": "Retour aux formations",
@@ -623,7 +625,6 @@
     "language": "Langue",
     "certificate": "Certificat",
     "lastUpdated": "Dernière mise à jour",
-    "enrolled": "Inscrits",
     "rating": "Évaluation",
     "yes": "Oui",
     "no": "Non",
@@ -642,7 +643,17 @@
     "courseProgress": "Progression",
     "noCoursesYet": "Vous n'êtes inscrit à aucune formation.",
     "browseCatalog": "Parcourir le catalogue",
-    "myCourses": "Mes formations"
+    "myCourses": "Mes formations",
+    "rating_section": {
+      "title": "Notes & Avis",
+      "reviewsCount": "avis",
+      "rateThisCourse": "Notez cette formation",
+      "reviewPlaceholder": "Partagez votre expérience (optionnel)...",
+      "submitRating": "Soumettre",
+      "submitting": "Envoi...",
+      "submitted": "Avis soumis !",
+      "noReviews": "Aucun avis pour le moment. Soyez le premier !"
+    }
   },
   "student": {
     "sidebar": {
@@ -692,7 +703,9 @@
       "viewCertificate": "Voir le certificat",
       "certified": "Certifié",
       "enrolledOn": "Inscrit le",
-      "progress": "Progression"
+      "progress": "Progression",
+      "cancelled": "Annulé",
+      "browseCatalog": "Parcourir le catalogue"
     },
     "certificates": {
       "title": "Mes Certificats",

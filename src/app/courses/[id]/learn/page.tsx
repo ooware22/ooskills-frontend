@@ -151,13 +151,15 @@ function SlideContent({ slide }: { slide: Slide }) {
 }
 
 /* ─────────────── Quiz Component ─────────────── */
-function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule['quiz']>; onComplete: (score: number) => void }) {
+function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule['quiz']>; onComplete: (score: number, answers: Record<string, number>) => void }) {
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [scores, setScores] = useState<boolean[]>([]);
   const [selections, setSelections] = useState<(number | null)[]>([]);
   const [showResults, setShowResults] = useState(false);
+  // Accumulate answers keyed by real question ID (apiQuestionId or fallback id)
+  const [answersMap, setAnswersMap] = useState<Record<string, number>>({});
 
   const question = quiz.questions[currentQ];
   const isLast = currentQ === quiz.questions.length - 1;
@@ -168,6 +170,8 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
     setShowExplanation(true);
     setScores(prev => [...prev, idx === question.correct_answer]);
     setSelections(prev => [...prev, idx]);
+    const qKey = question.apiQuestionId || String(question.id);
+    setAnswersMap(prev => ({ ...prev, [qKey]: idx }));
   };
 
   const handleNext = () => {
@@ -252,7 +256,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
 
         {/* Continue button */}
         <div className="text-center">
-          <button onClick={() => onComplete(pct)}
+          <button onClick={() => onComplete(pct, answersMap)}
             className="px-10 py-4 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors text-lg">
             متابعة ←
           </button>
@@ -773,8 +777,10 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                   : sq.title || 'Quiz',
                 intro_text: sq.intro_text || '',
                 pass_threshold: sq.pass_threshold ?? 70,
+                apiQuizId: sq.id || undefined,
                 questions: (sq.questions || []).map((q: any, qi: number): QuizQuestion => ({
                   id: qi + 1,
+                  apiQuestionId: q.id ? String(q.id) : undefined,
                   type: q.type || 'multiple_choice',
                   question: typeof q.text === 'object'
                     ? q.text.fr || q.text.en || q.text.ar || ''
@@ -1076,13 +1082,27 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
 
   const goPrev = () => goToSlide(currentSlideIdx - 1);
 
-  const handleQuizComplete = (score: number) => {
-    if (currentFlat) {
+  const handleQuizComplete = (score: number, answers: Record<string, number>) => {
+    if (currentFlat && content) {
       const key = `mod_${currentFlat.moduleIndex}`;
       setQuizScores(prev => ({ ...prev, [key]: score }));
       if (!completedModules.includes(currentFlat.moduleIndex)) {
         setCompletedModules(prev => [...prev, currentFlat.moduleIndex]);
       }
+
+      // Submit quiz attempt to backend API if we have a real quiz ID
+      const mod = content.modules[currentFlat.moduleIndex];
+      if (mod.quiz?.apiQuizId && isAuthenticated) {
+        axiosClient.post('/formation/quiz-attempts/', {
+          quiz_id: mod.quiz.apiQuizId,
+          answers,
+        }).then((res) => {
+          console.log('[Quiz] Submitted to backend, xp_earned:', res.data.xp_earned);
+        }).catch((err) => {
+          console.error('[Quiz] Failed to submit attempt:', err);
+        });
+      }
+
       setShowQuiz(false);
       goToSlide(currentSlideIdx + 1);
     }

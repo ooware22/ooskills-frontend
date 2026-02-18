@@ -356,7 +356,7 @@ export default function CataloguePage() {
                             {/* Enrolled badge */}
                             {isEnrolled && (
                               <span className="absolute top-3 end-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                Enrolled
+                                {t("enrolled")}
                               </span>
                             )}
                           </div>
@@ -405,7 +405,7 @@ export default function CataloguePage() {
                               {isEnrolled ? (
                                 <span className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                   <CheckCircleIcon className="w-4 h-4" />
-                                  Enrolled
+                                  {t("enrolled")}
                                 </span>
                               ) : (
                                 <button
@@ -413,7 +413,7 @@ export default function CataloguePage() {
                                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-gold text-oxford hover:bg-gold-light transition-colors duration-200"
                                 >
                                   <PlusIcon className="w-4 h-4" />
-                                  Enroll Now
+                                  {t("enrollNow")}
                                 </button>
                               )}
                             </div>

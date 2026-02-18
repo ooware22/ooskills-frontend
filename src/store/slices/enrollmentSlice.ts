@@ -224,8 +224,29 @@ export const saveProgress = createAsyncThunk(
 export const fetchMyQuizAttempts = createAsyncThunk(
   "student/fetchMyQuizAttempts",
   async () => {
-    const { data } = await api.get("/formation/quiz-attempts/");
-    return extractResults<QuizAttempt>(data);
+    // Fetch both section quiz attempts and final quiz attempts in parallel
+    const [sectionRes, finalRes] = await Promise.all([
+      api.get("/formation/quiz-attempts/"),
+      api.get("/formation/final-quiz/my-attempts/").catch(() => ({ data: [] })),
+    ]);
+    const sectionAttempts = extractResults<QuizAttempt>(sectionRes.data);
+    // Map final quiz attempts to the same shape for XP summing
+    const finalAttempts: QuizAttempt[] = (
+      Array.isArray(finalRes.data) ? finalRes.data : finalRes.data.results || []
+    ).map((a: any) => ({
+      id: a.id,
+      enrollment: a.enrollment,
+      quiz: a.final_quiz || '',
+      score: a.score,
+      answers: a.answers || {},
+      passed: a.passed,
+      xp_earned: a.xp_earned || 0,
+      feedback: a.feedback || [],
+      attempt_number: a.attempt_number,
+      submitted_at: a.submitted_at,
+      remaining_attempts: a.remaining_attempts ?? 0,
+    }));
+    return [...sectionAttempts, ...finalAttempts];
   },
 );
 

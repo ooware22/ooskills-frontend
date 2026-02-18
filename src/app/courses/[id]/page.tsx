@@ -8,6 +8,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EnrollDialog from "@/components/EnrollDialog";
+import CourseRatingSection from "@/components/CourseRatingSection";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -372,6 +373,15 @@ export default function CourseDetailPage({
                   ))}
                 </div>
               </motion.div>
+
+              {/* Ratings & Reviews */}
+              <CourseRatingSection
+                slug={slug}
+                enrolled={enrolled}
+                isAuthenticated={isAuthenticated}
+                courseRating={course.rating}
+                courseReviews={course.reviews}
+              />
             </div>
 
             {/* Right Column — Sticky Price Card */}

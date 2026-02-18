@@ -72,6 +72,8 @@ export interface QuizQuestion {
   explanation: string;
   difficulty: string;
   category: string;
+  /** Real backend UUID when loaded from API */
+  apiQuestionId?: string;
 }
 
 export interface Quiz {
@@ -79,6 +81,8 @@ export interface Quiz {
   intro_text: string;
   questions: QuizQuestion[];
   pass_threshold: number;
+  /** Real backend Quiz UUID when loaded from API */
+  apiQuizId?: string;
 }
 
 export interface CourseContentModule {

@@ -637,7 +637,9 @@
     "tryDifferent": "Try adjusting your filters or search query",
     "backToHome": "Back to Home",
     "students": "students",
-    "hours": "hours"
+    "hours": "hours",
+    "enrolled": "Enrolled",
+    "enrollNow": "Enroll Now"
   },
   "courseDetail": {
     "backToCourses": "Back to Courses",
@@ -654,7 +656,6 @@
     "language": "Language",
     "certificate": "Certificate",
     "lastUpdated": "Last Updated",
-    "enrolled": "Enrolled",
     "rating": "Rating",
     "yes": "Yes",
     "no": "No",
@@ -673,7 +674,17 @@
     "courseProgress": "Progress",
     "noCoursesYet": "You haven't enrolled in any courses yet.",
     "browseCatalog": "Browse Catalog",
-    "myCourses": "My Courses"
+    "myCourses": "My Courses",
+    "rating_section": {
+      "title": "Ratings & Reviews",
+      "reviewsCount": "reviews",
+      "rateThisCourse": "Rate this course",
+      "reviewPlaceholder": "Share your experience (optional)...",
+      "submitRating": "Submit Rating",
+      "submitting": "Submitting...",
+      "submitted": "Rating submitted!",
+      "noReviews": "No reviews yet. Be the first!"
+    }
   },
   "student": {
     "sidebar": {
@@ -723,7 +734,9 @@
       "viewCertificate": "View Certificate",
       "certified": "Certified",
       "enrolledOn": "Enrolled on",
-      "progress": "Progress"
+      "progress": "Progress",
+      "cancelled": "Cancelled",
+      "browseCatalog": "Browse Courses"
     },
     "certificates": {
       "title": "My Certificates",
