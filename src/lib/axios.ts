@@ -16,11 +16,14 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
 // Create axios instance with default config
 const axiosClient = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 15000,
+    timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+/** Timeout for file upload requests (multipart/form-data) — 2 minutes */
+export const UPLOAD_TIMEOUT = 120_000;
 
 // =============================================================================
 // TOKEN REFRESH STATE

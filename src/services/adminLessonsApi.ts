@@ -6,7 +6,7 @@
  * Supports multipart/form-data for audio file uploads.
  */
 
-import axiosClient from '@/lib/axios';
+import axiosClient, { UPLOAD_TIMEOUT } from '@/lib/axios';
 
 // =============================================================================
 // TYPES
@@ -110,7 +110,10 @@ const adminLessonsApi = {
      */
     create: async (data: LessonCreatePayload) => {
         const { body, headers } = buildLessonFormData(data);
-        const response = await axiosClient.post<AdminLesson>(ENDPOINT, body, { headers });
+        const response = await axiosClient.post<AdminLesson>(ENDPOINT, body, {
+            headers,
+            timeout: data.audioFile ? UPLOAD_TIMEOUT : undefined,
+        });
         return response.data;
     },
 
@@ -119,7 +122,10 @@ const adminLessonsApi = {
      */
     update: async (id: string, data: LessonUpdatePayload) => {
         const { body, headers } = buildLessonFormData(data);
-        const response = await axiosClient.patch<AdminLesson>(`${ENDPOINT}${id}/`, body, { headers });
+        const response = await axiosClient.patch<AdminLesson>(`${ENDPOINT}${id}/`, body, {
+            headers,
+            timeout: data.audioFile ? UPLOAD_TIMEOUT : undefined,
+        });
         return response.data;
     },
 
