@@ -461,7 +461,9 @@
       "noCoursesFound": "No courses found matching your criteria",
       "addPrerequisite": "Add prerequisite",
       "addLearningPoint": "Add learning point",
-      "manageContent": "Manage Content"
+      "manageContent": "Manage Content",
+      "uploadImage": "Upload Image",
+      "changeImage": "Change Image"
     },
     "courseContent": {
       "title": "Course Content",
@@ -675,6 +677,15 @@
     "noCoursesYet": "You haven't enrolled in any courses yet.",
     "browseCatalog": "Browse Catalog",
     "myCourses": "My Courses",
+    "price": "Price",
+    "free": "Free",
+    "cancel": "Cancel",
+    "confirmEnroll": "Confirm Enrollment",
+    "processing": "Processing...",
+    "enrollSuccess": "You have been successfully enrolled.",
+    "continue": "Continue",
+    "error": "Error",
+    "tryAgain": "Try Again",
     "rating_section": {
       "title": "Ratings & Reviews",
       "reviewsCount": "reviews",

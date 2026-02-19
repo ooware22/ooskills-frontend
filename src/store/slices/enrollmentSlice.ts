@@ -3,6 +3,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/lib/axios";
 import type { RootState } from "@/store";
+import { logout, clearCredentials } from "./authSlice";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -386,6 +387,12 @@ const enrollmentSlice = createSlice({
       .addCase(fetchMyCertificates.rejected, (state) => {
         state.certificatesLoading = false;
       });
+
+    // ── Reset on logout ─────────────────────────────────────────
+    builder
+      .addCase(logout.fulfilled, () => initialState)
+      .addCase(logout.rejected, () => initialState)
+      .addCase(clearCredentials, () => initialState);
   },
 });
 

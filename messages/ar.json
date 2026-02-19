@@ -430,7 +430,9 @@
       "noCoursesFound": "لم يتم العثور على دورات مطابقة لمعاييرك",
       "addPrerequisite": "إضافة متطلب مسبق",
       "addLearningPoint": "إضافة نقطة تعلم",
-      "manageContent": "إدارة المحتوى"
+      "manageContent": "إدارة المحتوى",
+      "uploadImage": "رفع الصورة",
+      "changeImage": "تغيير الصورة"
     },
     "courseContent": {
       "title": "محتوى الدورة",
@@ -644,6 +646,15 @@
     "noCoursesYet": "لم تسجّل في أي دورة بعد.",
     "browseCatalog": "تصفّح الدورات",
     "myCourses": "دوراتي",
+    "price": "السعر",
+    "free": "مجاني",
+    "cancel": "إلغاء",
+    "confirmEnroll": "تأكيد التسجيل",
+    "processing": "جاري المعالجة...",
+    "enrollSuccess": "تم تسجيلك بنجاح.",
+    "continue": "متابعة",
+    "error": "خطأ",
+    "tryAgain": "حاول مرة أخرى",
     "rating_section": {
       "title": "التقييمات والمراجعات",
       "reviewsCount": "مراجعات",

@@ -198,6 +198,7 @@ const authSlice = createSlice({
             state.user = null;
             state.tokens = null;
             state.isAuthenticated = false;
+            state.isInitialized = false;
             state.error = null;
             authApi.clearTokens();
         },
@@ -302,6 +303,7 @@ const authSlice = createSlice({
                 state.user = null;
                 state.tokens = null;
                 state.isAuthenticated = false;
+                state.isInitialized = false;
                 state.loading = false;
                 state.error = null;
             })
@@ -310,6 +312,7 @@ const authSlice = createSlice({
                 state.user = null;
                 state.tokens = null;
                 state.isAuthenticated = false;
+                state.isInitialized = false;
                 state.loading = false;
             });
 

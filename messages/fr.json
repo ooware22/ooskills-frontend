@@ -430,7 +430,9 @@
       "noCoursesFound": "Aucun cours trouvé correspondant à vos critères",
       "addPrerequisite": "Ajouter un prérequis",
       "addLearningPoint": "Ajouter un point d'apprentissage",
-      "manageContent": "Gérer le contenu"
+      "manageContent": "Gérer le contenu",
+      "uploadImage": "Télécharger l'image",
+      "changeImage": "Changer l'image"
     },
     "courseContent": {
       "title": "Contenu du cours",
@@ -644,6 +646,15 @@
     "noCoursesYet": "Vous n'êtes inscrit à aucune formation.",
     "browseCatalog": "Parcourir le catalogue",
     "myCourses": "Mes formations",
+    "price": "Prix",
+    "free": "Gratuit",
+    "cancel": "Annuler",
+    "confirmEnroll": "Confirmer l'inscription",
+    "processing": "Traitement en cours...",
+    "enrollSuccess": "Vous avez été inscrit avec succès.",
+    "continue": "Continuer",
+    "error": "Erreur",
+    "tryAgain": "Réessayer",
     "rating_section": {
       "title": "Notes & Avis",
       "reviewsCount": "avis",
