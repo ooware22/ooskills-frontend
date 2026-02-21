@@ -124,7 +124,7 @@ export default function StudentDashboard() {
     for (const c of certificates.slice(0, 5)) {
       items.push({
         type: "certificate",
-        text: `Certificate earned: ${c.course_title}`,
+        text: `Open Badge earned: ${c.course_title}`,
         course: c.course_title,
         time: new Date(c.issuedAt).toLocaleDateString(),
       });

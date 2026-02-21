@@ -52,8 +52,8 @@ export default function CertificatesPage() {
     const url = `${window.location.origin}/verify/${cert.code}`;
     if (navigator.share) {
       navigator.share({
-        title: `Certificate — ${cert.course_title}`,
-        text: `I earned a certificate for "${cert.course_title}" on OOSkills!`,
+        title: `Open Badge — ${cert.course_title}`,
+        text: `I earned an Open Badge for "${cert.course_title}" on OOSkills!`,
         url,
       });
     } else {
@@ -72,12 +72,12 @@ export default function CertificatesPage() {
               <TrophySolid className="w-6 h-6 text-gold" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-oxford dark:text-white">
-              {t("student.certificates.title") || "My Certificates"}
+              {t("student.certificates.title") || "My Open Badges"}
             </h1>
           </div>
           <p className="text-silver dark:text-white/50 text-sm ms-12">
             {t("student.certificates.subtitle") ||
-              "View and share your earned certificates"}
+              "View and share your earned Open Badges"}
           </p>
         </div>
 
@@ -99,11 +99,11 @@ export default function CertificatesPage() {
               <AcademicCapIcon className="w-10 h-10 text-gold" />
             </div>
             <h3 className="text-xl font-semibold text-oxford dark:text-white mb-2">
-              {t("student.certificates.empty") || "No certificates yet"}
+              {t("student.certificates.empty") || "No Open Badges yet"}
             </h3>
             <p className="text-silver dark:text-white/50 max-w-md mx-auto">
               {t("student.certificates.emptyDesc") ||
-                "Complete a course and pass its quiz to earn your first certificate!"}
+                "Complete a course and pass its quiz to earn your first Open Badge!"}
             </p>
           </motion.div>
         )}

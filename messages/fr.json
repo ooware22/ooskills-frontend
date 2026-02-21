@@ -681,7 +681,7 @@
     "sidebar": {
       "dashboard": "Tableau de bord",
       "myCourses": "Mes formations",
-      "certificates": "Certificats",
+      "certificates": "Open Badges",
       "settings": "Paramètres",
       "logout": "Se déconnecter",
       "collapse": "Réduire",
@@ -722,7 +722,7 @@
       "startCourse": "Commencer",
       "reviewCourse": "Revoir",
       "noCourses": "Aucune formation ne correspond à vos filtres.",
-      "viewCertificate": "Voir le certificat",
+      "viewCertificate": "Voir l'Open Badge",
       "certified": "Certifié",
       "enrolledOn": "Inscrit le",
       "progress": "Progression",
@@ -730,10 +730,10 @@
       "browseCatalog": "Parcourir le catalogue"
     },
     "certificates": {
-      "title": "Mes Certificats",
-      "subtitle": "Consultez et partagez vos certificats obtenus",
-      "empty": "Aucun certificat pour le moment",
-      "emptyDesc": "Terminez un cours et réussissez son quiz pour obtenir votre premier certificat !",
+      "title": "Mes Open Badges",
+      "subtitle": "Consultez et partagez vos Open Badges obtenus",
+      "empty": "Aucun Open Badge pour le moment",
+      "emptyDesc": "Terminez un cours et réussissez son quiz pour obtenir votre premier Open Badge !",
       "share": "Partager"
     },
     "catalogue": {

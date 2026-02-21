@@ -681,7 +681,7 @@
     "sidebar": {
       "dashboard": "لوحة التحكم",
       "myCourses": "دوراتي",
-      "certificates": "الشهادات",
+      "certificates": "Open Badges",
       "settings": "الإعدادات",
       "logout": "تسجيل الخروج",
       "collapse": "تصغير",
@@ -722,7 +722,7 @@
       "startCourse": "بدء الدورة",
       "reviewCourse": "مراجعة",
       "noCourses": "لا توجد دورات مطابقة للفلاتر.",
-      "viewCertificate": "عرض الشهادة",
+      "viewCertificate": "عرض الـ Open Badge",
       "certified": "معتمد",
       "enrolledOn": "مسجل في",
       "progress": "التقدم",
@@ -730,10 +730,10 @@
       "browseCatalog": "تصفّح الدورات"
     },
     "certificates": {
-      "title": "شهاداتي",
-      "subtitle": "استعرض وشارك الشهادات التي حصلت عليها",
-      "empty": "لا توجد شهادات بعد",
-      "emptyDesc": "أكمل دورة وانجح في الاختبار للحصول على أول شهادة!",
+      "title": "Open Badges الخاصة بي",
+      "subtitle": "استعرض وشارك الـ Open Badges التي حصلت عليها",
+      "empty": "لا توجد Open Badges بعد",
+      "emptyDesc": "أكمل دورة وانجح في الاختبار للحصول على أول Open Badge!",
       "share": "مشاركة"
     },
     "catalogue": {
