@@ -35,6 +35,7 @@ export interface AdminCourse {
     date: string;
     price: number;
     originalPrice: number;
+    discount: number;
     description: string;
     prerequisites: string[];
     whatYouLearn: string[];
@@ -42,6 +43,7 @@ export interface AdminCourse {
     language: string;
     certificate: boolean;
     lastUpdated: string;
+    status: string;
 }
 
 export interface AdminCourseCreatePayload {
@@ -50,14 +52,15 @@ export interface AdminCourseCreatePayload {
     category: string;
     level: string;
     duration: number;
-    price: number;
     originalPrice: number;
+    discount: number;
     description: string;
     prerequisites: string[];
     whatYouLearn: string[];
     language: string;
     certificate: boolean;
     image?: File | string;
+    status?: string;
 }
 
 export interface AdminCourseUpdatePayload {
@@ -66,14 +69,15 @@ export interface AdminCourseUpdatePayload {
     category?: string;
     level?: string;
     duration?: number;
-    price?: number;
     originalPrice?: number;
+    discount?: number;
     description?: string;
     prerequisites?: string[];
     whatYouLearn?: string[];
     language?: string;
     certificate?: boolean;
     image?: File | string;
+    status?: string;
 }
 
 export interface CourseListParams {

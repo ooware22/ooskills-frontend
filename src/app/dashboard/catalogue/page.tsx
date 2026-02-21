@@ -2,43 +2,56 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
 import {
   MagnifyingGlassIcon,
-  ClockIcon,
-  ChartBarIcon,
-  UserGroupIcon,
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   CheckCircleIcon,
   PlusIcon,
   AcademicCapIcon,
+  BeakerIcon,
+  LanguageIcon,
+  ComputerDesktopIcon,
+  BriefcaseIcon,
+  MusicalNoteIcon,
+  PaintBrushIcon,
+  HeartIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { useTranslations, useI18n } from "@/lib/i18n";
-import { categoryList } from "@/data/courses";
 import StudentHeader from "@/components/student/StudentHeader";
+import CourseCard, { CourseCardSkeleton } from "@/components/CourseCard";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { enrollInCourse, fetchMyEnrollments } from "@/store/slices/enrollmentSlice";
+import { fetchMyEnrollments } from "@/store/slices/enrollmentSlice";
 import {
   fetchPublicCourses,
   fetchPublicCategories,
 } from "@/store/slices/publicCoursesSlice";
 import EnrollDialog from "@/components/EnrollDialog";
+import type { ComponentType, SVGProps } from "react";
 
-/** Format large student counts */
-function formatStudents(n: number) {
-  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
-}
+/** Map backend icon name → Heroicon component */
+const CATEGORY_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+  academic: AcademicCapIcon,
+  star: StarIcon,
+  science: BeakerIcon,
+  language: LanguageIcon,
+  computer: ComputerDesktopIcon,
+  business: BriefcaseIcon,
+  music: MusicalNoteIcon,
+  art: PaintBrushIcon,
+  health: HeartIcon,
+  default: CubeIcon,
+};
 
 export default function CataloguePage() {
   const t = useTranslations("coursesPage");
-  const tc = useTranslations("categories");
+  const { locale } = useI18n();
   const dispatch = useAppDispatch();
 
-  // API courses
-  const { courses: apiCourses, categories: apiCategories, loading } = useAppSelector(
+  // API courses & categories
+  const { courses: apiCourses, categories, loading, categoriesLoading } = useAppSelector(
     (s) => s.publicCourses,
   );
 
@@ -49,7 +62,7 @@ export default function CataloguePage() {
     [enrollments],
   );
 
-  // Fetch courses + enrollments on mount
+  // Fetch courses + categories + enrollments on mount
   useEffect(() => {
     dispatch(fetchPublicCourses(undefined));
     dispatch(fetchPublicCategories());
@@ -89,10 +102,10 @@ export default function CataloguePage() {
 
   const levelLabel = (level: string) => {
     switch (level) {
-      case "beginner":
-        return t("beginner");
-      case "intermediate":
-        return t("intermediate");
+      case "initialisation":
+        return t("initialisation");
+      case "approfondissement":
+        return t("approfondissement");
       case "advanced":
         return t("advanced");
       default:
@@ -100,14 +113,21 @@ export default function CataloguePage() {
     }
   };
 
-  // Category counts from API courses
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    apiCourses.forEach((c) => {
-      counts[c.category] = (counts[c.category] || 0) + 1;
-    });
-    return counts;
-  }, [apiCourses]);
+  // Helpers
+  const getCategoryName = (name: Record<string, string> | string) => {
+    if (typeof name === "string") return name;
+    return name[locale] || name.en || name.fr || Object.values(name)[0] || "";
+  };
+
+  const categoryLabel = (slug: string) => {
+    const cat = categories.find((c) => c.slug === slug);
+    if (!cat) return slug;
+    return getCategoryName(cat.name as unknown as Record<string, string>);
+  };
+
+  const getCategoryIcon = (iconName: string) => {
+    return CATEGORY_ICONS[iconName] || CATEGORY_ICONS.default;
+  };
 
   // Client-side filter + sort
   const filteredCourses = useMemo(() => {
@@ -190,7 +210,7 @@ export default function CataloguePage() {
             )}
           </button>
 
-          {/* Sidebar — Categories */}
+          {/* Sidebar — Categories (from API) */}
           <aside
             className={`lg:w-72 flex-shrink-0 ${
               mobileFiltersOpen ? "block" : "hidden lg:block"
@@ -216,36 +236,43 @@ export default function CataloguePage() {
                 <span className="text-xs opacity-60">{apiCourses.length}</span>
               </button>
 
-              <div className="space-y-0.5">
-                {categoryList.map((cat) => {
-                  const Icon = cat.icon;
-                  const isActive = selectedCategory === cat.key;
-                  return (
-                    <button
-                      key={cat.key}
-                      onClick={() => {
-                        setSelectedCategory(isActive ? null : cat.key);
-                        setMobileFiltersOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? "bg-gold/10 text-gold dark:bg-gold/15"
-                          : "text-silver hover:text-oxford dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      <Icon
-                        className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-gold" : ""}`}
-                      />
-                      <span className="flex-1 text-start">
-                        {tc(`items.${cat.key}`)}
-                      </span>
-                      <span className="text-xs opacity-60">
-                        {categoryCounts[cat.key] || 0}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              {categoriesLoading ? (
+                <div className="space-y-2 mt-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-10 bg-gray-100 dark:bg-white/5 rounded-xl animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  {categories.map((cat) => {
+                    const isActive = selectedCategory === cat.slug;
+                    const label = getCategoryName(cat.name as unknown as Record<string, string>);
+                    const IconComp = cat.icon ? getCategoryIcon(cat.icon) : null;
+                    return (
+                      <button
+                        key={cat.slug}
+                        onClick={() => {
+                          setSelectedCategory(isActive ? null : cat.slug);
+                          setMobileFiltersOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-gold/10 text-gold dark:bg-gold/15"
+                            : "text-silver hover:text-oxford dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        {IconComp && (
+                          <IconComp className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-gold" : ""}`} />
+                        )}
+                        <span className="flex-1 text-start">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </aside>
 
@@ -273,8 +300,8 @@ export default function CataloguePage() {
                   }}
                 >
                   <option value="all">{t("allLevels")}</option>
-                  <option value="beginner">{t("beginner")}</option>
-                  <option value="intermediate">{t("intermediate")}</option>
+                  <option value="initialisation">{t("initialisation")}</option>
+                  <option value="approfondissement">{t("approfondissement")}</option>
                   <option value="advanced">{t("advanced")}</option>
                 </select>
 
@@ -301,18 +328,7 @@ export default function CataloguePage() {
               {loading ? (
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-white dark:bg-oxford-light rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden animate-pulse"
-                    >
-                      <div className="aspect-video bg-gray-200 dark:bg-white/5" />
-                      <div className="p-5 space-y-3">
-                        <div className="h-5 w-20 bg-gray-200 dark:bg-white/5 rounded-full" />
-                        <div className="h-5 w-3/4 bg-gray-200 dark:bg-white/5 rounded" />
-                        <div className="h-4 w-1/2 bg-gray-200 dark:bg-white/5 rounded" />
-                        <div className="h-10 w-full bg-gray-200 dark:bg-white/5 rounded-xl" />
-                      </div>
-                    </div>
+                    <CourseCardSkeleton key={i} />
                   ))}
                 </div>
               ) : filteredCourses.length > 0 ? (
@@ -327,99 +343,37 @@ export default function CataloguePage() {
                   {filteredCourses.map((course, index) => {
                     const isEnrolled = enrolledIds.has(course.slug);
                     return (
-                      <Link
+                      <CourseCard
                         key={course.id}
-                        href={`/courses/${course.slug}`}
-                        className="block"
-                      >
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.35, delay: index * 0.04 }}
-                          className="group h-full bg-white dark:bg-oxford-light rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden hover:border-gold/30 dark:hover:border-gold/30 hover:shadow-xl hover:shadow-gold/10 dark:hover:shadow-gold/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
-                        >
-                          {/* Thumbnail */}
-                          <div className="aspect-video bg-gray-100 dark:bg-oxford relative overflow-hidden">
-                            {course.image ? (
-                              <Image
-                                src={course.image}
-                                alt={course.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-oxford/60 to-oxford flex items-center justify-center">
-                                <AcademicCapIcon className="w-12 h-12 text-gold/40" />
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            {/* Enrolled badge */}
-                            {isEnrolled && (
-                              <span className="absolute top-3 end-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                {t("enrolled")}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Content */}
-                          <div className="p-5 flex-1 flex flex-col">
-                            <div className="inline-block px-2.5 py-1 bg-gold/10 dark:bg-gold/15 text-gold text-xs font-medium rounded-full mb-3 self-start group-hover:bg-gold group-hover:text-oxford transition-colors duration-300">
-                              {course.level}
-                            </div>
-
-                            <h3 className="font-semibold text-oxford dark:text-white mb-3 line-clamp-2 group-hover:text-gold transition-colors duration-300 leading-snug">
-                              {course.title}
-                            </h3>
-
-                            <div className="flex items-center gap-4 text-xs text-silver mb-4">
-                              <div className="flex items-center gap-1">
-                                <ClockIcon className="w-3.5 h-3.5" />
-                                <span>
-                                  {course.duration} {t("hours")}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <ChartBarIcon className="w-3.5 h-3.5" />
-                                <span>{levelLabel(course.level)}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-white/5 group-hover:border-gold/20 transition-colors duration-300 mb-4">
-                              <div className="flex items-center gap-1">
-                                <StarIcon className="w-3.5 h-3.5 fill-gold text-gold" />
-                                <span className="text-xs font-medium text-oxford dark:text-white">
-                                  {parseFloat(course.rating).toFixed(1)}
-                                </span>
-                                <span className="text-xs text-silver">
-                                  ({course.reviews})
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-silver">
-                                <UserGroupIcon className="w-3.5 h-3.5" />
-                                <span>{formatStudents(course.students)}</span>
-                              </div>
-                            </div>
-
-                            {/* Enroll Button */}
-                            <div className="mt-auto">
-                              {isEnrolled ? (
-                                <span className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                  <CheckCircleIcon className="w-4 h-4" />
-                                  {t("enrolled")}
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={(e) => openEnrollDialog(e, course)}
-                                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-gold text-oxford hover:bg-gold-light transition-colors duration-200"
-                                >
-                                  <PlusIcon className="w-4 h-4" />
-                                  {t("enrollNow")}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      </Link>
+                        course={course}
+                        index={index}
+                        badgeText={categoryLabel(course.category)}
+                        levelLabel={levelLabel(course.level)}
+                        hoursLabel={` ${t("hours")}`}
+                        overlayBadge={
+                          isEnrolled ? (
+                            <span className="absolute top-3 end-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              {t("enrolled")}
+                            </span>
+                          ) : undefined
+                        }
+                        footer={
+                          isEnrolled ? (
+                            <span className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              <CheckCircleIcon className="w-4 h-4" />
+                              {t("enrolled")}
+                            </span>
+                          ) : (
+                            <button
+                              onClick={(e) => openEnrollDialog(e, course)}
+                              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium bg-gold text-oxford hover:bg-gold-light transition-colors duration-200"
+                            >
+                              <PlusIcon className="w-4 h-4" />
+                              {t("enrollNow")}
+                            </button>
+                          )
+                        }
+                      />
                     );
                   })}
                 </motion.div>
@@ -457,3 +411,4 @@ export default function CataloguePage() {
     </div>
   );
 }
+

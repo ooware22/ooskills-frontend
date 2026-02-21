@@ -416,8 +416,8 @@
       "modules": "الوحدات",
       "date": "التاريخ",
       "lastUpdated": "آخر تحديث",
-      "levelBeginner": "مبتدئ",
-      "levelIntermediate": "متوسط",
+      "levelInitialisation": "تهيئة",
+      "levelApprofondissement": "تعمق",
       "levelAdvanced": "متقدم",
       "confirmDelete": "هل أنت متأكد من حذف هذه الدورة؟",
       "confirmDeleteDesc": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف الدورة نهائياً.",
@@ -432,7 +432,12 @@
       "addLearningPoint": "إضافة نقطة تعلم",
       "manageContent": "إدارة المحتوى",
       "uploadImage": "رفع الصورة",
-      "changeImage": "تغيير الصورة"
+      "changeImage": "تغيير الصورة",
+      "status": "الحالة",
+      "statusDraft": "مسودة",
+      "statusPublished": "منشور",
+      "statusArchived": "مؤرشف",
+      "discount": "تخفيض"
     },
     "courseContent": {
       "title": "محتوى الدورة",
@@ -598,6 +603,8 @@
     "allLevels": "جميع المستويات",
     "beginner": "مبتدئ",
     "intermediate": "متوسط",
+    "initialisation": "تهيئة",
+    "approfondissement": "تعمّق",
     "advanced": "متقدم",
     "sortBy": "ترتيب حسب",
     "popular": "الأكثر شعبية",

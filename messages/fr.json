@@ -416,8 +416,8 @@
       "modules": "Modules",
       "date": "Date",
       "lastUpdated": "Dernière mise à jour",
-      "levelBeginner": "Débutant",
-      "levelIntermediate": "Intermédiaire",
+      "levelInitialisation": "Initialisation",
+      "levelApprofondissement": "Approfondissement",
       "levelAdvanced": "Avancé",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce cours ?",
       "confirmDeleteDesc": "Cette action est irréversible. Le cours sera définitivement supprimé.",
@@ -432,7 +432,12 @@
       "addLearningPoint": "Ajouter un point d'apprentissage",
       "manageContent": "Gérer le contenu",
       "uploadImage": "Télécharger l'image",
-      "changeImage": "Changer l'image"
+      "changeImage": "Changer l'image",
+      "status": "Statut",
+      "statusDraft": "Brouillon",
+      "statusPublished": "Publié",
+      "statusArchived": "Archivé",
+      "discount": "Réduction"
     },
     "courseContent": {
       "title": "Contenu du cours",
@@ -598,6 +603,8 @@
     "allLevels": "Tous les niveaux",
     "beginner": "Débutant",
     "intermediate": "Intermédiaire",
+    "initialisation": "Initialisation",
+    "approfondissement": "Approfondissement",
     "advanced": "Avancé",
     "sortBy": "Trier par",
     "popular": "Les plus populaires",

@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useTranslations, useI18n } from "@/lib/i18n";
@@ -12,12 +10,9 @@ import {
   fetchPublicCourses,
   fetchPublicCategories,
 } from "@/store/slices/publicCoursesSlice";
-import type { CourseFilterParams } from "@/services/publicCoursesApi";
+import CourseCard, { CourseCardSkeleton } from "@/components/CourseCard";
 import {
   MagnifyingGlassIcon,
-  ClockIcon,
-  ChartBarIcon,
-  UserGroupIcon,
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   AcademicCapIcon,
@@ -47,11 +42,6 @@ const CATEGORY_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   default: CubeIcon,
 };
 
-/** Format large student counts as e.g. "2.4k" */
-function formatStudents(n: number) {
-  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
-}
-
 export default function CoursesPage() {
   const t = useTranslations("coursesPage");
   const { locale } = useI18n();
@@ -80,7 +70,6 @@ export default function CoursesPage() {
   const filteredCourses = useMemo(() => {
     let result = [...courses];
 
-    // Search
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -90,17 +79,14 @@ export default function CoursesPage() {
       );
     }
 
-    // Category
     if (selectedCategory) {
       result = result.filter((c) => c.category === selectedCategory);
     }
 
-    // Level
     if (selectedLevel !== "all") {
       result = result.filter((c) => c.level === selectedLevel);
     }
 
-    // Sort
     switch (sortBy) {
       case "popular":
         result.sort((a, b) => b.students - a.students);
@@ -120,7 +106,6 @@ export default function CoursesPage() {
     return result;
   }, [courses, search, selectedCategory, selectedLevel, sortBy]);
 
-  // Search handler — instant since filtering is local
   const handleSearchChange = (value: string) => {
     setSearch(value);
   };
@@ -128,10 +113,10 @@ export default function CoursesPage() {
   // ── Helpers ───────────────────────────────────────────────────────────
   const levelLabel = (level: string) => {
     switch (level) {
-      case "beginner":
-        return t("beginner");
-      case "intermediate":
-        return t("intermediate");
+      case "initialisation":
+        return t("initialisation");
+      case "approfondissement":
+        return t("approfondissement");
       case "advanced":
         return t("advanced");
       default:
@@ -139,20 +124,17 @@ export default function CoursesPage() {
     }
   };
 
-  /** Get localised category name from the API‑returned i18n object */
   const getCategoryName = (name: Record<string, string> | string) => {
     if (typeof name === "string") return name;
     return name[locale] || name.en || name.fr || Object.values(name)[0] || "";
   };
 
-  /** Resolve category slug → localised label (from fetched categories list) */
   const categoryLabel = (slug: string) => {
     const cat = categories.find((c) => c.slug === slug);
     if (!cat) return slug;
     return getCategoryName(cat.name as unknown as Record<string, string>);
   };
 
-  /** Get an icon component for a category's icon name */
   const getCategoryIcon = (iconName: string) => {
     return CATEGORY_ICONS[iconName] || CATEGORY_ICONS.default;
   };
@@ -225,7 +207,6 @@ export default function CoursesPage() {
                   {t("allCategories")}
                 </h3>
 
-                {/* All Categories button */}
                 <button
                   onClick={() => {
                     setSelectedCategory(null);
@@ -305,8 +286,8 @@ export default function CoursesPage() {
                     }}
                   >
                     <option value="all">{t("allLevels")}</option>
-                    <option value="beginner">{t("beginner")}</option>
-                    <option value="intermediate">{t("intermediate")}</option>
+                    <option value="initialisation">{t("initialisation")}</option>
+                    <option value="approfondissement">{t("approfondissement")}</option>
                     <option value="advanced">{t("advanced")}</option>
                   </select>
 
@@ -339,19 +320,7 @@ export default function CoursesPage() {
                     className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6"
                   >
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div
-                        key={i}
-                        className="bg-white dark:bg-oxford-light rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden animate-pulse"
-                      >
-                        <div className="aspect-video bg-gray-200 dark:bg-white/5" />
-                        <div className="p-5 space-y-3">
-                          <div className="h-5 w-20 bg-gray-200 dark:bg-white/5 rounded-full" />
-                          <div className="h-5 w-3/4 bg-gray-200 dark:bg-white/5 rounded" />
-                          <div className="h-4 w-1/2 bg-gray-200 dark:bg-white/5 rounded" />
-                          <div className="h-px bg-gray-100 dark:bg-white/5" />
-                          <div className="h-4 w-full bg-gray-200 dark:bg-white/5 rounded" />
-                        </div>
-                      </div>
+                      <CourseCardSkeleton key={i} />
                     ))}
                   </motion.div>
                 ) : filteredCourses.length > 0 ? (
@@ -364,76 +333,14 @@ export default function CoursesPage() {
                     className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6"
                   >
                     {filteredCourses.map((course, index) => (
-                      <Link
+                      <CourseCard
                         key={course.id}
-                        href={`/courses/${course.slug}`}
-                        className="block"
-                      >
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.35, delay: index * 0.04 }}
-                          className="group h-full bg-white dark:bg-oxford-light rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden hover:border-gold/30 dark:hover:border-gold/30 hover:shadow-xl hover:shadow-gold/10 dark:hover:shadow-gold/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                        >
-                          {/* Thumbnail */}
-                          <div className="aspect-video bg-gray-100 dark:bg-oxford relative overflow-hidden">
-                            {course.image ? (
-                              <Image
-                                src={course.image}
-                                alt={course.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-oxford/60 to-oxford flex items-center justify-center">
-                                <AcademicCapIcon className="w-12 h-12 text-gold/40" />
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          </div>
-
-                          {/* Content */}
-                          <div className="p-5">
-                            {/* Category */}
-                            <div className="inline-block px-2.5 py-1 bg-gold/10 dark:bg-gold/15 text-gold text-xs font-medium rounded-full mb-3 group-hover:bg-gold group-hover:text-oxford transition-colors duration-300">
-                              {categoryLabel(course.category)}
-                            </div>
-
-                            <h3 className="font-semibold text-oxford dark:text-white mb-3 line-clamp-2 group-hover:text-gold transition-colors duration-300 leading-snug">
-                              {course.title}
-                            </h3>
-
-                            <div className="flex items-center gap-4 text-xs text-silver mb-4">
-                              <div className="flex items-center gap-1">
-                                <ClockIcon className="w-3.5 h-3.5" />
-                                <span>
-                                  {course.duration} {t("hours")}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <ChartBarIcon className="w-3.5 h-3.5" />
-                                <span>{levelLabel(course.level)}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-white/5 group-hover:border-gold/20 transition-colors duration-300">
-                              <div className="flex items-center gap-1">
-                                <StarIcon className="w-3.5 h-3.5 fill-gold text-gold" />
-                                <span className="text-xs font-medium text-oxford dark:text-white">
-                                  {course.rating}
-                                </span>
-                                <span className="text-xs text-silver">
-                                  ({course.reviews})
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-silver">
-                                <UserGroupIcon className="w-3.5 h-3.5" />
-                                <span>{formatStudents(course.students)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      </Link>
+                        course={course}
+                        index={index}
+                        badgeText={categoryLabel(course.category)}
+                        levelLabel={levelLabel(course.level)}
+                        hoursLabel={` ${t("hours")}`}
+                      />
                     ))}
                   </motion.div>
                 ) : (
@@ -460,3 +367,4 @@ export default function CoursesPage() {
     </>
   );
 }
+

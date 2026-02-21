@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   SparklesIcon as Sparkles,
@@ -20,6 +20,8 @@ import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchDashboardData, selectDashboardSections } from "@/store/slices/dashboardSlice";
+import { fetchAdminCourses } from "@/store/slices/adminCoursesManagementSlice";
+import { fetchUsers } from "@/store/slices/usersSlice";
 
 type SectionConfig = {
   nameKey: string;
@@ -31,16 +33,9 @@ const sectionConfigs: SectionConfig[] = [
   { nameKey: "hero", icon: Sparkles, href: "/admin/hero" },
   { nameKey: "countdown", icon: Clock, href: "/admin/countdown" },
   { nameKey: "features", icon: Award, href: "/admin/features" },
-  { nameKey: "courses", icon: BookOpen, href: "/admin/courses" },
   { nameKey: "faq", icon: HelpCircle, href: "/admin/faq" },
   { nameKey: "contact", icon: Phone, href: "/admin/contact" },
   { nameKey: "settings", icon: Settings, href: "/admin/settings" },
-];
-
-const stats = [
-  { labelKey: "totalCourses", value: "12,458", change: "+12%", icon: Eye },
-  { labelKey: "totalStudents", value: "45,892", change: "+8%", icon: TrendingUp },
-  { labelKey: "activeUsers", value: "234", change: "+24%", icon: Users },
 ];
 
 export default function AdminDashboard() {
@@ -48,10 +43,31 @@ export default function AdminDashboard() {
   const dispatch = useAppDispatch();
   const sections = useAppSelector(selectDashboardSections);
 
-  // Fetch data on mount (uses cache if available)
+  // Courses data
+  const courses = useAppSelector((state) => state.adminCoursesManagement.courses);
+  const totalCourses = useAppSelector((state) => state.adminCoursesManagement.totalCount);
+
+  // Users data
+  const totalUsers = useAppSelector((state) => state.adminUsers.totalCount);
+
+  // Compute total students from all courses
+  const totalStudents = useMemo(
+    () => courses.reduce((sum, c) => sum + (c.students || 0), 0),
+    [courses]
+  );
+
+  // Fetch data on mount
   useEffect(() => {
     dispatch(fetchDashboardData());
+    dispatch(fetchAdminCourses());
+    dispatch(fetchUsers(undefined));
   }, [dispatch]);
+
+  const stats = [
+    { labelKey: "totalCourses", value: totalCourses.toLocaleString(), icon: Eye },
+    { labelKey: "totalStudents", value: totalStudents.toLocaleString(), icon: TrendingUp },
+    { labelKey: "activeUsers", value: totalUsers.toLocaleString(), icon: Users },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -75,9 +91,6 @@ export default function AdminDashboard() {
                 <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center">
                   <stat.icon className="w-5 h-5 text-gold" />
                 </div>
-                <span className="text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-full">
-                  {stat.change}
-                </span>
               </div>
               <p className="text-2xl font-bold text-oxford dark:text-white mb-1">
                 {stat.value}

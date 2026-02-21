@@ -57,7 +57,6 @@ const navItems: NavItem[] = [
       { href: "/admin/hero", labelKey: "hero", icon: Sparkles },
       { href: "/admin/countdown", labelKey: "countdown", icon: Clock },
       { href: "/admin/features", labelKey: "features", icon: Award },
-      { href: "/admin/courses", labelKey: "courses", icon: BookOpen },
       { href: "/admin/faq", labelKey: "faq", icon: HelpCircle },
       { href: "/admin/contact", labelKey: "contact", icon: Phone },
       { href: "/admin/settings", labelKey: "settings", icon: Settings },

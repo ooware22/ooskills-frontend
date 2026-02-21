@@ -32,6 +32,7 @@ import {
   updateAdminCourse,
   deleteAdminCourse,
   setFilters,
+  invalidateCache,
 } from "@/store/slices/adminCoursesManagementSlice";
 import { fetchCategories } from "@/store/slices/adminCategoriesSlice";
 import type { AdminCourse, AdminCourseCreatePayload } from "@/services/adminCoursesManagementApi";
@@ -50,35 +51,48 @@ interface CourseForm {
   duration: number;
   price: number;
   originalPrice: number;
+  discount: number;
   description: string;
   prerequisites: string[];
   whatYouLearn: string[];
   language: string;
   certificate: boolean;
   image: string;
+  status: string;
 }
 
 const emptyForm: CourseForm = {
   title: "",
   slug: "",
   category: "",
-  level: "beginner",
+  level: "initialisation",
   duration: 0,
   price: 0,
   originalPrice: 0,
+  discount: 0,
   description: "",
   prerequisites: [],
   whatYouLearn: [],
   language: "",
   certificate: true,
   image: "",
+  status: "draft",
 };
 
 const levelColor = (level: string) => {
   switch (level) {
-    case "beginner": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-    case "intermediate": return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
+    case "initialisation": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+    case "approfondissement": return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
     case "advanced": return "bg-red-500/10 text-red-600 dark:text-red-400";
+    default: return "bg-gray-500/10 text-gray-600";
+  }
+};
+
+const statusColor = (status: string) => {
+  switch (status) {
+    case "published": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+    case "draft": return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400";
+    case "archived": return "bg-gray-500/10 text-gray-500 dark:text-gray-400";
     default: return "bg-gray-500/10 text-gray-600";
   }
 };
@@ -146,6 +160,7 @@ export default function CourseManagementPage() {
 
   // Stats
   const totalStudents = courses.reduce((sum, c) => sum + c.students, 0);
+  const publishedCount = courses.filter((c) => c.status === "published").length;
 
   // Toast
   const showToast = (msg: string) => {
@@ -155,10 +170,19 @@ export default function CourseManagementPage() {
 
   const getLevelLabel = (level: string) => {
     switch (level) {
-      case "beginner": return tc("levelBeginner");
-      case "intermediate": return tc("levelIntermediate");
+      case "initialisation": return tc("levelInitialisation");
+      case "approfondissement": return tc("levelApprofondissement");
       case "advanced": return tc("levelAdvanced");
       default: return level;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "draft": return tc("statusDraft");
+      case "published": return tc("statusPublished");
+      case "archived": return tc("statusArchived");
+      default: return status;
     }
   };
 
@@ -184,12 +208,14 @@ export default function CourseManagementPage() {
       duration: course.duration,
       price: course.price,
       originalPrice: course.originalPrice,
+      discount: course.discount || 0,
       description: course.description,
       prerequisites: [...course.prerequisites],
       whatYouLearn: [...course.whatYouLearn],
       language: course.language,
       certificate: course.certificate,
       image: course.image,
+      status: course.status || "draft",
     });
     setImageFile(null);
     setImagePreview(course.image || null);
@@ -234,27 +260,35 @@ export default function CourseManagementPage() {
       category: formData.category,
       level: formData.level,
       duration: formData.duration,
-      price: formData.price,
       originalPrice: formData.originalPrice,
+      discount: formData.discount,
       description: formData.description,
       prerequisites: formData.prerequisites.filter(Boolean),
       whatYouLearn: formData.whatYouLearn.filter(Boolean),
       language: formData.language,
       certificate: formData.certificate,
-      image: imageFile || formData.image,
+      status: formData.status,
     };
+    // Only include image when a new file is selected
+    if (imageFile) {
+      payload.image = imageFile;
+    }
 
     if (modalMode === "add") {
       const result = await dispatch(createAdminCourse(payload));
       if (createAdminCourse.fulfilled.match(result)) {
         showToast(tc("courseAdded"));
         closeModal();
+        dispatch(invalidateCache());
+        dispatch(fetchAdminCourses());
       }
     } else if (modalMode === "edit" && selectedCourse) {
       const result = await dispatch(updateAdminCourse({ id: selectedCourse.id, data: payload }));
       if (updateAdminCourse.fulfilled.match(result)) {
         showToast(tc("courseUpdated"));
         closeModal();
+        dispatch(invalidateCache());
+        dispatch(fetchAdminCourses());
       }
     }
   };
@@ -284,7 +318,7 @@ export default function CourseManagementPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: tc("totalCourses"), value: totalCount, icon: AcademicCapIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
-            { label: tc("publishedCourses"), value: totalCount, icon: BookOpenIcon, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+            { label: tc("publishedCourses"), value: publishedCount, icon: BookOpenIcon, color: "text-emerald-500", bg: "bg-emerald-500/10" },
             { label: tc("totalStudents"), value: totalStudents.toLocaleString(), icon: UserGroupIcon, color: "text-gold", bg: "bg-gold/10" },
           ].map((stat, i) => (
             <motion.div
@@ -330,8 +364,8 @@ export default function CourseManagementPage() {
               style={selectArrowStyle}
             >
               <option value="all" className="text-black">{tc("allLevels")}</option>
-              <option value="beginner" className="text-black">{tc("levelBeginner")}</option>
-              <option value="intermediate" className="text-black">{tc("levelIntermediate")}</option>
+              <option value="initialisation" className="text-black">{tc("levelInitialisation")}</option>
+              <option value="approfondissement" className="text-black">{tc("levelApprofondissement")}</option>
               <option value="advanced" className="text-black">{tc("levelAdvanced")}</option>
             </select>
 
@@ -399,6 +433,9 @@ export default function CourseManagementPage() {
                       <th className="text-start px-5 py-4 text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">
                         {tc("modules")}
                       </th>
+                      <th className="text-start px-5 py-4 text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">
+                        {t("admin.common.status")}
+                      </th>
                       <th className="text-end px-5 py-4 text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">
                         {t("admin.common.actions")}
                       </th>
@@ -440,6 +477,11 @@ export default function CourseManagementPage() {
                         </td>
                         <td className="px-5 py-4 text-sm text-gray-600 dark:text-white/60">
                           {course.modules?.length ?? 0}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={cn("inline-flex px-2.5 py-1 rounded-full text-xs font-medium", statusColor(course.status))}>
+                            {getStatusLabel(course.status)}
+                          </span>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -492,12 +534,15 @@ export default function CourseManagementPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
                         {course.category}
                       </span>
                       <span className={cn("inline-flex px-2.5 py-1 rounded-full text-xs font-medium", levelColor(course.level))}>
                         {getLevelLabel(course.level)}
+                      </span>
+                      <span className={cn("inline-flex px-2.5 py-1 rounded-full text-xs font-medium", statusColor(course.status))}>
+                        {getStatusLabel(course.status)}
                       </span>
                     </div>
                     <p className="text-sm font-semibold text-oxford dark:text-white">
@@ -612,6 +657,9 @@ export default function CourseManagementPage() {
                         </span>
                         <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium", levelColor(selectedCourse.level))}>
                           {getLevelLabel(selectedCourse.level)}
+                        </span>
+                        <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium", statusColor(selectedCourse.status))}>
+                          {getStatusLabel(selectedCourse.status)}
                         </span>
                       </div>
                     </div>
@@ -730,11 +778,25 @@ export default function CourseManagementPage() {
                         onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                         className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors cursor-pointer"
                       >
-                        <option value="beginner" className="text-black">{tc("levelBeginner")}</option>
-                        <option value="intermediate" className="text-black">{tc("levelIntermediate")}</option>
+                        <option value="initialisation" className="text-black">{tc("levelInitialisation")}</option>
+                        <option value="approfondissement" className="text-black">{tc("levelApprofondissement")}</option>
                         <option value="advanced" className="text-black">{tc("levelAdvanced")}</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">{tc("status")}</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors cursor-pointer"
+                    >
+                      <option value="draft" className="text-black">{tc("statusDraft")}</option>
+                      <option value="published" className="text-black">{tc("statusPublished")}</option>
+                      <option value="archived" className="text-black">{tc("statusArchived")}</option>
+                    </select>
                   </div>
 
                   {/* Duration & Language */}
@@ -760,27 +822,42 @@ export default function CourseManagementPage() {
                     </div>
                   </div>
 
-                  {/* Price & Original Price */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">{tc("price")}</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-                      />
-                    </div>
+                  {/* Price & Discount */}
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">{tc("originalPrice")}</label>
                       <input
                         type="number"
                         min={0}
                         value={formData.originalPrice}
-                        onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const orig = Number(e.target.value);
+                          const computed = Math.round(orig * (1 - formData.discount / 100));
+                          setFormData({ ...formData, originalPrice: orig, price: computed });
+                        }}
                         className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">{tc("discount")} (%)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={formData.discount}
+                        onChange={(e) => {
+                          const disc = Math.min(100, Math.max(0, Number(e.target.value)));
+                          const computed = Math.round(formData.originalPrice * (1 - disc / 100));
+                          setFormData({ ...formData, discount: disc, price: computed });
+                        }}
+                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">{tc("price")}</label>
+                      <div className="w-full px-3 py-2.5 bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-semibold text-oxford dark:text-white">
+                        {formData.price.toLocaleString()} DA
+                      </div>
                     </div>
                   </div>
 

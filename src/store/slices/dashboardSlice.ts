@@ -30,7 +30,6 @@ const initialState: DashboardState = {
         hero: { nameKey: "hero", status: "Loading...", loading: true },
         countdown: { nameKey: "countdown", status: "Active", loading: false },
         features: { nameKey: "features", status: "Loading...", loading: true },
-        courses: { nameKey: "courses", status: "Coming soon", loading: false },
         faq: { nameKey: "faq", status: "Loading...", loading: true },
         contact: { nameKey: "contact", status: "Loading...", loading: true },
         settings: { nameKey: "settings", status: "Loading...", loading: true },
