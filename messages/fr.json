@@ -437,7 +437,11 @@
       "statusDraft": "Brouillon",
       "statusPublished": "Publié",
       "statusArchived": "Archivé",
-      "discount": "Réduction"
+      "discount": "Réduction",
+      "importJson": "Importer depuis JSON",
+      "jsonHint": "Collez votre JSON de cours ci-dessous. Le champ image restera vide — vous pourrez le télécharger plus tard.",
+      "applyJson": "Appliquer le JSON",
+      "jsonApplied": "JSON appliqué — vérifiez le formulaire et enregistrez"
     },
     "courseContent": {
       "title": "Contenu du cours",

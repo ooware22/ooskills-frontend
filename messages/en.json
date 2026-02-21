@@ -468,7 +468,11 @@
       "statusDraft": "Draft",
       "statusPublished": "Published",
       "statusArchived": "Archived",
-      "discount": "Discount"
+      "discount": "Discount",
+      "importJson": "Import from JSON",
+      "jsonHint": "Paste your course JSON below. The image field will stay empty — you can upload it later.",
+      "applyJson": "Apply JSON",
+      "jsonApplied": "JSON applied — review the form and save"
     },
     "courseContent": {
       "title": "Course Content",

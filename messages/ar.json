@@ -437,7 +437,11 @@
       "statusDraft": "مسودة",
       "statusPublished": "منشور",
       "statusArchived": "مؤرشف",
-      "discount": "تخفيض"
+      "discount": "تخفيض",
+      "importJson": "استيراد من JSON",
+      "jsonHint": "الصق ملف JSON للدورة أدناه. سيبقى حقل الصورة فارغاً — يمكنك رفعها لاحقاً.",
+      "applyJson": "تطبيق JSON",
+      "jsonApplied": "تم تطبيق JSON — راجع النموذج واحفظ"
     },
     "courseContent": {
       "title": "محتوى الدورة",

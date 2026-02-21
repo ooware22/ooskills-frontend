@@ -19,6 +19,7 @@ import {
   MinusCircleIcon,
   ArrowUpTrayIcon,
   PhotoIcon,
+  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
@@ -124,6 +125,11 @@ export default function CourseManagementPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // JSON import state (only used in "add" mode)
+  const [jsonMode, setJsonMode] = useState(false);
+  const [jsonText, setJsonText] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
   // Translation helper
   const tc = (key: string) => t(`admin.courseManagement.${key}`);
 
@@ -195,7 +201,48 @@ export default function CourseManagementPage() {
 
   const openAdd = () => {
     resetForm();
+    setJsonMode(false);
+    setJsonText("");
+    setJsonError(null);
     setModalMode("add");
+  };
+
+  /** Parse pasted JSON and populate the form. Image is always left empty (null). */
+  const parseJsonInput = () => {
+    try {
+      const parsed = JSON.parse(jsonText);
+      const origPrice = parsed.originalPrice ?? parsed.original_price ?? 0;
+      const disc = parsed.discount ?? 0;
+      const computedPrice = parsed.price ?? Math.round(origPrice * (1 - disc / 100));
+      setFormData({
+        title: parsed.title || "",
+        slug: (parsed.slug || parsed.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+        category: parsed.category || "",
+        level: parsed.level || "initialisation",
+        duration: parsed.duration ?? (parsed.modules?.reduce((sum: number, m: { duration_minutes?: number }) => sum + (m.duration_minutes || 0), 0) ?? 0) / 60,
+        price: computedPrice,
+        originalPrice: origPrice,
+        discount: disc,
+        description: parsed.description || parsed.subtitle || "",
+        prerequisites: Array.isArray(parsed.prerequisites)
+          ? (typeof parsed.prerequisites[0] === "string" ? parsed.prerequisites : [])
+          : (typeof parsed.prerequisites === "string" && parsed.prerequisites ? [parsed.prerequisites] : []),
+        whatYouLearn: Array.isArray(parsed.whatYouLearn || parsed.objectives)
+          ? (parsed.whatYouLearn || parsed.objectives)
+          : [],
+        language: parsed.language || "",
+        certificate: parsed.certificate ?? true,
+        image: "",
+        status: parsed.status || "draft",
+      });
+      setImageFile(null);
+      setImagePreview(null);
+      setJsonError(null);
+      setJsonMode(false); // switch back to form view so user can review
+      showToast(tc("jsonApplied") || "JSON applied — review and save");
+    } catch (err) {
+      setJsonError((err as Error).message);
+    }
   };
 
   const openEdit = (course: AdminCourse) => {
@@ -598,12 +645,31 @@ export default function CourseManagementPage() {
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
-                <h3 className="text-lg font-semibold text-oxford dark:text-white">
-                  {modalMode === "add" && tc("addCourse")}
-                  {modalMode === "edit" && tc("editCourse")}
-                  {modalMode === "view" && tc("viewCourse")}
-                  {modalMode === "delete" && tc("deleteCourse")}
-                </h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-oxford dark:text-white">
+                    {modalMode === "add" && tc("addCourse")}
+                    {modalMode === "edit" && tc("editCourse")}
+                    {modalMode === "view" && tc("viewCourse")}
+                    {modalMode === "delete" && tc("deleteCourse")}
+                  </h3>
+                  {/* JSON toggle — only in add mode */}
+                  {modalMode === "add" && (
+                    <button
+                      type="button"
+                      onClick={() => { setJsonMode(!jsonMode); setJsonError(null); }}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                        jsonMode
+                          ? "bg-gold text-oxford"
+                          : "bg-gold/10 text-gold hover:bg-gold/20"
+                      )}
+                      title={tc("importJson") || "Import from JSON"}
+                    >
+                      <CodeBracketIcon className="w-3.5 h-3.5" />
+                      JSON
+                    </button>
+                  )}
+                </div>
                 <button
                   onClick={closeModal}
                   className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
@@ -731,8 +797,45 @@ export default function CourseManagementPage() {
                 </div>
               )}
 
+              {/* JSON Import Panel (add mode only) */}
+              {modalMode === "add" && jsonMode && (
+                <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                  <p className="text-xs text-silver dark:text-white/50">
+                    {tc("jsonHint") || "Paste your course JSON below. The image field will stay empty — you can upload it later."}
+                  </p>
+                  <textarea
+                    rows={18}
+                    value={jsonText}
+                    onChange={(e) => { setJsonText(e.target.value); setJsonError(null); }}
+                    placeholder='{\n  "title": "...",\n  "category": "...",\n  "level": "initialisation",\n  ...\n}'
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors resize-none"
+                  />
+                  {jsonError && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 rounded-xl text-xs text-red-600 dark:text-red-400">
+                      <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
+                      <span>{jsonError}</span>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setJsonMode(false)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      {t("admin.common.cancel")}
+                    </button>
+                    <button
+                      onClick={parseJsonInput}
+                      disabled={!jsonText.trim()}
+                      className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                    >
+                      {tc("applyJson") || "Apply JSON"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Add / Edit Form */}
-              {(modalMode === "add" || modalMode === "edit") && (
+              {(modalMode === "add" || modalMode === "edit") && !jsonMode && (
                 <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                   {/* Title & Slug */}
                   <div className="grid grid-cols-2 gap-4">
