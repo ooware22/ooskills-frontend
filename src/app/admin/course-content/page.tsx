@@ -55,6 +55,7 @@ import type {
   LessonModalMode,
   QuizModalMode,
 } from "./types";
+import JsonBulkImport from "./JsonBulkImport";
 
 // =============================================================================
 // ID GENERATOR
@@ -83,6 +84,7 @@ export default function CourseContentPage() {
   );
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   // Toast
   const [toast, setToast] = useState<string | null>(null);
@@ -131,6 +133,9 @@ export default function CourseContentPage() {
   const [quizForm, setQuizForm] = useState<AdminSectionQuiz>({
     id: "", title: "", intro_text: "", questions: [], pass_threshold: 70, max_attempts: 3, xp_reward: 10,
   });
+  const [quizJsonMode, setQuizJsonMode] = useState(false);
+  const [quizJsonText, setQuizJsonText] = useState("");
+  const [quizJsonError, setQuizJsonError] = useState<string | null>(null);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SECTION CRUD
@@ -321,8 +326,10 @@ export default function CourseContentPage() {
   const closeQuizModal = () => { setQuizModal(null); };
 
   const saveQuiz = async () => {
+    // For new quizzes, strip client-generated ids from questions
+    const isAdd = quizModal === "add";
     const questions = quizForm.questions.map((q, i) => ({
-      ...(q.id ? { id: q.id } : {}),
+      ...(!isAdd && q.id ? { id: q.id } : {}),
       type: q.type,
       question: q.question,
       options: q.options,
@@ -333,7 +340,7 @@ export default function CourseContentPage() {
       sequence: i,
     }));
 
-    if (quizModal === "add") {
+    if (isAdd) {
       const result = await dispatch(createQuiz({
         quiz: {
           section: quizParentId,
@@ -347,6 +354,7 @@ export default function CourseContentPage() {
       }));
       if (createQuiz.fulfilled.match(result)) {
         showToast(tc("quizAdded"));
+        closeQuizModal();
       }
     } else if (quizModal === "edit" && quizForm.id) {
       const result = await dispatch(updateQuiz({
@@ -362,9 +370,9 @@ export default function CourseContentPage() {
       }));
       if (updateQuiz.fulfilled.match(result)) {
         showToast(tc("quizUpdated"));
+        closeQuizModal();
       }
     }
-    closeQuizModal();
   };
 
   const handleDeleteQuiz = async (sectionId: string) => {
@@ -414,6 +422,35 @@ export default function CourseContentPage() {
 
   const removeQuestion = (idx: number) => setQuizForm({ ...quizForm, questions: quizForm.questions.filter((_, i) => i !== idx) });
 
+  // Quiz JSON import
+  const parseQuizJson = () => {
+    try {
+      const raw = JSON.parse(quizJsonText);
+      const data = raw.quiz || raw;
+      const questions = (data.questions || []).map((q: Record<string, unknown>) => ({
+        id: uid(),
+        type: (q.type as string) || "multiple_choice",
+        question: (q.question as string) || "",
+        options: (q.options as string[]) || ["", "", "", ""],
+        correct_answer: (q.correct_answer as number) ?? 0,
+        explanation: (q.explanation as string) || "",
+        difficulty: (q.difficulty as string) || "easy",
+        category: (q.category as string) || "general",
+      }));
+      setQuizForm({
+        ...quizForm,
+        title: (data.title as string) || quizForm.title,
+        intro_text: (data.intro_text as string) || quizForm.intro_text,
+        questions,
+      });
+      setQuizJsonError(null);
+      setQuizJsonMode(false);
+      showToast(tc("quizJsonApplied") || `JSON applied — ${questions.length} questions loaded`);
+    } catch (err) {
+      setQuizJsonError((err as Error).message);
+    }
+  };
+
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════════
@@ -431,9 +468,14 @@ export default function CourseContentPage() {
           <Link href="/admin/course-management" className="flex items-center gap-2 text-sm text-silver dark:text-white/50 hover:text-gold transition-colors">
             <ArrowLeftIcon className="w-4 h-4" /> {tc("backToCourses")}
           </Link>
-          <button onClick={openAddSection} className="flex items-center gap-2 px-5 py-2.5 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 transition-colors shadow-md hover:shadow-lg">
-            <Plus className="w-4 h-4" /> {tc("addSection")}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowBulkImport(true)} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-white/5 text-oxford dark:text-white border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium hover:border-gold/50 transition-colors">
+              JSON
+            </button>
+            <button onClick={openAddSection} className="flex items-center gap-2 px-5 py-2.5 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 transition-colors shadow-md hover:shadow-lg">
+              <Plus className="w-4 h-4" /> {tc("addSection")}
+            </button>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -819,10 +861,48 @@ export default function CourseContentPage() {
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-semibold text-oxford dark:text-white">{quizModal === "add" ? tc("addQuiz") : tc("editQuiz")}</h3>
-                <button onClick={closeQuizModal} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setQuizJsonMode(!quizJsonMode); setQuizJsonError(null); }}
+                    className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors", quizJsonMode ? "bg-gold text-oxford" : "bg-gray-100 dark:bg-white/5 text-silver dark:text-white/50 hover:text-oxford dark:hover:text-white")}
+                  >JSON</button>
+                  <button onClick={closeQuizModal} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                </div>
               </div>
 
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                {/* Quiz JSON Paste */}
+                {quizJsonMode && (
+                  <div className="space-y-2 pb-3 mb-3 border-b border-gray-200 dark:border-white/10">
+                    <p className="text-xs text-silver dark:text-white/50">{tc("quizJsonHint") || "Paste a quiz JSON. It will fill the title, intro, and all questions."}</p>
+                    <textarea
+                      rows={8}
+                      value={quizJsonText}
+                      onChange={(e) => { setQuizJsonText(e.target.value); setQuizJsonError(null); }}
+                      placeholder='{"quiz": { "title": "...", "questions": [...] }}'
+                      className={cn(InputClass, "font-mono resize-none")}
+                    />
+                    {quizJsonError && (
+                      <div className="flex items-center gap-1.5 text-xs text-red-500">
+                        <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />{quizJsonError}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 dark:border-white/20 rounded-lg text-sm font-medium text-silver dark:text-white/50 hover:border-gold hover:text-gold cursor-pointer transition-colors">
+                        <ArrowUpTrayIcon className="w-4 h-4" />
+                        {tc("importFile") || "Import File"}
+                        <input type="file" accept=".json" className="hidden" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) { const r = new FileReader(); r.onload = () => { setQuizJsonText(r.result as string); setQuizJsonError(null); }; r.readAsText(file); }
+                          e.target.value = "";
+                        }} />
+                      </label>
+                      <button onClick={parseQuizJson} disabled={!quizJsonText.trim()} className="flex-1 px-4 py-2 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 disabled:opacity-40 transition-colors">
+                        {tc("applyQuizJson") || "Apply JSON"}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div><label className={LabelClass}>{tc("quizTitle")} <span className="text-red-500">*</span></label>
                   <input type="text" value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} className={InputClass} /></div>
                 <div><label className={LabelClass}>{tc("introText")}</label>
@@ -853,7 +933,7 @@ export default function CourseContentPage() {
                             <option value="scenario" className="text-black">Scénario</option>
                           </select>
                           <select value={q.difficulty} onChange={(e) => updateQuestion(qIdx, "difficulty", e.target.value)} className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white">
-                            <option value="easy" className="text-black">Easy</option><option value="medium" className="text-black">Medium</option><option value="hard" className="text-black">Hard</option>
+                            <option value="easy" className="text-black">Easy</option><option value="medium" className="text-black">Medium</option><option value="hard" className="text-black">Hard</option><option value="expert" className="text-black">Expert</option>
                           </select>
                           <button onClick={() => removeQuestion(qIdx)} className="p-1 text-red-400 hover:text-red-500 transition-colors"><MinusCircleIcon className="w-4 h-4" /></button>
                         </div>
@@ -908,13 +988,29 @@ export default function CourseContentPage() {
 
                 <div className="flex gap-3 pt-3">
                   <button onClick={closeQuizModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                  <button onClick={saveQuiz} disabled={!quizForm.title} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
-                    {quizModal === "add" ? tc("addQuiz") : t("admin.common.save")}
+                  <button onClick={saveQuiz} disabled={!quizForm.title || saving} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
+                    {saving ? "..." : (quizModal === "add" ? tc("addQuiz") : t("admin.common.save"))}
                   </button>
                 </div>
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showBulkImport && (
+          <JsonBulkImport
+            courseId={courseId}
+            existingSectionsCount={sections.length}
+            onComplete={(msg) => {
+              setShowBulkImport(false);
+              showToast(msg);
+              if (courseSlug) dispatch(fetchSections(courseSlug));
+            }}
+            onClose={() => setShowBulkImport(false)}
+          />
         )}
       </AnimatePresence>
 

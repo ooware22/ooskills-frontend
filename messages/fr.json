@@ -441,7 +441,8 @@
       "importJson": "Importer depuis JSON",
       "jsonHint": "Collez votre JSON de cours ci-dessous. Le champ image restera vide — vous pourrez le télécharger plus tard.",
       "applyJson": "Appliquer le JSON",
-      "jsonApplied": "JSON appliqué — vérifiez le formulaire et enregistrez"
+      "jsonApplied": "JSON appliqué — vérifiez le formulaire et enregistrez",
+      "importFile": "Importer un fichier"
     },
     "courseContent": {
       "title": "Contenu du cours",
@@ -494,7 +495,22 @@
       "explanation": "Explication",
       "quizAdded": "Quiz ajouté avec succès !",
       "quizUpdated": "Quiz mis à jour avec succès !",
-      "quizDeleted": "Quiz supprimé avec succès !"
+      "quizDeleted": "Quiz supprimé avec succès !",
+      "bulkImport": "Import JSON en masse",
+      "bulkImportHint": "Collez un JSON de teaser, introduction ou module. La section et toutes ses leçons seront créées automatiquement.",
+      "parsePreview": "Analyser et prévisualiser",
+      "importAll": "Tout importer",
+      "importing": "Import en cours",
+      "importComplete": "Import terminé",
+      "previewSection": "section",
+      "previewLessons": "leçons",
+      "back": "Retour",
+      "cancel": "Annuler",
+      "quizJsonHint": "Collez un JSON de quiz. Le titre, l'introduction et toutes les questions seront remplis automatiquement.",
+      "applyQuizJson": "Appliquer le JSON",
+      "quizJsonApplied": "JSON appliqué — questions chargées",
+      "scenarioDescription": "Description du scénario",
+      "importFile": "Importer un fichier"
     },
     "categoryManagement": {
       "title": "Gestion des catégories",

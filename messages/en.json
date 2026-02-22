@@ -472,7 +472,8 @@
       "importJson": "Import from JSON",
       "jsonHint": "Paste your course JSON below. The image field will stay empty — you can upload it later.",
       "applyJson": "Apply JSON",
-      "jsonApplied": "JSON applied — review the form and save"
+      "jsonApplied": "JSON applied — review the form and save",
+      "importFile": "Import File"
     },
     "courseContent": {
       "title": "Course Content",
@@ -525,7 +526,22 @@
       "explanation": "Explanation",
       "quizAdded": "Quiz added successfully!",
       "quizUpdated": "Quiz updated successfully!",
-      "quizDeleted": "Quiz deleted successfully!"
+      "quizDeleted": "Quiz deleted successfully!",
+      "bulkImport": "JSON Bulk Import",
+      "bulkImportHint": "Paste a teaser, introduction, or module JSON. It will create the section and all its lessons automatically.",
+      "parsePreview": "Parse & Preview",
+      "importAll": "Import All",
+      "importing": "Importing",
+      "importComplete": "Import complete",
+      "previewSection": "section",
+      "previewLessons": "lessons",
+      "back": "Back",
+      "cancel": "Cancel",
+      "quizJsonHint": "Paste a quiz JSON. It will fill the title, intro, and all questions.",
+      "applyQuizJson": "Apply JSON",
+      "quizJsonApplied": "JSON applied — questions loaded",
+      "scenarioDescription": "Scenario Description",
+      "importFile": "Import File"
     },
     "categoryManagement": {
       "title": "Category Management",

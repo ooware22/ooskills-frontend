@@ -441,7 +441,8 @@
       "importJson": "استيراد من JSON",
       "jsonHint": "الصق ملف JSON للدورة أدناه. سيبقى حقل الصورة فارغاً — يمكنك رفعها لاحقاً.",
       "applyJson": "تطبيق JSON",
-      "jsonApplied": "تم تطبيق JSON — راجع النموذج واحفظ"
+      "jsonApplied": "تم تطبيق JSON — راجع النموذج واحفظ",
+      "importFile": "استيراد ملف"
     },
     "courseContent": {
       "title": "محتوى الدورة",
@@ -494,7 +495,22 @@
       "explanation": "الشرح",
       "quizAdded": "تمت إضافة الاختبار بنجاح!",
       "quizUpdated": "تم تحديث الاختبار بنجاح!",
-      "quizDeleted": "تم حذف الاختبار بنجاح!"
+      "quizDeleted": "تم حذف الاختبار بنجاح!",
+      "bulkImport": "استيراد JSON بالجملة",
+      "bulkImportHint": "الصق ملف JSON لتيزر أو مقدمة أو وحدة. سيتم إنشاء القسم وجميع دروسه تلقائياً.",
+      "parsePreview": "تحليل ومعاينة",
+      "importAll": "استيراد الكل",
+      "importing": "جاري الاستيراد",
+      "importComplete": "تم الاستيراد",
+      "previewSection": "قسم",
+      "previewLessons": "دروس",
+      "back": "رجوع",
+      "cancel": "إلغاء",
+      "quizJsonHint": "الصق ملف JSON للاختبار. سيتم ملء العنوان والمقدمة وجميع الأسئلة تلقائياً.",
+      "applyQuizJson": "تطبيق JSON",
+      "quizJsonApplied": "تم تطبيق JSON — تم تحميل الأسئلة",
+      "scenarioDescription": "وصف السيناريو",
+      "importFile": "استيراد ملف"
     },
     "categoryManagement": {
       "title": "إدارة الفئات",

@@ -145,11 +145,17 @@ export const createQuiz = createAsyncThunk(
         try {
             const created = await adminQuizzesApi.create(quiz);
             // Create questions sequentially
+            const createdQuestions = [];
             for (let i = 0; i < questions.length; i++) {
-                await adminQuizzesApi.createQuestion({ ...questions[i], quiz: created.id, sequence: i });
+                const q = await adminQuizzesApi.createQuestion({ ...questions[i], quiz: created.id, sequence: i });
+                createdQuestions.push(q);
             }
-            // Re-fetch quiz with nested questions
-            return await adminQuizzesApi.retrieve(created.id);
+            // Try re-fetch, but if it fails, return what we already have
+            try {
+                return await adminQuizzesApi.retrieve(created.id);
+            } catch {
+                return { ...created, questions: createdQuestions };
+            }
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
@@ -186,8 +192,12 @@ export const updateQuiz = createAsyncThunk(
                     await adminQuizzesApi.createQuestion({ ...q, quiz: id, sequence: i });
                 }
             }
-            // Re-fetch updated quiz
-            return await adminQuizzesApi.retrieve(id);
+            // Try re-fetch, but if it fails, return what we have
+            try {
+                return await adminQuizzesApi.retrieve(id);
+            } catch {
+                return existing;
+            }
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }

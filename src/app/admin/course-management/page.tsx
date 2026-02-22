@@ -817,9 +817,18 @@ export default function CourseManagementPage() {
                     </div>
                   )}
                   <div className="flex gap-3">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 dark:border-white/20 rounded-xl text-sm font-medium text-silver dark:text-white/50 hover:border-gold hover:text-gold cursor-pointer transition-colors">
+                      <ArrowUpTrayIcon className="w-4 h-4" />
+                      {tc("importFile") || "Import File"}
+                      <input type="file" accept=".json" className="hidden" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) { const r = new FileReader(); r.onload = () => { setJsonText(r.result as string); setJsonError(null); }; r.readAsText(file); }
+                        e.target.value = "";
+                      }} />
+                    </label>
                     <button
                       onClick={() => setJsonMode(false)}
-                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                      className="px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                     >
                       {t("admin.common.cancel")}
                     </button>
