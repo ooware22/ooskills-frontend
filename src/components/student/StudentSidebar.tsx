@@ -25,7 +25,11 @@ import { clearCredentials } from "@/store/slices/authSlice";
 const navItems = [
   { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/dashboard/my-courses", labelKey: "myCourses", icon: BookOpen },
-  { href: "/dashboard/certificates", labelKey: "certificates", icon: TrophyIcon },
+  {
+    href: "/dashboard/certificates",
+    labelKey: "certificates",
+    icon: TrophyIcon,
+  },
   { href: "/dashboard/catalogue", labelKey: "catalogue", icon: Search },
   { href: "/dashboard/settings", labelKey: "settings", icon: Settings },
 ];
@@ -76,7 +80,7 @@ function SidebarTooltip({ label, isRtl }: { label: string; isRtl: boolean }) {
     <span
       className={cn(
         "absolute top-1/2 -translate-y-1/2 px-2 py-1 bg-oxford text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg",
-        isRtl ? "right-full mr-2" : "left-full ml-2"
+        isRtl ? "right-full mr-2" : "left-full ml-2",
       )}
     >
       {label}
@@ -106,7 +110,7 @@ export default function StudentSidebar() {
   const renderLink = (
     href: string,
     labelKey: string,
-    Icon: React.ElementType
+    Icon: React.ElementType,
   ) => {
     const isActive = pathname === href;
     const label = getLabel(labelKey);
@@ -121,7 +125,7 @@ export default function StudentSidebar() {
           isActive
             ? "bg-gold text-oxford shadow-md"
             : "text-white/70 hover:text-white hover:bg-white/5",
-          !isExpanded && "justify-center px-2"
+          !isExpanded && "justify-center px-2",
         )}
       >
         <Icon className="w-5 h-5 flex-shrink-0" />
@@ -152,7 +156,7 @@ export default function StudentSidebar() {
           isRtl ? "right-0 border-l" : "left-0 border-r",
           "hidden lg:flex",
           collapsed ? "lg:w-16" : "lg:w-64",
-          mobileOpen && "!flex w-64"
+          mobileOpen && "!flex w-64",
         )}
       >
         {/* Mobile Close Button */}
@@ -160,7 +164,7 @@ export default function StudentSidebar() {
           onClick={closeMobile}
           className={cn(
             "lg:hidden absolute top-4 p-1 text-white/60 hover:text-white",
-            isRtl ? "left-4" : "right-4"
+            isRtl ? "left-4" : "right-4",
           )}
         >
           <X className="w-5 h-5" />
@@ -177,9 +181,9 @@ export default function StudentSidebar() {
               <Image
                 src="/images/logo/logo_icon2.png"
                 alt="OOSkills"
-                width={56}
-                height={56}
-                className="w-14 h-14 rounded-xl object-contain"
+                width={72}
+                height={72}
+                className="w-[72px] h-[72px] rounded-xl object-contain"
               />
             ) : (
               <Image
@@ -196,7 +200,7 @@ export default function StudentSidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10">
           {navItems.map((item) =>
-            renderLink(item.href, item.labelKey, item.icon)
+            renderLink(item.href, item.labelKey, item.icon),
           )}
         </nav>
 
@@ -207,7 +211,7 @@ export default function StudentSidebar() {
             title={collapsed ? getLabel("expand") : getLabel("collapse")}
             className={cn(
               "hidden lg:flex w-full items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group relative",
-              collapsed && "justify-center px-2"
+              collapsed && "justify-center px-2",
             )}
           >
             {collapsed ? (
@@ -227,7 +231,7 @@ export default function StudentSidebar() {
             title={!isExpanded ? getLabel("logout") : undefined}
             className={cn(
               "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group relative",
-              !isExpanded && "justify-center px-2"
+              !isExpanded && "justify-center px-2",
             )}
           >
             <LogOut className={cn("w-5 h-5", isRtl && "rotate-180")} />
