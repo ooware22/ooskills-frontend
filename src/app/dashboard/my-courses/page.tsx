@@ -311,7 +311,7 @@ export default function MyCoursesPage() {
                         className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xs font-medium bg-gold/10 text-gold hover:bg-gold/20 transition-all duration-200 mt-2"
                       >
                         <TrophyIcon className="w-3.5 h-3.5" />
-                        {tc("viewCertificate") || "View Open Badge"}
+                        {tc("viewCertificate") || "View Badge"}
                       </Link>
                     )}
                   </div>

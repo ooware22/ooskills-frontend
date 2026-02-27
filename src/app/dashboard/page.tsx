@@ -35,12 +35,8 @@ export default function StudentDashboard() {
   const td = (key: string) => t(`student.dashboard.${key}`);
   const dispatch = useAppDispatch();
 
-  const {
-    enrollments,
-    enrollmentsLoading,
-    quizAttempts,
-    certificates,
-  } = useAppSelector((s) => s.enrollment);
+  const { enrollments, enrollmentsLoading, quizAttempts, certificates } =
+    useAppSelector((s) => s.enrollment);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   useEffect(() => {
@@ -55,8 +51,13 @@ export default function StudentDashboard() {
   const stats = useMemo(() => {
     const total = enrollments.length;
     const active = enrollments.filter((e) => e.status === "active").length;
-    const completed = enrollments.filter((e) => e.status === "completed").length;
-    const totalXp = quizAttempts.reduce((sum, q) => sum + (q.xp_earned || 0), 0);
+    const completed = enrollments.filter(
+      (e) => e.status === "completed",
+    ).length;
+    const totalXp = quizAttempts.reduce(
+      (sum, q) => sum + (q.xp_earned || 0),
+      0,
+    );
     return [
       {
         labelKey: "enrolledCourses",
@@ -124,7 +125,7 @@ export default function StudentDashboard() {
     for (const c of certificates.slice(0, 5)) {
       items.push({
         type: "certificate",
-        text: `Open Badge earned: ${c.course_title}`,
+        text: `Badge earned: ${c.course_title}`,
         course: c.course_title,
         time: new Date(c.issuedAt).toLocaleDateString(),
       });
@@ -180,7 +181,9 @@ export default function StudentDashboard() {
               className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-5"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 ${stat.bg} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`w-10 h-10 ${stat.bg} rounded-lg flex items-center justify-center`}
+                >
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
                 </div>
               </div>

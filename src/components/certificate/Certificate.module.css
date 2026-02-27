@@ -1,0 +1,831 @@
+/* ===============================================
+   Certificate - One-page layout + right toolbar
+   =============================================== */
+
+/* -- CSS Custom Properties (Light) ----------- */
+.certificateRoot {
+  --bg-page: #f0ece3;
+  --bg-card: #fffdf7;
+  --bg-toolbar: rgba(255, 253, 247, 0.85);
+  --border-outer: #cfb53b;
+  --border-inner: rgba(207, 181, 59, 0.25);
+  --gold: #cfb53b;
+  --gold-light: #e8d583;
+  --gold-dark: #8b7a2b;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a5e;
+  --text-muted: #8a8a9e;
+  --footer-text: #999;
+  --btn-bg: linear-gradient(135deg, #cfb53b 0%, #e8d583 50%, #cfb53b 100%);
+  --btn-text: #1a1a2e;
+  --btn-shadow: 0 4px 15px rgba(207, 181, 59, 0.35);
+  --watermark-opacity: 0.035;
+  --divider: linear-gradient(
+    90deg,
+    transparent,
+    #cfb53b 20%,
+    #e8d583 50%,
+    #cfb53b 80%,
+    transparent
+  );
+  --toolbar-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --toolbar-border: rgba(207, 181, 59, 0.2);
+  --tooltip-bg: #1a1a2e;
+  --tooltip-text: #fff;
+}
+
+/* -- Dark Theme ------------------------------ */
+:global(.dark) .certificateRoot {
+  --bg-page: #0d0d1a;
+  --bg-card: #141428;
+  --bg-toolbar: rgba(20, 20, 40, 0.85);
+  --border-inner: rgba(207, 181, 59, 0.15);
+  --text-primary: #e8e8f0;
+  --text-secondary: #b0b0c0;
+  --text-muted: #707088;
+  --footer-text: #555;
+  --watermark-opacity: 0.04;
+  --toolbar-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --toolbar-border: rgba(207, 181, 59, 0.15);
+  --tooltip-bg: #fffdf7;
+  --tooltip-text: #1a1a2e;
+}
+
+/* -- Root & Page Layout ---------------------- */
+.certificateRoot {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  transition:
+    background 0.4s ease,
+    color 0.4s ease;
+}
+
+.pageWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  padding: 24px;
+  gap: 20px;
+}
+
+/* -- Floating Toolbar (Right Side) ----------- */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: var(--bg-toolbar);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 16px;
+  box-shadow: var(--toolbar-shadow);
+  z-index: 10;
+  flex-shrink: 0;
+  transition:
+    background 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.toolbarDivider {
+  width: 28px;
+  height: 1px;
+  background: var(--border-inner);
+  margin: 4px 0;
+  border-radius: 1px;
+}
+
+/* -- Toolbar Button (shared) ----------------- */
+.toolBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.toolBtn:hover {
+  background: rgba(207, 181, 59, 0.12);
+  color: var(--gold);
+  transform: scale(1.08);
+}
+
+.toolBtn:active {
+  transform: scale(0.95);
+}
+
+.toolBtnActive {
+  background: rgba(207, 181, 59, 0.15);
+  color: var(--gold);
+  box-shadow: inset 0 0 0 1.5px rgba(207, 181, 59, 0.3);
+}
+
+.toolBtn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Tooltip */
+.toolBtn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.9);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.toolBtn:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* -- Language Buttons ------------------------- */
+.langGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.langBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.langBtn:hover {
+  background: rgba(207, 181, 59, 0.1);
+  color: var(--gold);
+}
+
+.langBtnActive {
+  background: var(--gold) !important;
+  color: #1a1a2e !important;
+  box-shadow: 0 2px 8px rgba(207, 181, 59, 0.35);
+}
+
+/* -- Spinning icon for loading state --------- */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* -- Copied state (checkmark) ---------------- */
+.copiedBtn {
+  color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+}
+
+/* ===============================================
+   Certificate Card
+   =============================================== */
+.certificateCard {
+  flex: 1;
+  max-width: 920px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.4s ease;
+}
+
+.certificateBorder {
+  width: 100%;
+  padding: 4px;
+  background: linear-gradient(
+    135deg,
+    #cfb53b 0%,
+    #e8d583 25%,
+    #cfb53b 50%,
+    #e8d583 75%,
+    #cfb53b 100%
+  );
+  border-radius: 6px;
+  box-shadow:
+    0 20px 60px rgba(207, 181, 59, 0.15),
+    0 0 30px rgba(207, 181, 59, 0.08);
+}
+
+.certificateInner {
+  background: var(--bg-card);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: background 0.4s ease;
+}
+
+.certificateContent {
+  position: relative;
+  padding: 42px 52px;
+  overflow: hidden;
+}
+
+/* -- Corner Ornaments ------------------------ */
+.certificateContent::before,
+.certificateContent::after,
+.cornerBl::before,
+.cornerBr::before {
+  content: "";
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-style: solid;
+  border-color: var(--gold);
+  opacity: 0.35;
+}
+
+.certificateContent::before {
+  top: 18px;
+  left: 18px;
+  border-width: 2px 0 0 2px;
+}
+
+.certificateContent::after {
+  top: 18px;
+  right: 18px;
+  border-width: 2px 2px 0 0;
+}
+
+.cornerBl,
+.cornerBr {
+  position: absolute;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.cornerBl {
+  left: 0;
+}
+.cornerBr {
+  right: 0;
+}
+
+.cornerBl::before {
+  bottom: 18px;
+  left: 18px;
+  position: absolute;
+  border-width: 0 0 2px 2px;
+}
+
+.cornerBr::before {
+  bottom: 18px;
+  right: 18px;
+  position: absolute;
+  border-width: 0 2px 2px 0;
+}
+
+/* -- Watermark ------------------------------- */
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: auto;
+  opacity: var(--watermark-opacity);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* -- Certificate Header ---------------------- */
+.certHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.certLogo {
+  height: 48px;
+  width: auto;
+  margin: 0 auto 14px;
+  display: block;
+  object-fit: contain;
+}
+
+.certTitle {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+  line-height: 1.1;
+}
+
+.certSubtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* -- Gold Divider ---------------------------- */
+.goldDivider {
+  height: 1px;
+  background: var(--divider);
+  margin: 18px 0;
+}
+
+/* -- Certificate Body ------------------------ */
+.certBody {
+  text-align: center;
+}
+
+.certPreamble {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.certStudentName {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.certHasCompleted {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin: 0 0 8px;
+}
+
+.certCourseName {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 0 0 18px;
+  line-height: 1.3;
+}
+
+/* -- Details Row ----------------------------- */
+.certDetails {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  margin: 0 0 16px;
+  flex-wrap: wrap;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 90px;
+}
+
+.detailIcon {
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.detailIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.detailValue {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.detailLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* -- Date ------------------------------------ */
+.certDate {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.certDate strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* -- Certificate Footer ---------------------- */
+.certFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+}
+
+.certSignature {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.signatureName {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+  border-bottom: 1.5px solid var(--gold);
+  padding-bottom: 3px;
+}
+
+.signatureTitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.certQrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.qrWrapper {
+  padding: 6px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.qrWrapper img {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+
+.qrLabel {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.certIdSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.certIdLabel {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.certIdValue {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+:global(.dark) .certIdValue {
+  color: var(--gold);
+}
+
+/* -- Toast notification ---------------------- */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-inner);
+  z-index: 9999;
+  transition: transform 0.4s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toastShow {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* -- Loading / Error states ------------------ */
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-page);
+  gap: 20px;
+}
+
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(207, 181, 59, 0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loadingText {
+  color: var(--text-muted);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.errorWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-page);
+  gap: 16px;
+  padding: 20px;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 48px;
+}
+
+.errorTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.errorDesc {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 400px;
+}
+
+.errorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 28px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: var(--btn-shadow);
+}
+
+.errorLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(207, 181, 59, 0.5);
+}
+
+/* -- Responsive ------------------------------ */
+@media (max-width: 900px) {
+  .pageWrapper {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    padding: 16px;
+    padding-bottom: 80px;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  .certificateRoot {
+    height: auto;
+    overflow: auto;
+  }
+
+  .certificateCard {
+    max-height: none;
+  }
+
+  .toolbar {
+    flex-direction: row;
+    width: auto;
+    padding: 8px 12px;
+    gap: 4px;
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+  }
+
+  .toolbarDivider {
+    width: 1px;
+    height: 28px;
+    margin: 0 4px;
+  }
+
+  .langGroup {
+    flex-direction: row;
+    gap: 2px;
+  }
+
+  .langBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 10px;
+  }
+
+  .toolBtn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .toolBtn::after {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%) scale(0.9);
+  }
+
+  .toolBtn:hover::after {
+    transform: translateX(-50%) scale(1);
+  }
+
+  .certificateContent {
+    padding: 30px 24px;
+  }
+
+  .certFooter {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .certSignature {
+    align-items: center;
+    text-align: center;
+  }
+
+  .certIdSection {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .certificateContent {
+    padding: 24px 16px;
+  }
+
+  .certLogo {
+    height: 36px;
+  }
+
+  .certTitle {
+    font-size: 26px;
+    letter-spacing: 3px;
+  }
+
+  .certStudentName {
+    font-size: 24px;
+  }
+
+  .certCourseName {
+    font-size: 18px;
+  }
+
+  .certDetails {
+    gap: 20px;
+  }
+
+  .detailItem {
+    min-width: 70px;
+  }
+
+  .certificateContent::before,
+  .certificateContent::after,
+  .cornerBl::before,
+  .cornerBr::before {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* -- RTL Support (Arabic) -------------------- */
+:global([dir="rtl"]) .certTitle,
+:global([dir="rtl"]) .certStudentName,
+:global([dir="rtl"]) .signatureName {
+  font-family: "Tajawal", "Playfair Display", Georgia, serif;
+}
+
+:global([dir="rtl"]) .certSubtitle,
+:global([dir="rtl"]) .certPreamble,
+:global([dir="rtl"]) .certHasCompleted {
+  font-family: "Tajawal", "Inter", sans-serif;
+}
+
+:global([dir="rtl"]) .pageWrapper {
+  flex-direction: row-reverse;
+}
+
+:global([dir="rtl"]) .certFooter {
+  direction: rtl;
+}
+
+:global([dir="rtl"]) .certIdValue {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* -- Print Styles ---------------------------- */
+@media print {
+  .certificateRoot {
+    height: auto;
+    overflow: visible;
+  }
+
+  .pageWrapper {
+    background: white !important;
+    padding: 0 !important;
+    height: auto;
+  }
+
+  .toolbar,
+  .toast {
+    display: none !important;
+  }
+
+  .certificateCard {
+    box-shadow: none !important;
+    max-height: none;
+  }
+}

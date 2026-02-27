@@ -728,7 +728,7 @@
     "sidebar": {
       "dashboard": "Dashboard",
       "myCourses": "My Courses",
-      "certificates": "Open Badges",
+      "certificates": "Badges",
       "settings": "Settings",
       "logout": "Log out",
       "collapse": "Collapse",
@@ -769,7 +769,7 @@
       "startCourse": "Start Course",
       "reviewCourse": "Review",
       "noCourses": "No courses found matching your filters.",
-      "viewCertificate": "View Open Badge",
+      "viewCertificate": "View Badge",
       "certified": "Certified",
       "enrolledOn": "Enrolled on",
       "progress": "Progress",
@@ -777,10 +777,11 @@
       "browseCatalog": "Browse Courses"
     },
     "certificates": {
-      "title": "My Open Badges",
-      "subtitle": "View and share your earned Open Badges",
-      "empty": "No Open Badges yet",
-      "emptyDesc": "Complete a course and pass its quiz to earn your first Open Badge!",
+      "title": "My Badges",
+      "subtitle": "View and share your earned badges",
+      "empty": "No badges yet",
+      "emptyDesc": "Complete a course and pass its quiz to earn your first badge!",
+      "view": "View Badge",
       "share": "Share"
     },
     "catalogue": {
