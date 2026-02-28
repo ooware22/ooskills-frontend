@@ -16,6 +16,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n, useTranslations, Locale } from "@/lib/i18n";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { initializeAuth } from "@/store/slices/authSlice";
 
 const localeLabels: Record<Locale, string> = {
   fr: "Français",
@@ -29,6 +31,16 @@ export default function Header() {
   const t = useTranslations("nav");
   const router = useRouter();
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
+
+  const { isAuthenticated, isInitialized, user } = useAppSelector(
+    (state) => state.auth,
+  );
+  const userName =
+    user?.first_name && user?.last_name
+      ? `${user.first_name} ${user.last_name}`
+      : user?.email || "";
+  const userAvatar = user?.avatar_display_url || null;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,7 +50,8 @@ export default function Header() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,22 +82,29 @@ export default function Header() {
     { href: "#contact", label: t("contact") },
   ];
 
-  const handleNavClick = useCallback((e: React.MouseEvent, hash: string) => {
-    e.preventDefault();
-    const sectionId = hash.replace("#", "");
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent, hash: string) => {
+      e.preventDefault();
+      const sectionId = hash.replace("#", "");
 
-    if (pathname === "/") {
-      // Already on home — just smooth scroll
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      // Navigate to home first, then scroll
-      router.push("/");
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-      }, 400);
-    }
-    setIsOpen(false);
-  }, [pathname, router]);
+      if (pathname === "/") {
+        // Already on home — just smooth scroll
+        document
+          .getElementById(sectionId)
+          ?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        // Navigate to home first, then scroll
+        router.push("/");
+        setTimeout(() => {
+          document
+            .getElementById(sectionId)
+            ?.scrollIntoView({ behavior: "smooth" });
+        }, 400);
+      }
+      setIsOpen(false);
+    },
+    [pathname, router],
+  );
 
   return (
     <header
@@ -98,7 +118,11 @@ export default function Header() {
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#hero" onClick={(e) => handleNavClick(e, "#hero")} className="flex items-center cursor-pointer">
+          <a
+            href="#hero"
+            onClick={(e) => handleNavClick(e, "#hero")}
+            className="flex items-center cursor-pointer"
+          >
             {mounted ? (
               <Image
                 src={
@@ -228,27 +252,50 @@ export default function Header() {
             {/* Separator */}
             <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1" />
 
-            {/* My Dashboard */}
-            <Link
-              href="/dashboard"
-              className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
-            >
-              {t("myDashboard")}
-            </Link>
-
-            {/* CTA Buttons */}
-            <Link
-              href="/auth/signin"
-              className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors"
-            >
-              {t("login")}
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="px-4 py-2 text-sm font-medium text-oxford bg-gold hover:bg-gold-light rounded-lg transition-colors"
-            >
-              {t("signup")}
-            </Link>
+            {isAuthenticated && isInitialized ? (
+              /* Logged-in: avatar + Dashboard link */
+              <div className="flex items-center gap-3">
+                <Link href="/dashboard" className="flex-shrink-0">
+                  {userAvatar ? (
+                    <Image
+                      src={userAvatar}
+                      alt={userName}
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
+                      <span className="text-oxford font-semibold text-sm">
+                        {userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+                >
+                  {t("myDashboard")}
+                </Link>
+              </div>
+            ) : (
+              /* Not logged-in: Sign in + Sign up */
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors"
+                >
+                  {t("login")}
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="px-4 py-2 text-sm font-medium text-oxford bg-gold hover:bg-gold-light rounded-lg transition-colors"
+                >
+                  {t("signup")}
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -274,13 +321,6 @@ export default function Header() {
                   {link.label}
                 </a>
               ))}
-              <Link
-                href="/dashboard"
-                onClick={() => setIsOpen(false)}
-                className="px-3 py-2.5 text-sm font-medium text-gold rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
-              >
-                {t("myDashboard")}
-              </Link>
               <div className="flex items-center gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
                 {/* Language buttons */}
                 <div className="flex gap-1">
@@ -310,22 +350,49 @@ export default function Header() {
                   )}
                 </button>
               </div>
-              <div className="flex gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
-                <Link
-                  href="/auth/signin"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 text-center py-2.5 text-sm font-medium border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                >
-                  {t("login")}
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 text-center py-2.5 text-sm font-medium bg-gold text-oxford rounded-lg hover:bg-gold-light transition-colors"
-                >
-                  {t("signup")}
-                </Link>
-              </div>
+              {isAuthenticated && isInitialized ? (
+                <div className="flex items-center gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
+                  {userAvatar ? (
+                    <Image
+                      src={userAvatar}
+                      alt={userName}
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
+                      <span className="text-oxford font-semibold text-sm">
+                        {userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="px-3 py-2.5 text-sm font-medium text-gold rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+                  >
+                    {t("myDashboard")}
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
+                  <Link
+                    href="/auth/signin"
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 text-center py-2.5 text-sm font-medium border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    {t("login")}
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 text-center py-2.5 text-sm font-medium bg-gold text-oxford rounded-lg hover:bg-gold-light transition-colors"
+                  >
+                    {t("signup")}
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -171,7 +171,7 @@ export default function StudentSidebar() {
         </button>
 
         {/* Logo */}
-        <div className="p-6 border-b border-white/10 transition-all duration-300 flex justify-center">
+        <div className="h-20 px-4 border-b border-white/10 transition-all duration-300 flex items-center justify-center">
           <Link
             href="/dashboard"
             className="flex items-center hover:opacity-80 transition-opacity"
@@ -181,9 +181,9 @@ export default function StudentSidebar() {
               <Image
                 src="/images/logo/logo_icon2.png"
                 alt="OOSkills"
-                width={72}
-                height={72}
-                className="w-[72px] h-[72px] rounded-xl object-contain"
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-lg object-contain"
               />
             ) : (
               <Image

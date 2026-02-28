@@ -4,159 +4,80 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useTheme } from "next-themes";
 import s from "./Certificate.module.css";
 
-//  Translations -
+/* ─── Translations ───────────────────────────────────────────── */
 const translations = {
   en: {
     title: "Certificate",
-    subtitle: "of Completion",
+    subtitle: "of Multiple Achievements",
     preamble: "This is to certify that",
-    hasCompleted: "has successfully completed the course",
-    duration: "Duration",
-    modules: "Modules",
-    level: "Level",
+    hasCompleted: "has successfully completed the following courses",
+    course: "Course",
+    score: "Score",
     issuedOn: "Issued on",
     scanVerify: "Scan to verify",
     certIdLabel: "Certificate ID",
     signatureTitle: "Training Platform",
-    score: "Score",
     downloadPdf: "Download PDF",
     copyLink: "Copy Link",
-    toastCopy: "\uD83D\uDD17 Verification link copied!",
+    toastCopy: "🔗 Verification link copied!",
     themeLight: "Light mode",
     themeDark: "Dark mode",
     close: "Close",
   },
   fr: {
     title: "Certificat",
-    subtitle: "de R\u00E9ussite",
+    subtitle: "de Réalisations Multiples",
     preamble: "Ceci certifie que",
-    hasCompleted: "a compl\u00E9t\u00E9 avec succ\u00E8s la formation",
-    duration: "Dur\u00E9e",
-    modules: "Modules",
-    level: "Niveau",
-    issuedOn: "D\u00E9livr\u00E9 le",
-    scanVerify: "Scanner pour v\u00E9rifier",
+    hasCompleted: "a complété avec succès les formations suivantes",
+    course: "Formation",
+    score: "Note",
+    issuedOn: "Délivré le",
+    scanVerify: "Scanner pour vérifier",
     certIdLabel: "ID du Certificat",
     signatureTitle: "Plateforme de Formation",
-    score: "Note",
-    downloadPdf: "T\u00E9l\u00E9charger PDF",
+    downloadPdf: "Télécharger PDF",
     copyLink: "Copier le lien",
-    toastCopy: "\uD83D\uDD17 Lien de v\u00E9rification copi\u00E9 !",
+    toastCopy: "🔗 Lien de vérification copié !",
     themeLight: "Mode clair",
     themeDark: "Mode sombre",
     close: "Fermer",
   },
   ar: {
-    title: "\u0634\u0647\u0627\u062F\u0629",
-    subtitle: "\u0625\u062A\u0645\u0627\u0645 \u0628\u0646\u062C\u0627\u062D",
-    preamble: "\u0646\u0634\u0647\u062F \u0628\u0623\u0646",
-    hasCompleted:
-      "\u0642\u062F \u0623\u062A\u0645\u0651 \u0628\u0646\u062C\u0627\u062D \u0627\u0644\u062F\u0648\u0631\u0629 \u0627\u0644\u062A\u062F\u0631\u064A\u0628\u064A\u0629",
-    duration: "\u0627\u0644\u0645\u062F\u0629",
-    modules: "\u0627\u0644\u0648\u062D\u062F\u0627\u062A",
-    level: "\u0627\u0644\u0645\u0633\u062A\u0648\u0649",
-    issuedOn: "\u0635\u062F\u0631\u062A \u0628\u062A\u0627\u0631\u064A\u062E",
-    scanVerify: "\u0627\u0645\u0633\u062D \u0644\u0644\u062A\u062D\u0642\u0642",
-    certIdLabel:
-      "\u0631\u0642\u0645 \u0627\u0644\u0634\u0647\u0627\u062F\u0629",
-    signatureTitle:
-      "\u0645\u0646\u0635\u0629 \u0627\u0644\u062A\u062F\u0631\u064A\u0628",
-    score: "\u0627\u0644\u0646\u062A\u064A\u062C\u0629",
-    downloadPdf: "\u062A\u062D\u0645\u064A\u0644 PDF",
-    copyLink: "\u0646\u0633\u062E \u0627\u0644\u0631\u0627\u0628\u0637",
-    toastCopy:
-      "\uD83D\uDD17 \u062A\u0645 \u0646\u0633\u062E \u0631\u0627\u0628\u0637 \u0627\u0644\u062A\u062D\u0642\u0642!",
-    themeLight:
-      "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0641\u0627\u062A\u062D",
-    themeDark:
-      "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062F\u0627\u0643\u0646",
-    close: "\u0625\u063A\u0644\u0627\u0642",
+    title: "شهادة",
+    subtitle: "إنجازات متعددة",
+    preamble: "نشهد بأن",
+    hasCompleted: "قد أتمّ بنجاح الدورات التدريبية التالية",
+    course: "الدورة",
+    score: "النتيجة",
+    issuedOn: "صدرت بتاريخ",
+    scanVerify: "امسح للتحقق",
+    certIdLabel: "رقم الشهادة",
+    signatureTitle: "منصة التدريب",
+    downloadPdf: "تحميل PDF",
+    copyLink: "نسخ الرابط",
+    toastCopy: "🔗 تم نسخ رابط التحقق!",
+    themeLight: "الوضع الفاتح",
+    themeDark: "الوضع الداكن",
+    close: "إغلاق",
   },
 } as const;
 
 type Lang = keyof typeof translations;
 
-//  Types
-export interface CertificateData {
-  code: string;
-  studentName: string;
+/* ─── Types ──────────────────────────────────────────────────── */
+export interface MergedCourseEntry {
   courseName: string;
-  duration?: string;
-  modules?: string;
-  level?: string;
-  issuedAt: string;
-  score?: number;
+  score: number;
 }
 
-//  Icons (inline SVGs) -
-const ClockIcon = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
+export interface MergedCertificateData {
+  code: string;
+  studentName: string;
+  courses: MergedCourseEntry[];
+  issuedAt: string;
+}
 
-const BookIcon = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-  </svg>
-);
-
-const CapIcon = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15v-3.572a48.353 48.353 0 0110.5 0V15" />
-  </svg>
-);
-
-const TrophyIcon = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M16.5 3.5H7.5V7c0 2.5 2 5 4.5 5s4.5-2.5 4.5-5V3.5z" />
-    <path d="M7.5 5.5H5a2 2 0 00-2 2v.5a3 3 0 003 3h1.5" />
-    <path d="M16.5 5.5H19a2 2 0 012 2v.5a3 3 0 01-3 3h-1.5" />
-    <path d="M12 12v2.5" />
-    <path d="M8 17.5h8" />
-    <path d="M7 20.5h10" />
-    <path d="M9.5 17.5v3" />
-    <path d="M14.5 17.5v3" />
-  </svg>
-);
-
+/* ─── Inline SVG Icons ───────────────────────────────────────── */
 const DownloadIcon = () => (
   <svg
     width="20"
@@ -256,7 +177,7 @@ const CloseIcon = () => (
   </svg>
 );
 
-//  Helpers
+/* ─── Helpers ────────────────────────────────────────────────── */
 const dateLocales: Record<Lang, string> = {
   en: "en-US",
   fr: "fr-FR",
@@ -275,14 +196,20 @@ function formatDate(iso: string, locale: string) {
   }
 }
 
-//
-//  CertificateTemplate Component
-//
-export default function CertificateTemplate({
+function scoreColor(score: number) {
+  if (score >= 80) return "#22C55E";
+  if (score >= 60) return "#CFB53B";
+  return "#EF4444";
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MergedCertificateTemplate
+   ═══════════════════════════════════════════════════════════════ */
+export default function MergedCertificateTemplate({
   data,
   onClose,
 }: {
-  data: CertificateData;
+  data: MergedCertificateData;
   onClose?: () => void;
 }) {
   const { theme, setTheme } = useTheme();
@@ -310,13 +237,13 @@ export default function CertificateTemplate({
     ? "/images/logo/logo_DarkMood2.png"
     : "/images/logo/logo_LightMood2.png";
 
-  //  Toast helper
+  /* ── Toast ── */
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
   }, []);
 
-  //  Copy link
+  /* ── Copy ── */
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(verifyUrl);
@@ -335,14 +262,13 @@ export default function CertificateTemplate({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  //  Download PDF
+  /* ── Download PDF ── */
   const handleDownload = async () => {
     if (!cardRef.current) return;
     setDownloading(true);
     try {
       const html2pdf = (await import("html2pdf.js")).default;
 
-      // Grab elements we need to temporarily restyle for PDF capture
       const root = cardRef.current.closest(
         `.${s.certificateRoot}`,
       ) as HTMLElement | null;
@@ -360,7 +286,6 @@ export default function CertificateTemplate({
         `.${s.watermark}`,
       ) as HTMLElement | null;
 
-      // Save original inline styles
       const saved = {
         root: root?.style.cssText ?? "",
         card: card.style.cssText,
@@ -370,7 +295,6 @@ export default function CertificateTemplate({
         watermark: watermark?.style.cssText ?? "",
       };
 
-      // 1) Resolve CSS custom properties for html2canvas
       if (root) {
         root.style.setProperty("--bg-card", isDark ? "#141428" : "#fffdf7");
         root.style.setProperty(
@@ -391,21 +315,7 @@ export default function CertificateTemplate({
         root.style.setProperty("--border-inner", "rgba(207, 181, 59, 0.25)");
       }
 
-      // 2) Size card to A4 landscape ratio (297×210mm) edge-to-edge
-      // At 96dpi: 297mm = 1123px, 210mm = 794px
-      card.style.cssText = `
-        display: block;
-        max-width: none;
-        max-height: none;
-        width: 1123px;
-        height: 794px;
-        margin: 0;
-        padding: 0;
-        background: transparent;
-        overflow: hidden;
-      `;
-
-      // Make border and inner fill the full A4 area
+      card.style.cssText = `display:block;max-width:none;max-height:none;width:1123px;height:794px;margin:0;padding:0;background:transparent;overflow:hidden;`;
       if (border) {
         border.style.boxShadow = "none";
         border.style.borderRadius = "0";
@@ -418,23 +328,19 @@ export default function CertificateTemplate({
         inner.style.height = "100%";
         inner.style.boxSizing = "border-box";
       }
-      // Push content to fill and move corner ornaments to the edges
       if (content) {
         content.style.height = "100%";
         content.style.boxSizing = "border-box";
         content.style.display = "flex";
         content.style.flexDirection = "column";
         content.style.justifyContent = "space-between";
-        content.style.padding = "42px 52px";
+        content.style.padding = "32px 44px";
       }
-
-      // 3) Fix watermark opacity
       if (watermark) {
         watermark.style.opacity = "0.035";
         watermark.style.width = "320px";
       }
 
-      // 3a) Force desktop layout on footer (media queries still fire on narrow viewports)
       const footer = card.querySelector<HTMLElement>(`.${s.certFooter}`);
       const savedFooter = footer?.style.cssText ?? "";
       if (footer) {
@@ -460,46 +366,6 @@ export default function CertificateTemplate({
         certIdSection.style.textAlign = "end";
       }
 
-      // 3a-ii) Force desktop font sizes on mobile
-      const certTitle = card.querySelector<HTMLElement>(`.${s.certTitle}`);
-      const savedCertTitle = certTitle?.style.cssText ?? "";
-      if (certTitle) {
-        certTitle.style.fontSize = "36px";
-        certTitle.style.letterSpacing = "6px";
-      }
-
-      const studentName = card.querySelector<HTMLElement>(
-        `.${s.certStudentName}`,
-      );
-      const savedStudentName = studentName?.style.cssText ?? "";
-      if (studentName) {
-        studentName.style.fontSize = "32px";
-      }
-
-      const courseName = card.querySelector<HTMLElement>(
-        `.${s.certCourseName}`,
-      );
-      const savedCourseName = courseName?.style.cssText ?? "";
-      if (courseName) {
-        courseName.style.fontSize = "22px";
-        courseName.style.marginBottom = "24px";
-      }
-
-      const certDetails = card.querySelector<HTMLElement>(`.${s.certDetails}`);
-      const savedCertDetails = certDetails?.style.cssText ?? "";
-      if (certDetails) {
-        certDetails.style.gap = "36px";
-        certDetails.style.marginBottom = "24px";
-      }
-
-      // Force desktop corner ornament sizes
-      const corners = Array.from(
-        card.querySelectorAll<HTMLElement>(
-          `.${s.certificateContent}::before, .${s.certificateContent}::after, .${s.cornerBl}::before, .${s.cornerBr}::before`,
-        ),
-      );
-
-      // 3b) Force explicit gold gradient on dividers (html2canvas drops CSS var gradients)
       const dividers = Array.from(
         card.querySelectorAll<HTMLElement>(`.${s.goldDivider}`),
       );
@@ -511,7 +377,6 @@ export default function CertificateTemplate({
         d.style.opacity = "1";
       });
 
-      // 3c) Force gold border on QR frame (html2canvas drops var() border colors)
       const qrFrame = card.querySelector<HTMLElement>(`.${s.qrFrame}`);
       const savedQrFrame = qrFrame?.style.cssText ?? "";
       if (qrFrame) {
@@ -522,25 +387,17 @@ export default function CertificateTemplate({
           "0 0 0 1px rgba(207,181,59,0.3), 0 2px 12px rgba(207,181,59,0.25)";
       }
 
-      // 4) Fix Arabic font rendering — html2canvas can't handle web font ligatures,
-      //    so we temporarily switch to system Arabic fonts it renders correctly
       let arStyleTag: HTMLStyleElement | null = null;
-      if (isRtl && card) {
+      if (isRtl) {
         arStyleTag = document.createElement("style");
-        arStyleTag.textContent = `
-          [dir="rtl"] * {
-            font-family: "Tahoma", "Segoe UI", "Arial", sans-serif !important;
-            letter-spacing: 0 !important;
-            word-spacing: normal !important;
-          }
-        `;
+        arStyleTag.textContent = `[dir="rtl"] * { font-family: "Tahoma","Segoe UI","Arial",sans-serif !important; letter-spacing:0 !important; word-spacing:normal !important; }`;
         document.head.appendChild(arStyleTag);
       }
 
       await html2pdf()
         .set({
           margin: 0,
-          filename: `OOSkills_Certificate_${data.studentName.replace(/\s+/g, "_")}.pdf`,
+          filename: `OOSkills_MergedBadge_${data.studentName.replace(/\s+/g, "_")}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
@@ -550,15 +407,9 @@ export default function CertificateTemplate({
             logging: false,
             onclone: (clonedDoc: Document) => {
               if (isRtl) {
-                const style = clonedDoc.createElement("style");
-                style.textContent = `
-                  * {
-                    font-family: "Tahoma", "Segoe UI", "Arial", sans-serif !important;
-                    letter-spacing: 0 !important;
-                    word-spacing: normal !important;
-                  }
-                `;
-                clonedDoc.head.appendChild(style);
+                const st = clonedDoc.createElement("style");
+                st.textContent = `* { font-family:"Tahoma","Segoe UI","Arial",sans-serif !important; letter-spacing:0 !important; word-spacing:normal !important; }`;
+                clonedDoc.head.appendChild(st);
               }
             },
           },
@@ -567,7 +418,6 @@ export default function CertificateTemplate({
         .from(card)
         .save();
 
-      // Restore all original styles
       if (arStyleTag) document.head.removeChild(arStyleTag);
       if (root) root.style.cssText = saved.root;
       card.style.cssText = saved.card;
@@ -579,10 +429,6 @@ export default function CertificateTemplate({
       if (footer) footer.style.cssText = savedFooter;
       if (signature) signature.style.cssText = savedSignature;
       if (certIdSection) certIdSection.style.cssText = savedCertId;
-      if (certTitle) certTitle.style.cssText = savedCertTitle;
-      if (studentName) studentName.style.cssText = savedStudentName;
-      if (courseName) courseName.style.cssText = savedCourseName;
-      if (certDetails) certDetails.style.cssText = savedCertDetails;
       dividers.forEach((d, i) => {
         d.style.cssText = savedDividers[i];
       });
@@ -593,10 +439,15 @@ export default function CertificateTemplate({
     }
   };
 
+  /* ── Average score ── */
+  const avgScore = Math.round(
+    data.courses.reduce((sum, c) => sum + c.score, 0) / data.courses.length,
+  );
+
   return (
     <div className={s.certificateRoot} dir={isRtl ? "rtl" : "ltr"}>
       <div className={s.pageWrapper}>
-        {/*  Certificate Card  */}
+        {/* ━━ Certificate Card ━━ */}
         <div className={s.certificateCard} ref={cardRef}>
           <div className={s.certificateBorder}>
             <div className={s.certificateInner}>
@@ -628,50 +479,127 @@ export default function CertificateTemplate({
 
                 <div className={s.goldDivider} />
 
-                {/* Body */}
+                {/* Body — with courses table */}
                 <div className={s.certBody}>
                   <p className={s.certPreamble}>{t.preamble}</p>
                   <h2 className={s.certStudentName}>{data.studentName}</h2>
                   <p className={s.certHasCompleted}>{t.hasCompleted}</p>
-                  <h3 className={s.certCourseName}>{data.courseName}</h3>
 
-                  <div className={s.certDetails}>
-                    {data.duration && (
-                      <div className={s.detailItem}>
-                        <span className={s.detailIcon}>
-                          <ClockIcon />
-                        </span>
-                        <span className={s.detailValue}>{data.duration}</span>
-                        <span className={s.detailLabel}>{t.duration}</span>
-                      </div>
-                    )}
-                    {data.modules && (
-                      <div className={s.detailItem}>
-                        <span className={s.detailIcon}>
-                          <BookIcon />
-                        </span>
-                        <span className={s.detailValue}>{data.modules}</span>
-                        <span className={s.detailLabel}>{t.modules}</span>
-                      </div>
-                    )}
-                    {data.level && (
-                      <div className={s.detailItem}>
-                        <span className={s.detailIcon}>
-                          <CapIcon />
-                        </span>
-                        <span className={s.detailValue}>{data.level}</span>
-                        <span className={s.detailLabel}>{t.level}</span>
-                      </div>
-                    )}
-                    {data.score != null && (
-                      <div className={s.detailItem}>
-                        <span className={s.detailIcon}>
-                          <TrophyIcon />
-                        </span>
-                        <span className={s.detailValue}>{data.score}%</span>
-                        <span className={s.detailLabel}>{t.score}</span>
-                      </div>
-                    )}
+                  {/* Courses table */}
+                  <div
+                    style={{
+                      width: "100%",
+                      maxWidth: 560,
+                      margin: "12px auto 8px",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      border: "1px solid var(--border-inner)",
+                    }}
+                  >
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        fontSize: 13,
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ background: "rgba(207,181,59,0.1)" }}>
+                          <th
+                            style={{
+                              textAlign: isRtl ? "right" : "left",
+                              padding: "8px 14px",
+                              fontWeight: 600,
+                              color: "var(--gold)",
+                              fontSize: 11,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            {t.course}
+                          </th>
+                          <th
+                            style={{
+                              textAlign: "center",
+                              padding: "8px 14px",
+                              fontWeight: 600,
+                              color: "var(--gold)",
+                              fontSize: 11,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                              width: 80,
+                            }}
+                          >
+                            {t.score}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.courses.map((c, i) => (
+                          <tr
+                            key={i}
+                            style={{
+                              borderTop: "1px solid var(--border-inner)",
+                              background:
+                                i % 2 === 0
+                                  ? "transparent"
+                                  : "rgba(207,181,59,0.03)",
+                            }}
+                          >
+                            <td
+                              style={{
+                                padding: "7px 14px",
+                                color: "var(--text-primary)",
+                                fontWeight: 500,
+                                fontSize: 13,
+                              }}
+                            >
+                              {c.courseName}
+                            </td>
+                            <td
+                              style={{
+                                padding: "7px 14px",
+                                textAlign: "center",
+                                fontWeight: 700,
+                                fontSize: 13,
+                                color: scoreColor(c.score),
+                              }}
+                            >
+                              {c.score}%
+                            </td>
+                          </tr>
+                        ))}
+                        {/* Average row */}
+                        <tr
+                          style={{
+                            borderTop: "2px solid var(--gold)",
+                            background: "rgba(207,181,59,0.08)",
+                          }}
+                        >
+                          <td
+                            style={{
+                              padding: "8px 14px",
+                              fontWeight: 700,
+                              fontSize: 13,
+                              color: "var(--gold)",
+                            }}
+                          >
+                            Average
+                          </td>
+                          <td
+                            style={{
+                              padding: "8px 14px",
+                              textAlign: "center",
+                              fontWeight: 800,
+                              fontSize: 14,
+                              color: scoreColor(avgScore),
+                            }}
+                          >
+                            {avgScore}%
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
                   <p className={s.certDate}>
@@ -722,7 +650,7 @@ export default function CertificateTemplate({
           </div>
         </div>
 
-        {/*  Floating Toolbar  */}
+        {/* ━━ Floating Toolbar ━━ */}
         <div className={s.toolbar}>
           {/* Close button */}
           {onClose && (
@@ -818,7 +746,7 @@ export default function CertificateTemplate({
         </div>
       </div>
 
-      {/*  Toast  */}
+      {/* Toast */}
       <div className={`${s.toast} ${toast ? s.toastShow : ""}`}>{toast}</div>
     </div>
   );

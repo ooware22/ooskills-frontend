@@ -706,10 +706,43 @@
   box-shadow: 0 8px 25px rgba(207, 181, 59, 0.5);
 }
 
+/* -- RTL Support (Arabic) -------------------- */
+:global([dir="rtl"]) .certTitle,
+:global([dir="rtl"]) .certStudentName,
+:global([dir="rtl"]) .signatureName {
+  font-family: "Tajawal", "Playfair Display", Georgia, serif;
+}
+
+:global([dir="rtl"]) .certSubtitle,
+:global([dir="rtl"]) .certPreamble,
+:global([dir="rtl"]) .certHasCompleted {
+  font-family: "Tajawal", "Inter", sans-serif;
+}
+
+:global([dir="rtl"]) .pageWrapper {
+  flex-direction: row-reverse;
+}
+
+:global([dir="rtl"]) .certFooter {
+  direction: rtl;
+}
+
+:global([dir="rtl"]) .certIdValue {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 /* -- Responsive ------------------------------ */
+
+/* Tablet & small desktop */
 @media (max-width: 900px) {
+  .certificateRoot {
+    height: auto;
+    overflow: auto;
+  }
+
   .pageWrapper {
-    flex-direction: column;
+    flex-direction: column !important; /* Override RTL row-reverse too */
     height: auto;
     min-height: 100vh;
     padding: 16px;
@@ -718,15 +751,12 @@
     overflow-y: auto;
   }
 
-  .certificateRoot {
-    height: auto;
-    overflow: auto;
-  }
-
   .certificateCard {
     max-height: none;
+    max-width: 100%;
   }
 
+  /* Toolbar → horizontal bottom bar */
   .toolbar {
     flex-direction: row;
     width: auto;
@@ -761,6 +791,7 @@
     height: 38px;
   }
 
+  /* Tooltips point upward on mobile */
   .toolBtn::after {
     right: auto;
     left: 50%;
@@ -792,71 +823,155 @@
     align-items: center;
     text-align: center;
   }
+
+  .watermark {
+    width: 220px;
+  }
 }
 
+/* Phone */
 @media (max-width: 480px) {
+  .pageWrapper {
+    padding: 10px;
+    padding-bottom: 76px;
+  }
+
   .certificateContent {
-    padding: 24px 16px;
+    padding: 22px 16px;
   }
 
   .certLogo {
-    height: 36px;
+    height: 26px;
+    margin-bottom: 18px;
   }
 
   .certTitle {
-    font-size: 26px;
+    font-size: 24px;
     letter-spacing: 3px;
   }
 
+  .certSubtitle {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  .goldDivider {
+    margin: 16px 0;
+  }
+
+  .certPreamble {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
   .certStudentName {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .certHasCompleted {
+    font-size: 11px;
   }
 
   .certCourseName {
-    font-size: 18px;
+    font-size: 17px;
+    margin-bottom: 16px;
   }
 
   .certDetails {
-    gap: 20px;
+    gap: 16px;
+    margin-bottom: 16px;
   }
 
   .detailItem {
-    min-width: 70px;
+    min-width: 60px;
+  }
+
+  .detailIcon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .detailValue {
+    font-size: 13px;
+  }
+
+  .detailLabel {
+    font-size: 9px;
+  }
+
+  .certDate {
+    font-size: 12px;
+  }
+
+  .signatureName {
+    font-size: 17px;
+  }
+
+  .qrWrapper img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .certIdValue {
+    font-size: 10px;
   }
 
   .certificateContent::before,
   .certificateContent::after,
   .cornerBl::before,
   .cornerBr::before {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .watermark {
+    width: 160px;
+  }
+
+  .certFooter {
+    gap: 16px;
   }
 }
 
-/* -- RTL Support (Arabic) -------------------- */
-:global([dir="rtl"]) .certTitle,
-:global([dir="rtl"]) .certStudentName,
-:global([dir="rtl"]) .signatureName {
-  font-family: "Tajawal", "Playfair Display", Georgia, serif;
-}
+/* Very small phone */
+@media (max-width: 360px) {
+  .certificateContent {
+    padding: 18px 12px;
+  }
 
-:global([dir="rtl"]) .certSubtitle,
-:global([dir="rtl"]) .certPreamble,
-:global([dir="rtl"]) .certHasCompleted {
-  font-family: "Tajawal", "Inter", sans-serif;
-}
+  .certTitle {
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
 
-:global([dir="rtl"]) .pageWrapper {
-  flex-direction: row-reverse;
-}
+  .certStudentName {
+    font-size: 19px;
+  }
 
-:global([dir="rtl"]) .certFooter {
-  direction: rtl;
-}
+  .certCourseName {
+    font-size: 15px;
+  }
 
-:global([dir="rtl"]) .certIdValue {
-  direction: ltr;
-  unicode-bidi: isolate;
+  .certDetails {
+    gap: 12px;
+  }
+
+  .qrWrapper img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .certificateContent::before,
+  .certificateContent::after,
+  .cornerBl::before,
+  .cornerBr::before {
+    width: 22px;
+    height: 22px;
+  }
+
+  .watermark {
+    width: 120px;
+  }
 }
 
 /* -- Print Styles ---------------------------- */
