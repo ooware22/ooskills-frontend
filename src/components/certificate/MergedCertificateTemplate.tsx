@@ -23,6 +23,9 @@ const translations = {
     themeLight: "Light mode",
     themeDark: "Dark mode",
     close: "Close",
+    disclaimerTitle: "DISCLAIMER",
+    disclaimerText:
+      "This badge reflects the candidate's self-assessment. OOSkills Academy does not certify the skills listed herein and disclaims all liability regarding the accuracy of declared results.",
   },
   fr: {
     title: "Certificat",
@@ -41,6 +44,9 @@ const translations = {
     themeLight: "Mode clair",
     themeDark: "Mode sombre",
     close: "Fermer",
+    disclaimerTitle: "CLAUSE DE NON-RESPONSABILITÉ",
+    disclaimerText:
+      "Ce badge reflète une auto-évaluation déclarative du candidat. OOSkills Academy ne certifie pas les compétences mentionnées et décline toute responsabilité quant à l'exactitude des résultats.",
   },
   ar: {
     title: "شهادة",
@@ -59,6 +65,9 @@ const translations = {
     themeLight: "الوضع الفاتح",
     themeDark: "الوضع الداكن",
     close: "إغلاق",
+    disclaimerTitle: "إخلاء المسؤولية",
+    disclaimerText:
+      "يعكس هذا الشارة تقييمًا ذاتيًا تصريحيًا من المرشح. لا تصادق أكاديمية OOSkills على المهارات المذكورة وتخلي مسؤوليتها عن دقة النتائج المعلنة.",
   },
 } as const;
 
@@ -357,14 +366,7 @@ export default function MergedCertificateTemplate({
         signature.style.textAlign = "start";
       }
 
-      const certIdSection = card.querySelector<HTMLElement>(
-        `.${s.certIdSection}`,
-      );
-      const savedCertId = certIdSection?.style.cssText ?? "";
-      if (certIdSection) {
-        certIdSection.style.alignItems = "flex-end";
-        certIdSection.style.textAlign = "end";
-      }
+
 
       const dividers = Array.from(
         card.querySelectorAll<HTMLElement>(`.${s.goldDivider}`),
@@ -401,6 +403,7 @@ export default function MergedCertificateTemplate({
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
+            windowWidth: 1123,
             useCORS: true,
             allowTaint: true,
             backgroundColor: isDark ? "#0d0d1a" : "#f0ece3",
@@ -428,7 +431,6 @@ export default function MergedCertificateTemplate({
       if (qrFrame) qrFrame.style.cssText = savedQrFrame;
       if (footer) footer.style.cssText = savedFooter;
       if (signature) signature.style.cssText = savedSignature;
-      if (certIdSection) certIdSection.style.cssText = savedCertId;
       dividers.forEach((d, i) => {
         d.style.cssText = savedDividers[i];
       });
@@ -486,21 +488,14 @@ export default function MergedCertificateTemplate({
                   <p className={s.certHasCompleted}>{t.hasCompleted}</p>
 
                   {/* Courses table */}
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: 560,
-                      margin: "12px auto 8px",
-                      borderRadius: 10,
-                      overflow: "hidden",
-                      border: "1px solid var(--border-inner)",
-                    }}
-                  >
+                  <div className={s.coursesTableWrapper}>
                     <table
+                      className={s.coursesTable}
                       style={{
                         width: "100%",
                         borderCollapse: "collapse",
-                        fontSize: 13,
+                        tableLayout: "fixed",
+                        wordBreak: "break-word",
                       }}
                     >
                       <thead>
@@ -508,7 +503,6 @@ export default function MergedCertificateTemplate({
                           <th
                             style={{
                               textAlign: isRtl ? "right" : "left",
-                              padding: "8px 14px",
                               fontWeight: 600,
                               color: "var(--gold)",
                               fontSize: 11,
@@ -521,7 +515,6 @@ export default function MergedCertificateTemplate({
                           <th
                             style={{
                               textAlign: "center",
-                              padding: "8px 14px",
                               fontWeight: 600,
                               color: "var(--gold)",
                               fontSize: 11,
@@ -548,20 +541,16 @@ export default function MergedCertificateTemplate({
                           >
                             <td
                               style={{
-                                padding: "7px 14px",
                                 color: "var(--text-primary)",
                                 fontWeight: 500,
-                                fontSize: 13,
                               }}
                             >
                               {c.courseName}
                             </td>
                             <td
                               style={{
-                                padding: "7px 14px",
                                 textAlign: "center",
                                 fontWeight: 700,
-                                fontSize: 13,
                                 color: scoreColor(c.score),
                               }}
                             >
@@ -578,9 +567,7 @@ export default function MergedCertificateTemplate({
                         >
                           <td
                             style={{
-                              padding: "8px 14px",
                               fontWeight: 700,
-                              fontSize: 13,
                               color: "var(--gold)",
                             }}
                           >
@@ -588,10 +575,8 @@ export default function MergedCertificateTemplate({
                           </td>
                           <td
                             style={{
-                              padding: "8px 14px",
                               textAlign: "center",
                               fontWeight: 800,
-                              fontSize: 14,
                               color: scoreColor(avgScore),
                             }}
                           >
@@ -615,8 +600,26 @@ export default function MergedCertificateTemplate({
                 {/* Footer */}
                 <div className={s.certFooter}>
                   <div className={s.certSignature}>
-                    <span className={s.signatureName}>OOSkills</span>
-                    <span className={s.signatureTitle}>{t.signatureTitle}</span>
+                    <span 
+                      className={s.signatureName}
+                      style={{ fontSize: "14px", paddingBottom: "2px" }}
+                    >
+                      {t.disclaimerTitle}
+                    </span>
+                    <span
+                      className={s.signatureTitle}
+                      style={{
+                        fontSize: "9px",
+                        textTransform: "none",
+                        lineHeight: 1.4,
+                        maxWidth: "200px",
+                        whiteSpace: "normal",
+                        textAlign: isRtl ? "right" : "left",
+                        letterSpacing: isRtl ? "0" : "0.2px",
+                      }}
+                    >
+                      {t.disclaimerText}
+                    </span>
                   </div>
 
                   <a
@@ -640,9 +643,46 @@ export default function MergedCertificateTemplate({
                     <span className={s.qrLabel}>{t.scanVerify}</span>
                   </a>
 
-                  <div className={s.certIdSection}>
-                    <div className={s.certIdLabel}>{t.certIdLabel}</div>
-                    <div className={s.certIdValue}>{data.code}</div>
+                  {/* ── Machine Readable Zone ──── */}
+                  <div className={s.mrzSection}>
+                    <div className={s.mrzHeader}>
+                      MACHINE READABLE ZONE
+                    </div>
+                    {(() => {
+                      const pad = (str: string, len: number) =>
+                        str
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, "<")
+                          .padEnd(len, "<")
+                          .slice(0, len);
+                      const name = data.studentName || "";
+                      const parts = name.split(/\s+/);
+                      const surname =
+                        parts.length > 1 ? parts.slice(-1)[0] : parts[0] || "";
+                      const given =
+                        parts.length > 1 ? parts.slice(0, -1).join("<") : "";
+                      const code = data.code || "OOSK0000";
+                      const dateRaw = data.issuedAt || "";
+                      const dp = dateRaw.replace(/[^0-9]/g, "").slice(0, 8);
+                      const dateFormatted =
+                        dp.length >= 6 ? dp.slice(2, 8) : "000000";
+                      const courseCount = String(data.courses.length).padStart(
+                        2,
+                        "0",
+                      );
+
+                      const line1 = `B<DZA${pad(surname, 20)}<${pad(given, 18)}`;
+                      const line2 = `${pad(code, 16)}<MRG${courseCount}<DZA${dateFormatted}F${dateFormatted}<`;
+                      const line3 = `OOSK${pad(String(avgScore), 4)}H<MERGED<${courseCount}CRS${"<".repeat(10)}`;
+
+                      return (
+                        <>
+                          <div className={s.mrzLine}>{line1}</div>
+                          <div className={s.mrzLine}>{line2}</div>
+                          <div className={s.mrzLine}>{line3}</div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

@@ -25,52 +25,61 @@ const translations = {
     themeLight: "Light mode",
     themeDark: "Dark mode",
     close: "Close",
+    disclaimerTitle: "DISCLAIMER",
+    disclaimerText:
+      "This badge reflects the candidate's self-assessment. OOSkills Academy does not certify the skills listed herein and disclaims all liability regarding the accuracy of declared results.",
   },
   fr: {
     title: "Certificat",
-    subtitle: "de R\u00E9ussite",
+    subtitle: "de Réussite",
     preamble: "Ceci certifie que",
-    hasCompleted: "a compl\u00E9t\u00E9 avec succ\u00E8s la formation",
-    duration: "Dur\u00E9e",
+    hasCompleted: "a complété avec succès la formation",
+    duration: "Durée",
     modules: "Modules",
     level: "Niveau",
-    issuedOn: "D\u00E9livr\u00E9 le",
-    scanVerify: "Scanner pour v\u00E9rifier",
+    issuedOn: "Délivré le",
+    scanVerify: "Scanner pour vérifier",
     certIdLabel: "ID du Certificat",
     signatureTitle: "Plateforme de Formation",
     score: "Note",
-    downloadPdf: "T\u00E9l\u00E9charger PDF",
+    downloadPdf: "Télécharger PDF",
     copyLink: "Copier le lien",
-    toastCopy: "\uD83D\uDD17 Lien de v\u00E9rification copi\u00E9 !",
+    toastCopy: "🔗 Lien de vérification copié !",
     themeLight: "Mode clair",
     themeDark: "Mode sombre",
     close: "Fermer",
+    disclaimerTitle: "CLAUSE DE NON-RESPONSABILITÉ",
+    disclaimerText:
+      "Ce badge reflète une auto-évaluation déclarative du candidat. OOSkills Academy ne certifie pas les compétences mentionnées et décline toute responsabilité quant à l'exactitude des résultats.",
   },
   ar: {
-    title: "\u0634\u0647\u0627\u062F\u0629",
-    subtitle: "\u0625\u062A\u0645\u0627\u0645 \u0628\u0646\u062C\u0627\u062D",
-    preamble: "\u0646\u0634\u0647\u062F \u0628\u0623\u0646",
+    title: "شهادة",
+    subtitle: "إتمام بنجاح",
+    preamble: "نشهد بأن",
     hasCompleted:
-      "\u0642\u062F \u0623\u062A\u0645\u0651 \u0628\u0646\u062C\u0627\u062D \u0627\u0644\u062F\u0648\u0631\u0629 \u0627\u0644\u062A\u062F\u0631\u064A\u0628\u064A\u0629",
-    duration: "\u0627\u0644\u0645\u062F\u0629",
-    modules: "\u0627\u0644\u0648\u062D\u062F\u0627\u062A",
-    level: "\u0627\u0644\u0645\u0633\u062A\u0648\u0649",
-    issuedOn: "\u0635\u062F\u0631\u062A \u0628\u062A\u0627\u0631\u064A\u062E",
-    scanVerify: "\u0627\u0645\u0633\u062D \u0644\u0644\u062A\u062D\u0642\u0642",
+      "قد أتمّ بنجاح الدورة التدريبية",
+    duration: "المدة",
+    modules: "الوحدات",
+    level: "المستوى",
+    issuedOn: "صدرت بتاريخ",
+    scanVerify: "امسح للتحقق",
     certIdLabel:
-      "\u0631\u0642\u0645 \u0627\u0644\u0634\u0647\u0627\u062F\u0629",
+      "رقم الشهادة",
     signatureTitle:
-      "\u0645\u0646\u0635\u0629 \u0627\u0644\u062A\u062F\u0631\u064A\u0628",
-    score: "\u0627\u0644\u0646\u062A\u064A\u062C\u0629",
-    downloadPdf: "\u062A\u062D\u0645\u064A\u0644 PDF",
-    copyLink: "\u0646\u0633\u062E \u0627\u0644\u0631\u0627\u0628\u0637",
+      "منصة التدريب",
+    score: "النتيجة",
+    downloadPdf: "تحميل PDF",
+    copyLink: "نسخ الرابط",
     toastCopy:
-      "\uD83D\uDD17 \u062A\u0645 \u0646\u0633\u062E \u0631\u0627\u0628\u0637 \u0627\u0644\u062A\u062D\u0642\u0642!",
+      "🔗 تم نسخ رابط التحقق!",
     themeLight:
-      "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0641\u0627\u062A\u062D",
+      "الوضع الفاتح",
     themeDark:
-      "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062F\u0627\u0643\u0646",
-    close: "\u0625\u063A\u0644\u0627\u0642",
+      "الوضع الداكن",
+    close: "إغلاق",
+    disclaimerTitle: "إخلاء المسؤولية",
+    disclaimerText:
+      "يعكس هذا الشارة تقييمًا ذاتيًا تصريحيًا من المرشح. لا تصادق أكاديمية OOSkills على المهارات المذكورة وتخلي مسؤوليتها عن دقة النتائج المعلنة.",
   },
 } as const;
 
@@ -451,15 +460,6 @@ export default function CertificateTemplate({
         signature.style.textAlign = "start";
       }
 
-      const certIdSection = card.querySelector<HTMLElement>(
-        `.${s.certIdSection}`,
-      );
-      const savedCertId = certIdSection?.style.cssText ?? "";
-      if (certIdSection) {
-        certIdSection.style.alignItems = "flex-end";
-        certIdSection.style.textAlign = "end";
-      }
-
       // 3a-ii) Force desktop font sizes on mobile
       const certTitle = card.querySelector<HTMLElement>(`.${s.certTitle}`);
       const savedCertTitle = certTitle?.style.cssText ?? "";
@@ -544,6 +544,7 @@ export default function CertificateTemplate({
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
+            windowWidth: 1123,
             useCORS: true,
             allowTaint: true,
             backgroundColor: isDark ? "#0d0d1a" : "#f0ece3",
@@ -578,7 +579,6 @@ export default function CertificateTemplate({
       if (qrFrame) qrFrame.style.cssText = savedQrFrame;
       if (footer) footer.style.cssText = savedFooter;
       if (signature) signature.style.cssText = savedSignature;
-      if (certIdSection) certIdSection.style.cssText = savedCertId;
       if (certTitle) certTitle.style.cssText = savedCertTitle;
       if (studentName) studentName.style.cssText = savedStudentName;
       if (courseName) courseName.style.cssText = savedCourseName;
@@ -687,8 +687,26 @@ export default function CertificateTemplate({
                 {/* Footer */}
                 <div className={s.certFooter}>
                   <div className={s.certSignature}>
-                    <span className={s.signatureName}>OOSkills</span>
-                    <span className={s.signatureTitle}>{t.signatureTitle}</span>
+                    <span 
+                      className={s.signatureName}
+                      style={{ fontSize: "14px", paddingBottom: "2px" }}
+                    >
+                      {t.disclaimerTitle}
+                    </span>
+                    <span
+                      className={s.signatureTitle}
+                      style={{
+                        fontSize: "9px",
+                        textTransform: "none",
+                        lineHeight: 1.4,
+                        maxWidth: "200px",
+                        whiteSpace: "normal",
+                        textAlign: isRtl ? "right" : "left",
+                        letterSpacing: isRtl ? "0" : "0.2px",
+                      }}
+                    >
+                      {t.disclaimerText}
+                    </span>
                   </div>
 
                   <a
@@ -712,9 +730,45 @@ export default function CertificateTemplate({
                     <span className={s.qrLabel}>{t.scanVerify}</span>
                   </a>
 
-                  <div className={s.certIdSection}>
-                    <div className={s.certIdLabel}>{t.certIdLabel}</div>
-                    <div className={s.certIdValue}>{data.code}</div>
+                  {/* ── Machine Readable Zone ──── */}
+                  <div className={s.mrzSection}>
+                    <div className={s.mrzHeader}>
+                      MACHINE READABLE ZONE
+                    </div>
+                    {(() => {
+                      const pad = (str: string, len: number) =>
+                        str
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, "<")
+                          .padEnd(len, "<")
+                          .slice(0, len);
+                      const name = data.studentName || "";
+                      const parts = name.split(/\s+/);
+                      const surname =
+                        parts.length > 1 ? parts.slice(-1)[0] : parts[0] || "";
+                      const given =
+                        parts.length > 1 ? parts.slice(0, -1).join("<") : "";
+                      const code = data.code || "OOSK0000";
+                      const score =
+                        data.score != null ? String(data.score) : "00";
+                      const level = data.level || "ADV";
+                      const dateRaw = data.issuedAt || "";
+                      const dp = dateRaw.replace(/[^0-9]/g, "").slice(0, 8);
+                      const dateFormatted =
+                        dp.length >= 6 ? dp.slice(2, 8) : "000000";
+
+                      const line1 = `B<DZA${pad(surname, 20)}<${pad(given, 18)}`;
+                      const line2 = `${pad(code, 16)}<${pad(level, 6)}<DZA${dateFormatted}F${dateFormatted}<`;
+                      const line3 = `OOSK${pad(score, 4)}H<${pad(level, 8)}<12ECTS${"<".repeat(10)}`;
+
+                      return (
+                        <>
+                          <div className={s.mrzLine}>{line1}</div>
+                          <div className={s.mrzLine}>{line2}</div>
+                          <div className={s.mrzLine}>{line3}</div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
