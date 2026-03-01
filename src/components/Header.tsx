@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useI18n, useTranslations, Locale } from "@/lib/i18n";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { initializeAuth } from "@/store/slices/authSlice";
+import { initializeAuth, selectIsAdmin } from "@/store/slices/authSlice";
 
 const localeLabels: Record<Locale, string> = {
   fr: "Français",
@@ -36,11 +36,16 @@ export default function Header() {
   const { isAuthenticated, isInitialized, user } = useAppSelector(
     (state) => state.auth,
   );
+  const isAdmin = useAppSelector(selectIsAdmin);
   const userName =
     user?.first_name && user?.last_name
       ? `${user.first_name} ${user.last_name}`
       : user?.email || "";
   const userAvatar = user?.avatar_display_url || null;
+
+  // Determine where the authenticated user should go
+  const dashboardHref = isAdmin ? "/admin" : "/dashboard";
+  const dashboardLabel = isAdmin ? t("adminPanel") || "Admin Panel" : t("myDashboard");
 
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -253,9 +258,9 @@ export default function Header() {
             <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1" />
 
             {isAuthenticated && isInitialized ? (
-              /* Logged-in: avatar + Dashboard link */
+              /* Logged-in: avatar + Dashboard / Admin link */
               <div className="flex items-center gap-3">
-                <Link href="/dashboard" className="flex-shrink-0">
+                <Link href={dashboardHref} className="flex-shrink-0">
                   {userAvatar ? (
                     <Image
                       src={userAvatar}
@@ -273,10 +278,10 @@ export default function Header() {
                   )}
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href={dashboardHref}
                   className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
                 >
-                  {t("myDashboard")}
+                  {dashboardLabel}
                 </Link>
               </div>
             ) : (
@@ -368,11 +373,11 @@ export default function Header() {
                     </div>
                   )}
                   <Link
-                    href="/dashboard"
+                    href={dashboardHref}
                     onClick={() => setIsOpen(false)}
                     className="px-3 py-2.5 text-sm font-medium text-gold rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
                   >
-                    {t("myDashboard")}
+                    {dashboardLabel}
                   </Link>
                 </div>
               ) : (

@@ -23,6 +23,8 @@ import {
   BookOpenIcon,
   CodeBracketIcon,
   PencilIcon,
+  AcademicCapIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
@@ -61,6 +63,16 @@ import JsonBulkImport from "./JsonBulkImport";
 // ID GENERATOR
 // =============================================================================
 const uid = () => crypto.randomUUID();
+
+type FinalQuizData = {
+  id: string;
+  title: string;
+  num_questions: number;
+  pass_threshold: number;
+  max_attempts: number;
+  xp_reward: number;
+};
+
 
 // =============================================================================
 // COMPONENT
@@ -105,6 +117,18 @@ export default function CourseContentPage() {
     }
   }, [dispatch, courseSlug]);
 
+  // Fetch final quiz config when courseId resolves
+  useEffect(() => {
+    if (!courseId) return;
+    setFinalQuizLoading(true);
+    import("@/lib/axios").then(({ default: api }) => {
+      api.get(`/formation/final-quiz/admin/get/?course_id=${courseId}`)
+        .then(res => setFinalQuiz(res.data))
+        .catch(() => setFinalQuiz(null))
+        .finally(() => setFinalQuizLoading(false));
+    });
+  }, [courseId]);
+
   // ─── SECTION MODALS ───
   const [sectionModal, setSectionModal] = useState<SectionModalMode>(null);
   const [selectedSection, setSelectedSection] = useState<AdminSection | null>(null);
@@ -136,6 +160,13 @@ export default function CourseContentPage() {
   const [quizJsonMode, setQuizJsonMode] = useState(false);
   const [quizJsonText, setQuizJsonText] = useState("");
   const [quizJsonError, setQuizJsonError] = useState<string | null>(null);
+
+  // ─── FINAL QUIZ STATE ───
+  const [finalQuiz, setFinalQuiz] = useState<FinalQuizData | null>(null);
+  const [finalQuizLoading, setFinalQuizLoading] = useState(false);
+  const [fqModal, setFqModal] = useState<"edit" | "delete" | null>(null);
+  const [fqSaving, setFqSaving] = useState(false);
+  const [fqForm, setFqForm] = useState({ title: "Final Quiz", num_questions: 10, pass_threshold: 70, max_attempts: 3, xp_reward: 50 });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SECTION CRUD
@@ -385,6 +416,51 @@ export default function CourseContentPage() {
     }
   };
 
+  // ── Final Quiz helpers ──────────────────────────────────────────────────────
+
+  const openFqModal = (mode: "edit") => {
+    setFqForm({
+      title: finalQuiz?.title || "Final Quiz",
+      num_questions: finalQuiz?.num_questions ?? 10,
+      pass_threshold: finalQuiz?.pass_threshold ?? 70,
+      max_attempts: finalQuiz?.max_attempts ?? 3,
+      xp_reward: finalQuiz?.xp_reward ?? 50,
+    });
+    setFqModal(mode);
+  };
+
+  const saveFinalQuiz = async () => {
+    if (!courseId) return;
+    setFqSaving(true);
+    try {
+      const { default: api } = await import("@/lib/axios");
+      const res = await api.post("/formation/final-quiz/admin/upsert/", { course_id: courseId, ...fqForm });
+      setFinalQuiz(res.data);
+      showToast(finalQuiz ? "Final quiz updated!" : "Final quiz created!");
+      setFqModal(null);
+    } catch {
+      showToast("Failed to save final quiz.");
+    } finally {
+      setFqSaving(false);
+    }
+  };
+
+  const deleteFinalQuiz = async () => {
+    if (!courseId) return;
+    setFqSaving(true);
+    try {
+      const { default: api } = await import("@/lib/axios");
+      await api.delete(`/formation/final-quiz/admin/delete/?course_id=${courseId}`);
+      setFinalQuiz(null);
+      showToast("Final quiz removed.");
+      setFqModal(null);
+    } catch {
+      showToast("Failed to delete final quiz.");
+    } finally {
+      setFqSaving(false);
+    }
+  };
+
   // Question helpers
   const addQuestion = (questionType: string = "multiple_choice") => {
     const defaultOptions: Record<string, string[]> = {
@@ -607,7 +683,134 @@ export default function CourseContentPage() {
             </motion.div>
           );
         })}
+
+        {/* ═══════════ FINAL QUIZ PANEL ═══════════ */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden"
+        >
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                <AcademicCapIcon className="w-4 h-4 text-purple-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-oxford dark:text-white text-sm">Final Quiz</p>
+                <p className="text-xs text-silver dark:text-white/40">Certificate exam — drawn from section quizzes</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {finalQuiz ? (
+                <>
+                  <button onClick={() => openFqModal("edit")} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                  <button onClick={() => setFqModal("delete")} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-4 h-4" /></button>
+                </>
+              ) : !finalQuizLoading && (
+                <button onClick={() => openFqModal("edit")} className="flex items-center gap-1.5 text-xs text-purple-500 hover:text-purple-400 font-medium">
+                  <PlusCircleIcon className="w-4 h-4" /> Add Final Quiz
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="px-5 py-4">
+            {finalQuizLoading ? (
+              <div className="flex items-center gap-2 text-sm text-silver dark:text-white/40">
+                <ArrowPathIcon className="w-4 h-4 animate-spin" /> Loading...
+              </div>
+            ) : finalQuiz ? (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {[
+                  { label: "Title", value: finalQuiz.title },
+                  { label: "Questions", value: finalQuiz.num_questions },
+                  { label: "Pass threshold", value: `${finalQuiz.pass_threshold}%` },
+                  { label: "Max attempts", value: finalQuiz.max_attempts },
+                  { label: "XP reward", value: finalQuiz.xp_reward },
+                ].map(item => (
+                  <div key={item.label} className="p-3 bg-purple-500/5 rounded-xl">
+                    <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider mb-0.5">{item.label}</p>
+                    <p className="text-sm font-semibold text-oxford dark:text-white">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <ClipboardDocumentCheckIcon className="w-10 h-10 text-gray-200 dark:text-white/10" />
+                <p className="text-sm text-silver dark:text-white/40">No final quiz configured yet</p>
+                <button onClick={() => openFqModal("edit")} className="mt-1 flex items-center gap-1.5 px-4 py-2 bg-purple-500/10 text-purple-500 rounded-lg text-xs font-semibold hover:bg-purple-500/20 transition-colors">
+                  <PlusCircleIcon className="w-4 h-4" /> Create Final Quiz
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
+
+      {/* ═══════════ FINAL QUIZ MODAL ═══════════ */}
+      <AnimatePresence>
+        {fqModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setFqModal(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={cn("relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden", fqModal === "delete" ? "max-w-md" : "max-w-lg")}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
+                <h3 className="text-lg font-semibold text-oxford dark:text-white">
+                  {fqModal === "delete" ? "Remove Final Quiz" : finalQuiz ? "Edit Final Quiz" : "Create Final Quiz"}
+                </h3>
+                <button onClick={() => setFqModal(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+              </div>
+
+              {fqModal === "delete" ? (
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-500/10 rounded-xl">
+                    <ExclamationTriangleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">This will permanently remove the final quiz for this course. Students who haven&apos;t taken it yet won&apos;t be able to get a certificate.</p>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={() => setFqModal(null)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                    <button onClick={deleteFinalQuiz} disabled={fqSaving} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">{fqSaving ? "..." : "Remove"}</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className={LabelClass}>Title</label>
+                    <input type="text" value={fqForm.title} onChange={e => setFqForm({ ...fqForm, title: e.target.value })} className={InputClass} placeholder="Final Quiz" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={LabelClass}>Questions drawn per attempt</label>
+                      <input type="number" min={1} value={fqForm.num_questions} onChange={e => setFqForm({ ...fqForm, num_questions: Number(e.target.value) })} className={InputClass} />
+                    </div>
+                    <div>
+                      <label className={LabelClass}>Pass threshold (%)</label>
+                      <input type="number" min={0} max={100} value={fqForm.pass_threshold} onChange={e => setFqForm({ ...fqForm, pass_threshold: Number(e.target.value) })} className={InputClass} />
+                    </div>
+                    <div>
+                      <label className={LabelClass}>Max attempts</label>
+                      <input type="number" min={1} value={fqForm.max_attempts} onChange={e => setFqForm({ ...fqForm, max_attempts: Number(e.target.value) })} className={InputClass} />
+                    </div>
+                    <div>
+                      <label className={LabelClass}>XP reward</label>
+                      <input type="number" min={0} value={fqForm.xp_reward} onChange={e => setFqForm({ ...fqForm, xp_reward: Number(e.target.value) })} className={InputClass} />
+                    </div>
+                  </div>
+                  <p className="text-xs text-silver dark:text-white/40">
+                    The questions will be randomly drawn from all section quizzes in this course.
+                  </p>
+                  <div className="flex gap-3 pt-3">
+                    <button onClick={() => setFqModal(null)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                    <button onClick={saveFinalQuiz} disabled={fqSaving} className="flex-1 px-4 py-2.5 bg-purple-500 text-white rounded-xl text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 shadow-md">
+                      {fqSaving ? "Saving..." : finalQuiz ? "Update" : "Create"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════ SECTION MODAL ═══════════ */}
       <AnimatePresence>
