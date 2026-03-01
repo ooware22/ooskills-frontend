@@ -75,7 +75,11 @@ export interface Certificate {
   score: number;
   code: string;
   issuedAt: string;
+  issued_at: string;    // snake_case alias for issuedAt (new)
   pdf_url: string | null;
+  duration?: string | null;   // e.g. "10h" from course.duration
+  modules?: string | null;    // e.g. "12" from course.sections.count()
+  level?: string | null;      // e.g. "advanced" from course.level
 }
 
 // ─── State ──────────────────────────────────────────────────────────────────

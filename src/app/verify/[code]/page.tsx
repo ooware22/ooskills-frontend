@@ -30,11 +30,15 @@ export default function VerifyCertificatePage() {
           code: json.code ?? code,
           studentName: json.user_name ?? "—",
           courseName: json.course_title ?? "—",
+          // backend now returns these directly
           duration: json.duration ?? undefined,
           modules: json.modules ?? undefined,
           level: json.level ?? undefined,
-          issuedAt: json.issued_at ?? json.issuedAt ?? new Date().toISOString(),
-          score: json.score ?? undefined,
+          // handle both issued_at (new snake_case) and issuedAt (legacy camelCase)
+          issuedAt:
+            json.issued_at ?? json.issuedAt ?? new Date().toISOString(),
+          score:
+            json.score != null ? Math.round(Number(json.score)) : undefined,
         });
       } catch {
         setError(true);
