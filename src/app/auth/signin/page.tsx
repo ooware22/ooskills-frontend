@@ -21,6 +21,7 @@ import {
   selectAuthLoading,
   selectAuthError,
   clearError,
+  clearCredentials,
 } from "@/store/slices/authSlice";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/ui/Toast";
@@ -101,6 +102,23 @@ export default function SignIn() {
     );
 
     if (login.fulfilled.match(result)) {
+      // Block admin/super-admin from the student portal
+      const userRole = (result.payload.user as any)?.role;
+      const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+      if (isAdmin) {
+        dispatch(clearCredentials());
+        showToast(
+          locale === "ar"
+            ? "هذا الحساب مخصص للمشرفين. يُرجى استخدام صفحة تسجيل دخول المشرفين."
+            : locale === "fr"
+            ? "Ce compte est réservé aux administrateurs. Utilisez la page de connexion admin."
+            : "This account belongs to an admin. Please use the admin login page.",
+          "error"
+        );
+        return;
+      }
+
       showToast(
         locale === "ar" ? "تم تسجيل الدخول بنجاح!" : locale === "fr" ? "Connexion réussie !" : "Logged in successfully!",
         "success"

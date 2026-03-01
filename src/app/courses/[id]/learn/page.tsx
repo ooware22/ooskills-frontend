@@ -164,6 +164,17 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
   const question = quiz.questions[currentQ];
   const isLast = currentQ === quiz.questions.length - 1;
 
+  // Reset the quiz so the student can try again
+  const handleRetry = () => {
+    setCurrentQ(0);
+    setSelected(null);
+    setShowExplanation(false);
+    setScores([]);
+    setSelections([]);
+    setAnswersMap({});
+    setShowResults(false);
+  };
+
   const handleSelect = (idx: number) => {
     if (showExplanation) return;
     setSelected(idx);
@@ -254,11 +265,21 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           })}
         </div>
 
-        {/* Continue button */}
-        <div className="text-center">
+        {/* Action buttons */}
+        <div className="text-center flex items-center justify-center gap-4">
+          {!passed && (
+            <button onClick={handleRetry}
+              className="px-8 py-3 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors">
+              🔄 إعادة المحاولة
+            </button>
+          )}
           <button onClick={() => onComplete(pct, answersMap)}
-            className="px-10 py-4 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors text-lg">
-            متابعة ←
+            className={`px-10 py-4 font-bold rounded-xl transition-colors text-lg ${
+              passed
+                ? 'bg-gold hover:bg-gold/90 text-oxford'
+                : 'bg-white/10 hover:bg-white/20 text-white'
+            }`}>
+            {passed ? 'متابعة ←' : 'تخطي والمتابعة'}
           </button>
         </div>
       </div>
@@ -273,8 +294,8 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           <span className="text-gold font-bold text-sm">{quiz.title}</span>
           <span className="text-gray-400 text-sm">{currentQ + 1} / {quiz.questions.length}</span>
         </div>
-        <div className="w-full bg-white/10 rounded-full h-1.5">
-          <div className="bg-gold h-1.5 rounded-full transition-all" style={{ width: `${((currentQ + 1) / quiz.questions.length) * 100}%` }} />
+        <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+          <div className="bg-gold h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, ((currentQ + 1) / quiz.questions.length) * 100)}%` }} />
         </div>
       </div>
 
@@ -649,8 +670,8 @@ function FinalQuizView({
             <span className="text-gold font-bold text-sm">الامتحان النهائي</span>
             <span className="text-gray-400 text-sm">{currentQ + 1} / {questions.length}</span>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-1.5">
-            <div className="bg-gold h-1.5 rounded-full transition-all" style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }} />
+          <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-gold h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, ((currentQ + 1) / questions.length) * 100)}%` }} />
           </div>
         </div>
 

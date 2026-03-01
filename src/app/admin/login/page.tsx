@@ -19,6 +19,7 @@ import {
   selectAuthLoading,
   selectAuthError,
   clearError,
+  clearCredentials,
 } from "@/store/slices/authSlice";
 
 export default function AdminLogin() {
@@ -31,6 +32,7 @@ export default function AdminLogin() {
   const error = useAppSelector(selectAuthError);
 
   const [showPassword, setShowPassword] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -54,6 +56,7 @@ export default function AdminLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearError());
+    setRoleError(null);
 
     const result = await dispatch(
       login({
@@ -63,6 +66,16 @@ export default function AdminLogin() {
     );
 
     if (login.fulfilled.match(result)) {
+      // Block non-admin users from the admin portal
+      const userRole = (result.payload.user as any)?.role;
+      const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+      if (!isAdmin) {
+        dispatch(clearCredentials());
+        setRoleError("Access denied. This login is for administrators only.");
+        return;
+      }
+
       const returnUrl = searchParams.get("returnUrl") || "/admin";
       router.push(returnUrl);
     }
@@ -108,14 +121,14 @@ export default function AdminLogin() {
           className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8"
         >
           {/* Error Alert */}
-          {error && (
+          {(error || roleError) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-5 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3"
             >
               <AlertIcon className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-300">{error}</p>
+              <p className="text-sm text-red-300">{roleError || error}</p>
             </motion.div>
           )}
 

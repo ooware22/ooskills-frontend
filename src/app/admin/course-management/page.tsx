@@ -130,6 +130,9 @@ export default function CourseManagementPage() {
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
 
+  // Save error — shown inside the modal
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   // Translation helper
   const tc = (key: string) => t(`admin.courseManagement.${key}`);
 
@@ -282,6 +285,7 @@ export default function CourseManagementPage() {
   const closeModal = () => {
     setModalMode(null);
     setSelectedCourse(null);
+    setSaveError(null);
     resetForm();
   };
 
@@ -301,6 +305,7 @@ export default function CourseManagementPage() {
   };
 
   const handleSave = async () => {
+    setSaveError(null);
     const payload: AdminCourseCreatePayload = {
       title: formData.title,
       slug: formData.slug,
@@ -321,6 +326,25 @@ export default function CourseManagementPage() {
       payload.image = imageFile;
     }
 
+    /** Extract a human-readable error string from a thunk rejected payload */
+    const extractError = (payload: unknown): string => {
+      if (typeof payload === 'string') return payload;
+      if (payload && typeof payload === 'object') {
+        const p = payload as Record<string, unknown>;
+        // Django REST Framework field errors: { field: ["msg", ...], ... }
+        const fieldErrors = Object.entries(p)
+          .filter(([k]) => k !== 'non_field_errors' && k !== 'detail')
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+          .join(' | ');
+        if (fieldErrors) return fieldErrors;
+        // detail or non_field_errors
+        if (p.detail) return String(p.detail);
+        if (Array.isArray(p.non_field_errors)) return (p.non_field_errors as string[]).join(', ');
+        return JSON.stringify(payload);
+      }
+      return 'An unknown error occurred.';
+    };
+
     if (modalMode === "add") {
       const result = await dispatch(createAdminCourse(payload));
       if (createAdminCourse.fulfilled.match(result)) {
@@ -328,6 +352,8 @@ export default function CourseManagementPage() {
         closeModal();
         dispatch(invalidateCache());
         dispatch(fetchAdminCourses());
+      } else {
+        setSaveError(extractError(result.payload));
       }
     } else if (modalMode === "edit" && selectedCourse) {
       const result = await dispatch(updateAdminCourse({ id: selectedCourse.id, data: payload }));
@@ -336,6 +362,8 @@ export default function CourseManagementPage() {
         closeModal();
         dispatch(invalidateCache());
         dispatch(fetchAdminCourses());
+      } else {
+        setSaveError(extractError(result.payload));
       }
     }
   };
@@ -1095,6 +1123,21 @@ export default function CourseManagementPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Save Error */}
+                  {saveError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl"
+                    >
+                      <ExclamationTriangleIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-0.5">Failed to save course</p>
+                        <p className="text-xs text-red-600 dark:text-red-300 break-words">{saveError}</p>
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Actions */}
                   <div className="flex gap-3 pt-3">
