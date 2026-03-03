@@ -2,6 +2,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { I18nProvider } from "@/lib/i18n";
 import { ReduxProvider } from "@/store/provider";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import ServerWakeUp from "@/components/ServerWakeUp";
 import "./globals.css";
 
 export const metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <I18nProvider>
+              <ServerWakeUp />
               <AnimatedBackground />
               {children}
             </I18nProvider>

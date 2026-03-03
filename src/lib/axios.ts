@@ -26,6 +26,16 @@ const axiosClient = axios.create({
 export const UPLOAD_TIMEOUT = 120_000;
 
 // =============================================================================
+// ACTIVE REQUEST COUNTER
+// Used by useServerWakeUp to skip pings when real requests are already in-flight.
+// =============================================================================
+
+let _activeRequests = 0;
+
+/** Returns the number of API requests currently in-flight. */
+export const getActiveRequestCount = (): number => _activeRequests;
+
+// =============================================================================
 // TOKEN REFRESH STATE
 // =============================================================================
 
@@ -79,7 +89,16 @@ const addAuthHeader = (config: InternalAxiosRequestConfig): InternalAxiosRequest
     return config;
 };
 
-axiosClient.interceptors.request.use(addAuthHeader, (error) => Promise.reject(error));
+axiosClient.interceptors.request.use(
+    (config) => {
+        _activeRequests++;
+        return addAuthHeader(config);
+    },
+    (error) => {
+        _activeRequests = Math.max(0, _activeRequests - 1);
+        return Promise.reject(error);
+    }
+);
 
 // =============================================================================
 // RESPONSE INTERCEPTOR
@@ -231,7 +250,16 @@ const createEnhancedError = (
     return enhancedError;
 };
 
-axiosClient.interceptors.response.use(handleResponseSuccess, handleResponseError);
+axiosClient.interceptors.response.use(
+    (response) => {
+        _activeRequests = Math.max(0, _activeRequests - 1);
+        return handleResponseSuccess(response);
+    },
+    async (error) => {
+        _activeRequests = Math.max(0, _activeRequests - 1);
+        return handleResponseError(error);
+    }
+);
 
 // =============================================================================
 // RETRY LOGIC WRAPPER
