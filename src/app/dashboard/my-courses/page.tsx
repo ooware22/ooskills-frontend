@@ -104,12 +104,12 @@ export default function MyCoursesPage() {
   // ── Loading skeleton ─────────────────────────────────────────────────
   if (enrollmentsLoading && enrollments.length === 0) {
     return (
-      <div className="min-h-screen">
+      <div className="flex flex-col flex-1 min-h-0">
         <StudentHeader
           titleKey="student.myCourses.title"
           subtitleKey="student.myCourses.subtitle"
         />
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div
@@ -132,13 +132,13 @@ export default function MyCoursesPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <StudentHeader
         titleKey="student.myCourses.title"
         subtitleKey="student.myCourses.subtitle"
       />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {/* Filters and Search */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

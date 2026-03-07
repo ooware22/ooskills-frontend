@@ -58,13 +58,13 @@ export default function StudentSettingsPage() {
   const LabelClass = "block text-xs font-medium text-silver dark:text-white/50 mb-1.5";
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <StudentHeader
         titleKey="student.settings.title"
         subtitleKey="student.settings.subtitle"
       />
 
-      <div className="p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Profile Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

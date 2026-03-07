@@ -43,7 +43,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <StudentHeader
         title={t("gamification.leaderboard.pageTitle") || "Leaderboard"}
         subtitle={
@@ -52,7 +52,7 @@ export default function LeaderboardPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {/* Period toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

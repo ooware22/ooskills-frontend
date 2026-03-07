@@ -35,7 +35,7 @@ export default function AchievementsPage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <StudentHeader
         title={t("gamification.achievements.pageTitle") || "Achievements"}
         subtitle={
@@ -44,7 +44,7 @@ export default function AchievementsPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {/* Stats bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -123,3 +123,4 @@ export default function AchievementsPage() {
     </div>
   );
 }
+

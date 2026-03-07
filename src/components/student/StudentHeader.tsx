@@ -77,7 +77,7 @@ export default function StudentHeader({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white dark:bg-oxford-light border-b border-gray-200 dark:border-white/10 px-4 lg:px-6 py-4">
+    <header className="sticky top-0 z-30 flex-shrink-0 bg-white dark:bg-oxford-light border-b border-gray-200 dark:border-white/10 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
         {/* Mobile Menu Button + Title */}
         <div className="flex items-center gap-3">

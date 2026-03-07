@@ -169,7 +169,7 @@ export default function LevelAvatar({
           width: s.badge,
           height: s.badge,
           bottom: -2,
-          right: -2,
+          insetInlineEnd: -2,
         }}
       >
         <span
@@ -184,7 +184,7 @@ export default function LevelAvatar({
 
       {/* Tooltip — shows level + XP remaining on hover */}
       <div
-        className={`absolute right-0 whitespace-nowrap pointer-events-none z-50 transition-all duration-200 ${
+        className={`absolute end-0 whitespace-nowrap pointer-events-none z-50 transition-all duration-200 ${
           hovered
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-1"
@@ -192,7 +192,7 @@ export default function LevelAvatar({
         style={{ top: s.container + 6 }}
       >
         {/* Arrow pointing up */}
-        <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[5px] border-l-transparent border-r-transparent border-b-oxford dark:border-b-[#1a2744] absolute right-2 -top-[5px]" />
+        <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[5px] border-l-transparent border-r-transparent border-b-oxford dark:border-b-[#1a2744] absolute end-2 -top-[5px]" />
         <div className="bg-oxford dark:bg-[#1a2744] text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl border border-white/10 flex flex-col items-center gap-0.5">
           <div>
             <span className="text-gold font-bold">Lv.{level}</span>

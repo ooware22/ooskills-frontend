@@ -237,13 +237,13 @@ export default function CertificatesPage() {
   const hasResults = filteredCerts.length > 0;
 
   return (
-    <div className="min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+    <div className="flex flex-col flex-1 min-h-0" dir={isRtl ? "rtl" : "ltr"}>
       <StudentHeader
         titleKey="student.certificates.title"
         subtitleKey="student.certificates.subtitle"
       />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {/* ── Search bar ──────────────────────────────────────── */}
         {!certificatesLoading && certificates.length > 0 && (
           <div className="mb-6">
@@ -686,7 +686,7 @@ export default function CertificatesPage() {
 
                 return (
                   <motion.div
-                    key={merged.code}
+                    key={`${merged.code}-${idx}`}
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{

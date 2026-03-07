@@ -166,13 +166,13 @@ export default function CataloguePage() {
   }, [apiCourses, search, selectedCategory, selectedLevel, sortBy]);
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <StudentHeader
         titleKey="student.catalogue.title"
         subtitleKey="student.catalogue.subtitle"
       />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative max-w-xl">

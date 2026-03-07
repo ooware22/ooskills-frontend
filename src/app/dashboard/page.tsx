@@ -156,12 +156,12 @@ export default function StudentDashboard() {
   // ── Loading skeleton ──────────────────────────────────────────────────
   if (enrollmentsLoading && enrollments.length === 0) {
     return (
-      <div className="min-h-screen">
+      <div className="flex flex-col flex-1 min-h-0">
         <StudentHeader
           titleKey="student.dashboard.welcomeBack"
           subtitleKey="student.dashboard.subtitle"
         />
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[1, 2, 3, 4].map((i) => (
               <div
@@ -180,13 +180,13 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       <StudentHeader
         titleKey="student.dashboard.welcomeBack"
         subtitleKey="student.dashboard.subtitle"
       />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => (
