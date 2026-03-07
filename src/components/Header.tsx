@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { useI18n, useTranslations, Locale } from "@/lib/i18n";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { initializeAuth, selectIsAdmin } from "@/store/slices/authSlice";
+import { selectLevel, selectLevelProgress } from "@/store/slices/gamificationSlice";
+import LevelAvatar from "@/components/student/LevelAvatar";
 
 const localeLabels: Record<Locale, string> = {
   fr: "Français",
@@ -42,6 +44,8 @@ export default function Header() {
       ? `${user.first_name} ${user.last_name}`
       : user?.email || "";
   const userAvatar = user?.avatar_display_url || null;
+  const level = useAppSelector(selectLevel);
+  const levelProgress = useAppSelector(selectLevelProgress);
 
   // Determine where the authenticated user should go
   const dashboardHref = isAdmin ? "/admin" : "/dashboard";
@@ -261,21 +265,14 @@ export default function Header() {
               /* Logged-in: avatar + Dashboard / Admin link */
               <div className="flex items-center gap-3">
                 <Link href={dashboardHref} className="flex-shrink-0">
-                  {userAvatar ? (
-                    <Image
-                      src={userAvatar}
-                      alt={userName}
-                      width={36}
-                      height={36}
-                      className="w-9 h-9 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
-                      <span className="text-oxford font-semibold text-sm">
-                        {userName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  <LevelAvatar
+                    src={userAvatar}
+                    alt={userName}
+                    name={userName}
+                    size="sm"
+                    level={level}
+                    progress={levelProgress}
+                  />
                 </Link>
                 <Link
                   href={dashboardHref}
@@ -357,21 +354,14 @@ export default function Header() {
               </div>
               {isAuthenticated && isInitialized ? (
                 <div className="flex items-center gap-3 pt-4 mt-2 border-t border-gray-100 dark:border-white/5">
-                  {userAvatar ? (
-                    <Image
-                      src={userAvatar}
-                      alt={userName}
-                      width={36}
-                      height={36}
-                      className="w-9 h-9 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
-                      <span className="text-oxford font-semibold text-sm">
-                        {userName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  <LevelAvatar
+                    src={userAvatar}
+                    alt={userName}
+                    name={userName}
+                    size="sm"
+                    level={level}
+                    progress={levelProgress}
+                  />
                   <Link
                     href={dashboardHref}
                     onClick={() => setIsOpen(false)}

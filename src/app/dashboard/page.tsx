@@ -12,16 +12,30 @@ import {
   AcademicCapIcon,
   TrophyIcon,
 } from "@heroicons/react/24/outline";
+import { FireIcon } from "@heroicons/react/24/solid";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import Image from "next/image";
 import StudentHeader from "@/components/student/StudentHeader";
+import XPProgressBar from "@/components/student/XPProgressBar";
+import AchievementCard from "@/components/student/AchievementCard";
+import LevelUpModal from "@/components/student/LevelUpModal";
+import XPGainToast from "@/components/student/XPGainToast";
+import AchievementToast from "@/components/student/AchievementToast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchMyEnrollments,
   fetchMyQuizAttempts,
   fetchMyCertificates,
 } from "@/store/slices/enrollmentSlice";
+import {
+  selectGamification,
+  selectAchievements,
+  selectStreak,
+  addXP,
+  demoLevelUp,
+  demoAchievement,
+} from "@/store/slices/gamificationSlice";
 
 /** Ensure image src starts with / or is an absolute URL */
 function normalizeImg(src: string | undefined | null): string | null {
@@ -38,6 +52,9 @@ export default function StudentDashboard() {
   const { enrollments, enrollmentsLoading, quizAttempts, certificates } =
     useAppSelector((s) => s.enrollment);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const streak = useAppSelector(selectStreak);
+  const achievements = useAppSelector(selectAchievements);
+  const recentAchievements = achievements.filter((a) => a.unlocked).slice(-4);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -81,14 +98,14 @@ export default function StudentDashboard() {
         bg: "bg-amber-500/10",
       },
       {
-        labelKey: "totalXp",
-        value: totalXp.toLocaleString(),
-        icon: SparklesIcon,
-        color: "text-gold",
-        bg: "bg-gold/10",
+        labelKey: "streak",
+        value: String(streak),
+        icon: FireIcon,
+        color: "text-orange-500",
+        bg: "bg-orange-500/10",
       },
     ];
-  }, [enrollments, quizAttempts]);
+  }, [enrollments, streak]);
 
   // ── Continue learning — active enrollments ─────────────────────────────
   const continueLearning = useMemo(
@@ -196,6 +213,69 @@ export default function StudentDashboard() {
             </motion.div>
           ))}
         </div>
+
+        {/* XP Progress Bar */}
+        <div className="mb-8">
+          <XPProgressBar />
+        </div>
+
+        {/* Recent Achievements */}
+        {recentAchievements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mb-8"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrophyIcon className="w-4 h-4 text-gold" />
+                <h3 className="text-sm font-semibold text-oxford dark:text-white">
+                  {t("gamification.recentAchievements") || "Recent Achievements"}
+                </h3>
+              </div>
+              <Link
+                href="/dashboard/achievements"
+                className="text-xs text-gold hover:text-gold-light transition-colors flex items-center gap-1"
+              >
+                {td("viewAll")}
+                <ArrowRightIcon className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {recentAchievements.map((ach, i) => (
+                <AchievementCard key={ach.id} achievement={ach} compact delay={i * 0.05} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Demo buttons (for testing — remove in production) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mb-8 flex flex-wrap gap-2"
+        >
+          <button
+            onClick={() => dispatch(addXP({ amount: 50, label: "Quiz passed" }))}
+            className="px-3 py-1.5 text-xs font-medium bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-colors"
+          >
+            +50 XP (Demo)
+          </button>
+          <button
+            onClick={() => dispatch(demoLevelUp())}
+            className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
+          >
+            Level Up (Demo)
+          </button>
+          <button
+            onClick={() => dispatch(demoAchievement())}
+            className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500/20 transition-colors"
+          >
+            Achievement (Demo)
+          </button>
+        </motion.div>
 
         {/* Continue Learning */}
         <motion.div

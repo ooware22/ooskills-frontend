@@ -702,7 +702,9 @@
       "logout": "Se déconnecter",
       "collapse": "Réduire",
       "expand": "Agrandir",
-      "catalogue": "Catalogue"
+      "catalogue": "Catalogue",
+      "achievements": "Réalisations",
+      "leaderboard": "Classement"
     },
     "header": {
       "searchPlaceholder": "Rechercher..."
@@ -714,6 +716,7 @@
       "completedCourses": "Terminées",
       "inProgress": "En cours",
       "totalXp": "XP Total",
+      "streak": "Série",
       "continueLearning": "Continuer l'apprentissage",
       "pickUpWhere": "Reprenez là où vous vous êtes arrêté",
       "viewAll": "Voir tout",
@@ -806,6 +809,64 @@
       "languageDesc": "Choisissez votre langue préférée",
       "saveLanguage": "Enregistrer la langue",
       "languageSaved": "Préférence de langue enregistrée !"
+    }
+  },
+  "gamification": {
+    "level": "Niveau",
+    "toNextLevel": "pour le prochain niveau",
+    "recentAchievements": "Réalisations récentes",
+    "achievementUnlocked": "Réalisation débloquée !",
+    "levels": {
+      "beginner": "Débutant",
+      "apprentice": "Apprenti",
+      "student": "Étudiant",
+      "explorer": "Explorateur",
+      "scholar": "Érudit",
+      "expert": "Expert",
+      "master": "Maître",
+      "champion": "Champion",
+      "legend": "Légende",
+      "genius": "Génie"
+    },
+    "streak": {
+      "days": "jours",
+      "best": "Meilleur"
+    },
+    "filter": {
+      "all": "Tout",
+      "unlocked": "Débloqué",
+      "locked": "Verrouillé"
+    },
+    "achievements": {
+      "pageTitle": "Réalisations",
+      "pageSubtitle": "Suivez vos étapes et débloquez des récompenses",
+      "completed": "réalisations complétées",
+      "noResults": "Aucune réalisation ne correspond à ce filtre",
+      "firstStep": { "title": "Premier pas", "desc": "Terminez votre première leçon" },
+      "avidReader": { "title": "Lecteur assidu", "desc": "Terminez 10 leçons" },
+      "finisher": { "title": "Finisseur", "desc": "Terminez votre premier cours" },
+      "perfectionist": { "title": "Perfectionniste", "desc": "Obtenez 100% à un quiz" },
+      "onFire7": { "title": "En feu", "desc": "Série de 7 jours de connexion" },
+      "unstoppable30": { "title": "Inarrêtable", "desc": "Série de 30 jours de connexion" },
+      "multiGraduate": { "title": "Multi-diplômé", "desc": "Obtenez 3 certificats" },
+      "critic": { "title": "Critique", "desc": "Laissez 5 avis sur des cours" },
+      "speedster": { "title": "Rapide", "desc": "Terminez un cours en moins de 7 jours" },
+      "risingStar": { "title": "Étoile montante", "desc": "Atteignez le Niveau 5" },
+      "legend": { "title": "Légende", "desc": "Atteignez le Niveau 10" }
+    },
+    "leaderboard": {
+      "pageTitle": "Classement",
+      "pageSubtitle": "Voyez votre rang parmi les autres apprenants",
+      "title": "Classements",
+      "subtitle": "Meilleurs apprenants par XP",
+      "weekly": "Cette semaine",
+      "alltime": "Tout le temps",
+      "you": "Vous"
+    },
+    "levelUp": {
+      "title": "Niveau supérieur !",
+      "desc": "Félicitations ! Continuez à apprendre pour débloquer plus de récompenses.",
+      "continue": "Continuer"
     }
   }
 }

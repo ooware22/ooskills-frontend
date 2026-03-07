@@ -702,7 +702,9 @@
       "logout": "تسجيل الخروج",
       "collapse": "تصغير",
       "expand": "توسيع",
-      "catalogue": "الكتالوج"
+      "catalogue": "الكتالوج",
+      "achievements": "الإنجازات",
+      "leaderboard": "الترتيب"
     },
     "header": {
       "searchPlaceholder": "بحث..."
@@ -714,6 +716,7 @@
       "completedCourses": "المكتملة",
       "inProgress": "قيد التقدم",
       "totalXp": "إجمالي XP",
+      "streak": "سلسلة",
       "continueLearning": "واصل التعلّم",
       "pickUpWhere": "استأنف من حيث توقفت",
       "viewAll": "عرض الكل",
@@ -806,6 +809,64 @@
       "languageDesc": "اختر لغتك المفضلة",
       "saveLanguage": "حفظ اللغة",
       "languageSaved": "تم حفظ تفضيل اللغة!"
+    }
+  },
+  "gamification": {
+    "level": "المستوى",
+    "toNextLevel": "للمستوى التالي",
+    "recentAchievements": "الإنجازات الأخيرة",
+    "achievementUnlocked": "تم فتح إنجاز!",
+    "levels": {
+      "beginner": "مبتدئ",
+      "apprentice": "متدرب",
+      "student": "طالب",
+      "explorer": "مستكشف",
+      "scholar": "عالم",
+      "expert": "خبير",
+      "master": "متقن",
+      "champion": "بطل",
+      "legend": "أسطورة",
+      "genius": "عبقري"
+    },
+    "streak": {
+      "days": "يوم",
+      "best": "الأفضل"
+    },
+    "filter": {
+      "all": "الكل",
+      "unlocked": "مفتوح",
+      "locked": "مقفل"
+    },
+    "achievements": {
+      "pageTitle": "الإنجازات",
+      "pageSubtitle": "تابع إنجازاتك وافتح المكافآت",
+      "completed": "إنجازات مكتملة",
+      "noResults": "لا توجد إنجازات تطابق هذا الفلتر",
+      "firstStep": { "title": "الخطوة الأولى", "desc": "أكمل أول درس" },
+      "avidReader": { "title": "قارئ نهم", "desc": "أكمل 10 دروس" },
+      "finisher": { "title": "منجز", "desc": "أكمل أول دورة" },
+      "perfectionist": { "title": "منشد الكمال", "desc": "احصل على 100% في اختبار" },
+      "onFire7": { "title": "مشتعل", "desc": "سلسلة تسجيل دخول 7 أيام" },
+      "unstoppable30": { "title": "لا يُوقف", "desc": "سلسلة تسجيل دخول 30 يوم" },
+      "multiGraduate": { "title": "متعدد الشهادات", "desc": "احصل على 3 شهادات" },
+      "critic": { "title": "ناقد", "desc": "اترك 5 تقييمات على الدورات" },
+      "speedster": { "title": "سريع", "desc": "أكمل دورة في أقل من 7 أيام" },
+      "risingStar": { "title": "نجم صاعد", "desc": "الوصول للمستوى 5" },
+      "legend": { "title": "أسطورة", "desc": "الوصول للمستوى 10" }
+    },
+    "leaderboard": {
+      "pageTitle": "الترتيب",
+      "pageSubtitle": "اعرف ترتيبك بين المتعلمين الآخرين",
+      "title": "الترتيب",
+      "subtitle": "أفضل المتعلمين حسب XP",
+      "weekly": "هذا الأسبوع",
+      "alltime": "كل الوقت",
+      "you": "أنت"
+    },
+    "levelUp": {
+      "title": "صعود مستوى!",
+      "desc": "تهانينا! واصل التعلّم لفتح المزيد من المكافآت.",
+      "continue": "متابعة"
     }
   }
 }

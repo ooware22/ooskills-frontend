@@ -16,6 +16,7 @@ import adminCoursesManagementReducer from "./slices/adminCoursesManagementSlice"
 import adminCourseContentReducer from "./slices/adminCourseContentSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
 import publicCoursesReducer from "./slices/publicCoursesSlice";
+import gamificationReducer from "./slices/gamificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -49,6 +50,9 @@ export const store = configureStore({
 
     // Public course browsing
     publicCourses: publicCoursesReducer,
+
+    // Gamification (levels, XP, achievements)
+    gamification: gamificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

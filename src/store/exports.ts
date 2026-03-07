@@ -267,3 +267,35 @@ export {
   setFilters as setAdminCoursesFilters,
   clearError as clearAdminCoursesError,
 } from "./slices/adminCoursesManagementSlice";
+
+// =============================================================================
+// GAMIFICATION SLICE EXPORTS
+// =============================================================================
+
+export {
+  default as gamificationReducer,
+  addXP,
+  dismissXPGain,
+  dismissLevelUp,
+  unlockAchievement,
+  dismissAchievement,
+  setLeaderboardPeriod,
+  toggleSound,
+  setSoundEnabled,
+  demoLevelUp,
+  demoAchievement,
+  // Selectors
+  selectGamification,
+  selectLevel,
+  selectTotalXP,
+  selectStreak,
+  selectAchievements,
+  selectLeaderboard,
+  selectShowLevelUp,
+  selectXPGainQueue,
+  selectRecentAchievement,
+  selectSoundEnabled,
+  selectLevelProgress,
+  LEVEL_THRESHOLDS,
+} from "./slices/gamificationSlice";
+export type { LevelInfo, Achievement, LeaderboardEntry } from "./slices/gamificationSlice";

@@ -7,12 +7,15 @@ import StudentSidebar, {
   useSidebar,
 } from "@/components/student/StudentSidebar";
 import AuthGuard from "@/components/auth/AuthGuard";
+import LevelUpModal from "@/components/student/LevelUpModal";
+import XPGainToast from "@/components/student/XPGainToast";
+import AchievementToast from "@/components/student/AchievementToast";
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-oxford">
+    <div className="min-h-screen bg-gray-50 dark:bg-oxford overflow-x-hidden">
       <StudentSidebar />
       <main
         className={`transition-all duration-300 ${
@@ -21,6 +24,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
+      {/* Gamification overlays */}
+      <LevelUpModal />
+      <XPGainToast />
+      <AchievementToast />
     </div>
   );
 }

@@ -15,6 +15,9 @@ import { useSidebar } from "./StudentSidebar";
 import { useI18n, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/hooks";
+import { selectLevel, selectLevelProgress } from "@/store/slices/gamificationSlice";
+import LevelAvatar from "@/components/student/LevelAvatar";
+import StreakCounter from "@/components/student/StreakCounter";
 import Image from "next/image";
 
 interface StudentHeaderProps {
@@ -45,6 +48,8 @@ export default function StudentHeader({
       : user?.email || "Student";
   const userEmail = user?.email || "student@example.com";
   const userAvatar = user?.avatar_display_url || null;
+  const level = useAppSelector(selectLevel);
+  const levelProgress = useAppSelector(selectLevelProgress);
 
   // Resolved title and subtitle from translation keys or direct props
   const resolvedTitle = titleKey ? t(titleKey) : title || "";
@@ -178,6 +183,9 @@ export default function StudentHeader({
             />
           </button>
 
+          {/* Streak Counter */}
+          <StreakCounter />
+
           {/* Profile */}
           <div
             className={cn(
@@ -198,21 +206,14 @@ export default function StudentHeader({
                 {userEmail}
               </p>
             </div>
-            {userAvatar ? (
-              <Image
-                src={userAvatar}
-                alt={userName}
-                width={36}
-                height={36}
-                className="w-9 h-9 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-9 h-9 bg-gold rounded-lg flex items-center justify-center">
-                <span className="text-oxford font-semibold text-sm">
-                  {userName.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <LevelAvatar
+              src={userAvatar}
+              alt={userName}
+              name={userName}
+              size="md"
+              level={level}
+              progress={levelProgress}
+            />
           </div>
         </div>
       </div>

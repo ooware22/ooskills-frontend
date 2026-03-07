@@ -15,6 +15,8 @@ import {
   Bars3Icon as Menu,
   XMarkIcon as X,
   TrophyIcon,
+  SparklesIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -30,6 +32,8 @@ const navItems = [
     labelKey: "certificates",
     icon: TrophyIcon,
   },
+  { href: "/dashboard/achievements", labelKey: "achievements", icon: SparklesIcon },
+  { href: "/dashboard/leaderboard", labelKey: "leaderboard", icon: ChartBarIcon },
   { href: "/dashboard/catalogue", labelKey: "catalogue", icon: Search },
   { href: "/dashboard/settings", labelKey: "settings", icon: Settings },
 ];

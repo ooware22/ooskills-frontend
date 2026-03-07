@@ -733,7 +733,9 @@
       "logout": "Log out",
       "collapse": "Collapse",
       "expand": "Expand",
-      "catalogue": "Catalogue"
+      "catalogue": "Catalogue",
+      "achievements": "Achievements",
+      "leaderboard": "Leaderboard"
     },
     "header": {
       "searchPlaceholder": "Search..."
@@ -745,6 +747,7 @@
       "completedCourses": "Completed",
       "inProgress": "In Progress",
       "totalXp": "Total XP",
+      "streak": "Streak",
       "continueLearning": "Continue Learning",
       "pickUpWhere": "Pick up where you left off",
       "viewAll": "View All",
@@ -837,6 +840,64 @@
       "languageDesc": "Choose your preferred language",
       "saveLanguage": "Save Language",
       "languageSaved": "Language preference saved!"
+    }
+  },
+  "gamification": {
+    "level": "Level",
+    "toNextLevel": "to next level",
+    "recentAchievements": "Recent Achievements",
+    "achievementUnlocked": "Achievement Unlocked!",
+    "levels": {
+      "beginner": "Beginner",
+      "apprentice": "Apprentice",
+      "student": "Student",
+      "explorer": "Explorer",
+      "scholar": "Scholar",
+      "expert": "Expert",
+      "master": "Master",
+      "champion": "Champion",
+      "legend": "Legend",
+      "genius": "Genius"
+    },
+    "streak": {
+      "days": "days",
+      "best": "Best"
+    },
+    "filter": {
+      "all": "All",
+      "unlocked": "Unlocked",
+      "locked": "Locked"
+    },
+    "achievements": {
+      "pageTitle": "Achievements",
+      "pageSubtitle": "Track your milestones and unlock rewards",
+      "completed": "achievements completed",
+      "noResults": "No achievements match this filter",
+      "firstStep": { "title": "First Step", "desc": "Complete your first lesson" },
+      "avidReader": { "title": "Avid Reader", "desc": "Complete 10 lessons" },
+      "finisher": { "title": "Finisher", "desc": "Complete your first course" },
+      "perfectionist": { "title": "Perfectionist", "desc": "Get 100% on any quiz" },
+      "onFire7": { "title": "On Fire", "desc": "7-day login streak" },
+      "unstoppable30": { "title": "Unstoppable", "desc": "30-day login streak" },
+      "multiGraduate": { "title": "Multi-Graduate", "desc": "Earn 3 certificates" },
+      "critic": { "title": "Critic", "desc": "Leave 5 course reviews" },
+      "speedster": { "title": "Speedster", "desc": "Complete a course in under 7 days" },
+      "risingStar": { "title": "Rising Star", "desc": "Reach Level 5" },
+      "legend": { "title": "Legend", "desc": "Reach Level 10" }
+    },
+    "leaderboard": {
+      "pageTitle": "Leaderboard",
+      "pageSubtitle": "See how you rank among other learners",
+      "title": "Rankings",
+      "subtitle": "Top learners by XP",
+      "weekly": "This Week",
+      "alltime": "All Time",
+      "you": "You"
+    },
+    "levelUp": {
+      "title": "Level Up!",
+      "desc": "Congratulations! Keep learning to unlock more rewards.",
+      "continue": "Continue"
     }
   }
 }
