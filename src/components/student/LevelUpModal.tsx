@@ -205,9 +205,10 @@ export default function LevelUpModal() {
     : "";
 
   // Dynamic tier styling
-  const isMaxTier = newLevel >= 10;
-  const isHighTier = newLevel >= 7;
-  const isMidTier = newLevel >= 4;
+  const currentLvl = newLevel ?? 0;
+  const isMaxTier = currentLvl >= 10;
+  const isHighTier = currentLvl >= 7;
+  const isMidTier = currentLvl >= 4;
 
   const tierGradient = isMaxTier
     ? "from-amber-400 via-yellow-300 to-orange-500"
@@ -325,7 +326,7 @@ export default function LevelUpModal() {
                     animate={{ scale: [0, 1.2, 1] }}
                     transition={{ delay: 0.4, duration: 0.4 }}
                   >
-                    {newLevel}
+                    {currentLvl}
                   </motion.span>
                   <motion.span
                     className="text-[10px] font-bold text-gold/80 uppercase tracking-[0.2em] mt-0.5"

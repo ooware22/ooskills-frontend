@@ -3,6 +3,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { ReduxProvider } from "@/store/provider";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ServerWakeUp from "@/components/ServerWakeUp";
+import GamificationOverlays from "@/components/GamificationOverlays";
 import "./globals.css";
 
 export const metadata = {
@@ -36,6 +37,7 @@ export default function RootLayout({
             <I18nProvider>
               <ServerWakeUp />
               <AnimatedBackground />
+              <GamificationOverlays />
               {children}
             </I18nProvider>
           </ThemeProvider>

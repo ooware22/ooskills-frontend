@@ -280,7 +280,9 @@
       "expand": "Expand",
       "courseManagement": "Course Management",
       "coursesList": "Courses",
-      "categoriesList": "Categories"
+      "categoriesList": "Categories",
+      "gamification": "Gamification",
+      "achievements": "Achievements"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -873,17 +875,50 @@
       "pageSubtitle": "Track your milestones and unlock rewards",
       "completed": "achievements completed",
       "noResults": "No achievements match this filter",
-      "firstStep": { "title": "First Step", "desc": "Complete your first lesson" },
-      "avidReader": { "title": "Avid Reader", "desc": "Complete 10 lessons" },
-      "finisher": { "title": "Finisher", "desc": "Complete your first course" },
-      "perfectionist": { "title": "Perfectionist", "desc": "Get 100% on any quiz" },
-      "onFire7": { "title": "On Fire", "desc": "7-day login streak" },
-      "unstoppable30": { "title": "Unstoppable", "desc": "30-day login streak" },
-      "multiGraduate": { "title": "Multi-Graduate", "desc": "Earn 3 certificates" },
-      "critic": { "title": "Critic", "desc": "Leave 5 course reviews" },
-      "speedster": { "title": "Speedster", "desc": "Complete a course in under 7 days" },
-      "risingStar": { "title": "Rising Star", "desc": "Reach Level 5" },
-      "legend": { "title": "Legend", "desc": "Reach Level 10" }
+      "firstStep": {
+        "title": "First Step",
+        "desc": "Complete your first lesson"
+      },
+      "avidReader": {
+        "title": "Avid Reader",
+        "desc": "Complete 10 lessons"
+      },
+      "finisher": {
+        "title": "Finisher",
+        "desc": "Complete your first course"
+      },
+      "perfectionist": {
+        "title": "Perfectionist",
+        "desc": "Get 100% on any quiz"
+      },
+      "onFire7": {
+        "title": "On Fire",
+        "desc": "7-day login streak"
+      },
+      "unstoppable30": {
+        "title": "Unstoppable",
+        "desc": "30-day login streak"
+      },
+      "multiGraduate": {
+        "title": "Multi-Graduate",
+        "desc": "Earn 3 certificates"
+      },
+      "critic": {
+        "title": "Critic",
+        "desc": "Leave 5 course reviews"
+      },
+      "speedster": {
+        "title": "Speedster",
+        "desc": "Complete a course in under 7 days"
+      },
+      "risingStar": {
+        "title": "Rising Star",
+        "desc": "Reach Level 5"
+      },
+      "legend": {
+        "title": "Legend",
+        "desc": "Reach Level 10"
+      }
     },
     "leaderboard": {
       "pageTitle": "Leaderboard",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   TrophyIcon,
@@ -8,16 +8,21 @@ import {
 } from "@heroicons/react/24/outline";
 import StudentHeader from "@/components/student/StudentHeader";
 import AchievementCard from "@/components/student/AchievementCard";
-import { useAppSelector } from "@/store/hooks";
-import { selectAchievements } from "@/store/slices/gamificationSlice";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { selectAchievements, fetchAchievements } from "@/store/slices/gamificationSlice";
 import { useI18n } from "@/lib/i18n";
 
 type Filter = "all" | "unlocked" | "locked";
 
 export default function AchievementsPage() {
   const { t } = useI18n();
+  const dispatch = useAppDispatch();
   const achievements = useAppSelector(selectAchievements);
   const [filter, setFilter] = useState<Filter>("all");
+
+  useEffect(() => {
+    dispatch(fetchAchievements());
+  }, [dispatch]);
 
   const filtered = achievements.filter((a) => {
     if (filter === "unlocked") return a.unlocked;

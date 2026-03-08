@@ -42,8 +42,9 @@ export default function AchievementCard({
 }: AchievementCardProps) {
   const { t } = useI18n();
   const Icon = ICON_MAP[achievement.icon] || StarIcon;
-  const title = t(achievement.titleKey) || achievement.titleFallback;
-  const description = t(achievement.descriptionKey) || achievement.descriptionFallback;
+  const title = (achievement.titleKey && t(achievement.titleKey)) || achievement.titleFallback || achievement.title?.en || achievement.title?.fr || "";
+  const description = (achievement.descriptionKey && t(achievement.descriptionKey)) || achievement.descriptionFallback || achievement.description?.en || achievement.description?.fr || "";
+  const unlockedDate = achievement.unlocked_at || (achievement as any).unlockedAt;
 
   if (compact) {
     return (
@@ -124,9 +125,9 @@ export default function AchievementCard({
       </p>
 
       {/* Unlocked date */}
-      {achievement.unlocked && achievement.unlockedAt && (
+      {achievement.unlocked && unlockedDate && (
         <p className="text-[10px] text-gold/80 dark:text-gold/60 mt-2">
-          {new Date(achievement.unlockedAt).toLocaleDateString()}
+          {new Date(unlockedDate).toLocaleDateString()}
         </p>
       )}
 

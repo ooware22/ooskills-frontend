@@ -249,7 +249,9 @@
       "expand": "توسيع",
       "courseManagement": "إدارة الدورات",
       "coursesList": "الدورات",
-      "categoriesList": "الفئات"
+      "categoriesList": "الفئات",
+      "gamification": "التلعيب",
+      "achievements": "الإنجازات"
     },
     "dashboard": {
       "title": "لوحة التحكم",
@@ -842,17 +844,50 @@
       "pageSubtitle": "تابع إنجازاتك وافتح المكافآت",
       "completed": "إنجازات مكتملة",
       "noResults": "لا توجد إنجازات تطابق هذا الفلتر",
-      "firstStep": { "title": "الخطوة الأولى", "desc": "أكمل أول درس" },
-      "avidReader": { "title": "قارئ نهم", "desc": "أكمل 10 دروس" },
-      "finisher": { "title": "منجز", "desc": "أكمل أول دورة" },
-      "perfectionist": { "title": "منشد الكمال", "desc": "احصل على 100% في اختبار" },
-      "onFire7": { "title": "مشتعل", "desc": "سلسلة تسجيل دخول 7 أيام" },
-      "unstoppable30": { "title": "لا يُوقف", "desc": "سلسلة تسجيل دخول 30 يوم" },
-      "multiGraduate": { "title": "متعدد الشهادات", "desc": "احصل على 3 شهادات" },
-      "critic": { "title": "ناقد", "desc": "اترك 5 تقييمات على الدورات" },
-      "speedster": { "title": "سريع", "desc": "أكمل دورة في أقل من 7 أيام" },
-      "risingStar": { "title": "نجم صاعد", "desc": "الوصول للمستوى 5" },
-      "legend": { "title": "أسطورة", "desc": "الوصول للمستوى 10" }
+      "firstStep": {
+        "title": "الخطوة الأولى",
+        "desc": "أكمل أول درس"
+      },
+      "avidReader": {
+        "title": "قارئ نهم",
+        "desc": "أكمل 10 دروس"
+      },
+      "finisher": {
+        "title": "منجز",
+        "desc": "أكمل أول دورة"
+      },
+      "perfectionist": {
+        "title": "منشد الكمال",
+        "desc": "احصل على 100% في اختبار"
+      },
+      "onFire7": {
+        "title": "مشتعل",
+        "desc": "سلسلة تسجيل دخول 7 أيام"
+      },
+      "unstoppable30": {
+        "title": "لا يُوقف",
+        "desc": "سلسلة تسجيل دخول 30 يوم"
+      },
+      "multiGraduate": {
+        "title": "متعدد الشهادات",
+        "desc": "احصل على 3 شهادات"
+      },
+      "critic": {
+        "title": "ناقد",
+        "desc": "اترك 5 تقييمات على الدورات"
+      },
+      "speedster": {
+        "title": "سريع",
+        "desc": "أكمل دورة في أقل من 7 أيام"
+      },
+      "risingStar": {
+        "title": "نجم صاعد",
+        "desc": "الوصول للمستوى 5"
+      },
+      "legend": {
+        "title": "أسطورة",
+        "desc": "الوصول للمستوى 10"
+      }
     },
     "leaderboard": {
       "pageTitle": "الترتيب",

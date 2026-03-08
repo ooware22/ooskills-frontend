@@ -23,6 +23,8 @@ import {
   UsersIcon as Users,
   AcademicCapIcon as AcademicCap,
   TagIcon as Tag,
+  FireIcon as Fire,
+  StarIcon as Star,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -70,6 +72,14 @@ const navItems: NavItem[] = [
     children: [
       { href: "/admin/course-management", labelKey: "coursesList", icon: BookOpen },
       { href: "/admin/course-categories", labelKey: "categoriesList", icon: Tag },
+    ],
+  },
+  {
+    type: "group",
+    labelKey: "gamification",
+    icon: Fire,
+    children: [
+      { href: "/admin/achievements", labelKey: "achievements", icon: Star },
     ],
   },
 ];

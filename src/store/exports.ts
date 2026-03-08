@@ -282,8 +282,14 @@ export {
   setLeaderboardPeriod,
   toggleSound,
   setSoundEnabled,
+  invalidateGamification,
   demoLevelUp,
   demoAchievement,
+  // Async Thunks
+  fetchGamificationProfile,
+  fetchAchievements,
+  fetchXPHistory,
+  fetchLeaderboard,
   // Selectors
   selectGamification,
   selectLevel,
@@ -296,6 +302,13 @@ export {
   selectRecentAchievement,
   selectSoundEnabled,
   selectLevelProgress,
+  selectProfileLoading,
+  selectAchievementsLoading,
+  selectLeaderboardLoading,
+  selectXPHistory,
+  selectXPHistoryLoading,
+  selectLeaderboardPeriod,
+  selectLevelTitleI18n,
   LEVEL_THRESHOLDS,
 } from "./slices/gamificationSlice";
-export type { LevelInfo, Achievement, LeaderboardEntry } from "./slices/gamificationSlice";
+export type { LevelInfo, Achievement, LeaderboardEntry, XPTransaction, XPProfile } from "./slices/gamificationSlice";

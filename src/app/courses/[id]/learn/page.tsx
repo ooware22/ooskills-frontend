@@ -23,6 +23,7 @@ import {
   AcademicCapIcon,
   ArrowLeftIcon,
   ChevronDownIcon,
+  LockClosedIcon,
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
@@ -273,14 +274,12 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
               🔄 إعادة المحاولة
             </button>
           )}
-          <button onClick={() => onComplete(pct, answersMap)}
-            className={`px-10 py-4 font-bold rounded-xl transition-colors text-lg ${
-              passed
-                ? 'bg-gold hover:bg-gold/90 text-oxford'
-                : 'bg-white/10 hover:bg-white/20 text-white'
-            }`}>
-            {passed ? 'متابعة ←' : 'تخطي والمتابعة'}
-          </button>
+          {passed && (
+            <button onClick={() => onComplete(pct, answersMap)}
+              className="px-10 py-4 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors text-lg">
+              متابعة ←
+            </button>
+          )}
         </div>
       </div>
     );
@@ -901,6 +900,56 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
     }
   }, [slug, getProgress]);
 
+  // Load quiz attempts from backend API to prevent redo of PASSED quizzes
+  useEffect(() => {
+    if (!content || !isAuthenticated) return;
+    axiosClient.get('/formation/quiz-attempts/')
+      .then((res) => {
+        const attempts = Array.isArray(res.data) ? res.data : res.data.results || [];
+        if (attempts.length === 0) return;
+
+        // Build a map of quiz_id → best PASSED score (only passed attempts block redo)
+        const passedScores: Record<string, number> = {};
+        for (const att of attempts) {
+          const qid = att.quiz?.id || att.quiz_id || att.quiz;
+          if (!qid) continue;
+          // Only consider passed attempts
+          if (!att.passed) continue;
+          const score = Number(att.score) || 0;
+          if (!passedScores[String(qid)] || score > passedScores[String(qid)]) {
+            passedScores[String(qid)] = score;
+          }
+        }
+
+        // Match quiz IDs to module indexes
+        const apiScores: Record<string, number> = {};
+        content.modules.forEach((mod, mi) => {
+          if (mod.quiz?.apiQuizId && passedScores[String(mod.quiz.apiQuizId)] !== undefined) {
+            apiScores[`mod_${mi}`] = passedScores[String(mod.quiz.apiQuizId)];
+          }
+        });
+
+        // Merge with existing quizScores (API takes priority)
+        if (Object.keys(apiScores).length > 0) {
+          setQuizScores(prev => ({ ...prev, ...apiScores }));
+          // Also mark modules with passed quizzes as completed
+          setCompletedModules(prev => {
+            const newCompleted = [...prev];
+            for (const key of Object.keys(apiScores)) {
+              const mi = parseInt(key.replace('mod_', ''));
+              if (!isNaN(mi) && !newCompleted.includes(mi)) {
+                newCompleted.push(mi);
+              }
+            }
+            return newCompleted;
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('[Quiz] Failed to load quiz attempts:', err);
+      });
+  }, [content, isAuthenticated]);
+
   // Save progress on changes (localStorage backup)
   useEffect(() => {
     if (completedSlides.length > 0 || currentSlideIdx > 0) {
@@ -1089,9 +1138,15 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
     if (currentFlat && content) {
       const mod = content.modules[currentFlat.moduleIndex];
       const isLastSlideInModule = currentFlat.slideIndexInModule === mod.slides.length - 1;
-      if (isLastSlideInModule && mod.quiz && !quizScores[`mod_${currentFlat.moduleIndex}`]) {
-        setShowQuiz(true);
-        return;
+      if (isLastSlideInModule && mod.quiz) {
+        const modKey = `mod_${currentFlat.moduleIndex}`;
+        const prevScore = quizScores[modKey];
+        const hasPassed = prevScore !== undefined && prevScore >= (mod.quiz.pass_threshold || 70);
+        // Show quiz if never attempted OR if previously failed
+        if (!hasPassed) {
+          setShowQuiz(true);
+          return;
+        }
       }
       // Auto-complete modules without quizzes when last slide is done
       if (isLastSlideInModule && !mod.quiz && !completedModules.includes(currentFlat.moduleIndex)) {
@@ -1105,27 +1160,36 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
 
   const handleQuizComplete = (score: number, answers: Record<string, number>) => {
     if (currentFlat && content) {
+      const mod = content.modules[currentFlat.moduleIndex];
+      const passThreshold = mod.quiz?.pass_threshold || 70;
+      const passed = score >= passThreshold;
       const key = `mod_${currentFlat.moduleIndex}`;
-      setQuizScores(prev => ({ ...prev, [key]: score }));
-      if (!completedModules.includes(currentFlat.moduleIndex)) {
-        setCompletedModules(prev => [...prev, currentFlat.moduleIndex]);
+
+      // Only lock the quiz score if the student PASSED
+      if (passed) {
+        setQuizScores(prev => ({ ...prev, [key]: score }));
+        if (!completedModules.includes(currentFlat.moduleIndex)) {
+          setCompletedModules(prev => [...prev, currentFlat.moduleIndex]);
+        }
       }
 
       // Submit quiz attempt to backend API if we have a real quiz ID
-      const mod = content.modules[currentFlat.moduleIndex];
       if (mod.quiz?.apiQuizId && isAuthenticated) {
         axiosClient.post('/formation/quiz-attempts/', {
           quiz_id: mod.quiz.apiQuizId,
           answers,
         }).then((res) => {
-          console.log('[Quiz] Submitted to backend, xp_earned:', res.data.xp_earned);
+          console.log('[Quiz] Submitted to backend, passed:', res.data.passed, 'xp_earned:', res.data.xp_earned);
         }).catch((err) => {
           console.error('[Quiz] Failed to submit attempt:', err);
         });
       }
 
       setShowQuiz(false);
-      goToSlide(currentSlideIdx + 1);
+      if (passed) {
+        goToSlide(currentSlideIdx + 1);
+      }
+      // If failed, stay on current slide — student can retry via goNext
     }
   };
 
@@ -1294,6 +1358,12 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                               {mod.quiz && (
                                 <button
                                   onClick={() => {
+                                    // Don't re-open quiz if already passed
+                                    const modKey = `mod_${mi}`;
+                                    const prevScore = quizScores[modKey];
+                                    const hasPassed = prevScore !== undefined && prevScore >= (mod.quiz!.pass_threshold || 70);
+                                    if (hasPassed) return; // Quiz already passed, do nothing
+
                                     // Navigate to last slide of this module and show quiz
                                     const lastSlideInModuleIdx = flatSlides.findIndex(
                                       (f) => f.moduleIndex === mi && f.slideIndexInModule === mod.slides.length - 1,
@@ -1312,12 +1382,21 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                                       setShowQuiz(true);
                                     }
                                   }}
-                                  className="flex items-center gap-2 px-2 py-2 text-sm w-full rounded hover:bg-white/10 transition-colors"
+                                  className={`flex items-center gap-2 px-2 py-2 text-sm w-full rounded transition-colors ${
+                                    quizScores[`mod_${mi}`] !== undefined && quizScores[`mod_${mi}`] >= (mod.quiz!.pass_threshold || 70)
+                                      ? 'cursor-default'
+                                      : 'hover:bg-white/10'
+                                  }`}
                                 >
-                                  {quizScores[`mod_${mi}`] !== undefined ? (
+                                  {quizScores[`mod_${mi}`] !== undefined && quizScores[`mod_${mi}`] >= (mod.quiz!.pass_threshold || 70) ? (
                                     <>
-                                      <CheckCircleSolid className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                                      <span className="text-emerald-400">Quiz — {quizScores[`mod_${mi}`]}%</span>
+                                      <LockClosedIcon className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                                      <span className="text-emerald-400">Quiz ✓ {quizScores[`mod_${mi}`]}%</span>
+                                    </>
+                                  ) : quizScores[`mod_${mi}`] !== undefined ? (
+                                    <>
+                                      <AcademicCapIcon className="w-3 h-3 text-orange-400 flex-shrink-0" />
+                                      <span className="text-orange-400">Quiz — {quizScores[`mod_${mi}`]}% (إعادة)</span>
                                     </>
                                   ) : (
                                     <>

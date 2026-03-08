@@ -35,6 +35,9 @@ import {
   addXP,
   demoLevelUp,
   demoAchievement,
+  fetchGamificationProfile,
+  fetchAchievements,
+  invalidateGamification,
 } from "@/store/slices/gamificationSlice";
 
 /** Ensure image src starts with / or is an absolute URL */
@@ -61,6 +64,10 @@ export default function StudentDashboard() {
       dispatch(fetchMyEnrollments());
       dispatch(fetchMyQuizAttempts());
       dispatch(fetchMyCertificates());
+      // Invalidate cache so we detect XP changes from /learn
+      dispatch(invalidateGamification());
+      dispatch(fetchGamificationProfile());
+      dispatch(fetchAchievements());
     }
   }, [dispatch, isAuthenticated]);
 

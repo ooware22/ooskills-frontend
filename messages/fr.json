@@ -249,7 +249,9 @@
       "expand": "Développer",
       "courseManagement": "Gestion des cours",
       "coursesList": "Cours",
-      "categoriesList": "Catégories"
+      "categoriesList": "Catégories",
+      "gamification": "Gamification",
+      "achievements": "Réalisations"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -842,17 +844,50 @@
       "pageSubtitle": "Suivez vos étapes et débloquez des récompenses",
       "completed": "réalisations complétées",
       "noResults": "Aucune réalisation ne correspond à ce filtre",
-      "firstStep": { "title": "Premier pas", "desc": "Terminez votre première leçon" },
-      "avidReader": { "title": "Lecteur assidu", "desc": "Terminez 10 leçons" },
-      "finisher": { "title": "Finisseur", "desc": "Terminez votre premier cours" },
-      "perfectionist": { "title": "Perfectionniste", "desc": "Obtenez 100% à un quiz" },
-      "onFire7": { "title": "En feu", "desc": "Série de 7 jours de connexion" },
-      "unstoppable30": { "title": "Inarrêtable", "desc": "Série de 30 jours de connexion" },
-      "multiGraduate": { "title": "Multi-diplômé", "desc": "Obtenez 3 certificats" },
-      "critic": { "title": "Critique", "desc": "Laissez 5 avis sur des cours" },
-      "speedster": { "title": "Rapide", "desc": "Terminez un cours en moins de 7 jours" },
-      "risingStar": { "title": "Étoile montante", "desc": "Atteignez le Niveau 5" },
-      "legend": { "title": "Légende", "desc": "Atteignez le Niveau 10" }
+      "firstStep": {
+        "title": "Premier pas",
+        "desc": "Terminez votre première leçon"
+      },
+      "avidReader": {
+        "title": "Lecteur assidu",
+        "desc": "Terminez 10 leçons"
+      },
+      "finisher": {
+        "title": "Finisseur",
+        "desc": "Terminez votre premier cours"
+      },
+      "perfectionist": {
+        "title": "Perfectionniste",
+        "desc": "Obtenez 100% à un quiz"
+      },
+      "onFire7": {
+        "title": "En feu",
+        "desc": "Série de 7 jours de connexion"
+      },
+      "unstoppable30": {
+        "title": "Inarrêtable",
+        "desc": "Série de 30 jours de connexion"
+      },
+      "multiGraduate": {
+        "title": "Multi-diplômé",
+        "desc": "Obtenez 3 certificats"
+      },
+      "critic": {
+        "title": "Critique",
+        "desc": "Laissez 5 avis sur des cours"
+      },
+      "speedster": {
+        "title": "Rapide",
+        "desc": "Terminez un cours en moins de 7 jours"
+      },
+      "risingStar": {
+        "title": "Étoile montante",
+        "desc": "Atteignez le Niveau 5"
+      },
+      "legend": {
+        "title": "Légende",
+        "desc": "Atteignez le Niveau 10"
+      }
     },
     "leaderboard": {
       "pageTitle": "Classement",

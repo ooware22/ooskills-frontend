@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ChartBarIcon,
@@ -12,7 +13,9 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import {
   selectLeaderboard,
   selectGamification,
+  selectLeaderboardLoading,
   setLeaderboardPeriod,
+  fetchLeaderboard,
   LEVEL_THRESHOLDS,
   selectLevelProgress,
 } from "@/store/slices/gamificationSlice";
@@ -22,7 +25,12 @@ export default function LeaderboardPage() {
   const { t } = useI18n();
   const dispatch = useAppDispatch();
   const leaderboard = useAppSelector(selectLeaderboard);
+  const leaderboardLoading = useAppSelector(selectLeaderboardLoading);
   const { leaderboardPeriod } = useAppSelector(selectGamification);
+
+  useEffect(() => {
+    dispatch(fetchLeaderboard(leaderboardPeriod));
+  }, [dispatch, leaderboardPeriod]);
 
   const periods: { value: "weekly" | "alltime"; labelKey: string; fallback: string; icon: React.ElementType }[] = [
     { value: "weekly", labelKey: "gamification.leaderboard.weekly", fallback: "This Week", icon: CalendarDaysIcon },
@@ -103,9 +111,12 @@ export default function LeaderboardPage() {
               const levelInfo = LEVEL_THRESHOLDS.find((l) => l.level === entry.level);
               const nextLevel = LEVEL_THRESHOLDS.find((l) => l.level === entry.level + 1);
               const progress = nextLevel
-                ? (entry.xp - (levelInfo?.xpRequired || 0)) /
+                ? (entry.total_xp - (levelInfo?.xpRequired || 0)) /
                   (nextLevel.xpRequired - (levelInfo?.xpRequired || 0))
                 : 1;
+              const userName = entry.user?.name || "Unknown";
+              const userAvatar = entry.user?.avatar_url || null;
+              const isCurrentUser = entry.isCurrentUser || false;
 
               return (
                 <motion.div
@@ -114,7 +125,7 @@ export default function LeaderboardPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 + index * 0.04 }}
                   className={`flex items-center gap-4 px-5 py-4 transition-colors ${
-                    entry.isCurrentUser
+                    isCurrentUser
                       ? "bg-gold/5 dark:bg-gold/10"
                       : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                   }`}
@@ -128,8 +139,8 @@ export default function LeaderboardPage() {
 
                   {/* Avatar */}
                   <LevelAvatar
-                    src={entry.avatar}
-                    name={entry.name}
+                    src={userAvatar}
+                    name={userName}
                     size="sm"
                     level={entry.level}
                     progress={progress}
@@ -139,13 +150,13 @@ export default function LeaderboardPage() {
                   <div className="flex-1 min-w-0">
                     <p
                       className={`text-sm font-medium truncate ${
-                        entry.isCurrentUser
+                        isCurrentUser
                           ? "text-gold"
                           : "text-oxford dark:text-white"
                       }`}
                     >
-                      {entry.name}
-                      {entry.isCurrentUser && (
+                      {userName}
+                      {isCurrentUser && (
                         <span className="text-xs text-gold/60 ms-1.5">
                           ({t("gamification.leaderboard.you") || "You"})
                         </span>
@@ -159,7 +170,7 @@ export default function LeaderboardPage() {
                   {/* XP */}
                   <div className="text-end flex-shrink-0">
                     <p className="text-sm font-bold text-oxford dark:text-white">
-                      {entry.xp.toLocaleString()}
+                      {entry.total_xp.toLocaleString()}
                     </p>
                     <p className="text-[10px] text-silver dark:text-white/40">XP</p>
                   </div>

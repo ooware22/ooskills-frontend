@@ -49,7 +49,7 @@ export default function AchievementToast() {
 
   const Icon = achievement ? (ICON_MAP[achievement.icon] || StarIcon) : StarIcon;
   const title = achievement
-    ? t(achievement.titleKey) || achievement.titleFallback
+    ? (achievement.titleKey && t(achievement.titleKey)) || achievement.titleFallback || achievement.title?.en || achievement.title?.fr || ""
     : "";
 
   return (
