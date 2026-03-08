@@ -78,6 +78,7 @@ export interface XPProfile {
   xp_for_next_level: number | null;
   progress: number;                      // 0–100
   streak_days: number;
+  longest_streak: number;
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -91,6 +92,7 @@ interface GamificationState {
   xpForCurrentLevel: number;
   xpForNextLevel: number;
   streak: number;
+  longestStreak: number;
   profileLoading: boolean;
   profileError: string | null;
   lastFetchedProfile: number | null;
@@ -158,6 +160,7 @@ const initialState: GamificationState = {
   xpForCurrentLevel: 0,
   xpForNextLevel: 100,
   streak: 0,
+  longestStreak: 0,
   profileLoading: false,
   profileError: null,
   lastFetchedProfile: null,
@@ -361,6 +364,7 @@ const gamificationSlice = createSlice({
           state.xpForCurrentLevel = data.xp_for_current_level;
           state.xpForNextLevel = data.xp_for_next_level ?? data.xp_for_current_level;
           state.streak = data.streak_days;
+          state.longestStreak = data.longest_streak;
           state.lastFetchedProfile = Date.now();
           state._initialProfileLoaded = true;
 
