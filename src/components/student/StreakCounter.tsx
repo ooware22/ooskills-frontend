@@ -80,7 +80,7 @@ export default function StreakCounter() {
                     ? "text-red-500"
                     : isHot
                       ? "text-orange-500"
-                      : "text-gold"
+                      : "text-orange-500"
               }`}
             />
           </motion.div>

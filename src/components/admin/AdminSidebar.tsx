@@ -313,7 +313,7 @@ export default function AdminSidebar() {
         </button>
 
         {/* Logo */}
-        <div className="p-6 border-b border-white/10 transition-all duration-300 flex justify-center">
+        <div className="px-6 border-b border-white/10 transition-all duration-300 flex items-center justify-center h-[72px]">
           <Link
             href="/admin"
             className="flex items-center hover:opacity-80 transition-opacity"

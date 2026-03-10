@@ -29,6 +29,16 @@ export interface LessonContent {
   narration_script: NarrationScript;
 }
 
+export type LessonDisplayMode = "narration" | "slide" | "both";
+
+export interface CourseMaterial {
+  id: string;
+  name: string;
+  type: "pdf" | "word" | "slides" | "video" | "other";
+  size: string;
+  url: string;
+}
+
 export interface AdminLesson {
   id: string;
   title: string;
@@ -38,6 +48,7 @@ export interface AdminLesson {
   audioUrl: string | null;
   content: LessonContent;
   slide_type: string;
+  displayMode?: LessonDisplayMode;
 }
 
 export interface QuizQuestion {

@@ -70,8 +70,8 @@ export default function AdminHeader({ title, subtitle, titleKey, subtitleKey }: 
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white dark:bg-oxford-light border-b border-gray-200 dark:border-white/10 px-4 lg:px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-30 bg-white dark:bg-oxford-light border-b border-gray-200 dark:border-white/10 px-4 lg:px-6 h-[72px] flex items-center">
+      <div className="flex items-center justify-between w-full">
         {/* Mobile Menu Button + Title */}
         <div className="flex items-center gap-3">
           <button
@@ -183,8 +183,7 @@ export default function AdminHeader({ title, subtitle, titleKey, subtitleKey }: 
 
           {/* Profile */}
           <div className={cn(
-            "flex items-center gap-3 border-gray-200 dark:border-white/10",
-            isRtl ? "pe-2 lg:pe-3 border-e" : "ps-2 lg:ps-3 border-s"
+            "flex items-center gap-3 border-gray-200 dark:border-white/10 ps-2 lg:ps-3 border-s"
           )}>
             <div className={cn("hidden md:block", isRtl ? "text-start" : "text-end")}>
               <p className="text-sm font-medium text-oxford dark:text-white">

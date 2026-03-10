@@ -475,7 +475,17 @@
       "jsonHint": "Paste your course JSON below. The image field will stay empty — you can upload it later.",
       "applyJson": "Apply JSON",
       "jsonApplied": "JSON applied — review the form and save",
-      "importFile": "Import File"
+      "importFile": "Import File",
+      "courseMaterials": "Course Materials",
+      "addMaterial": "Add Material",
+      "noMaterialsYet": "No materials added yet. Click \"Add Material\" to attach PDFs, slides, videos, etc.",
+      "materialName": "Material name...",
+      "uploadFile": "Upload",
+      "materialTypePdf": "PDF",
+      "materialTypeWord": "Word",
+      "materialTypeSlides": "Slides",
+      "materialTypeVideo": "Video",
+      "materialTypeOther": "Other"
     },
     "courseContent": {
       "title": "Course Content",
@@ -543,7 +553,17 @@
       "applyQuizJson": "Apply JSON",
       "quizJsonApplied": "JSON applied — questions loaded",
       "scenarioDescription": "Scenario Description",
-      "importFile": "Import File"
+      "importFile": "Import File",
+      "displayMode": "Display Mode",
+      "narrationOnly": "Narration Only",
+      "slideOnly": "Slide Only",
+      "both": "Both",
+      "narrationOnlyDesc": "Show narration script only",
+      "slideOnlyDesc": "Show visual content only",
+      "bothDesc": "Show narration + slide",
+      "slideContent": "Slide Content",
+      "uploadSlide": "Upload Slide",
+      "slideFileHint": "Accepts images (PNG, JPG), PDFs, and PowerPoint files (PPTX)"
     },
     "categoryManagement": {
       "title": "Category Management",

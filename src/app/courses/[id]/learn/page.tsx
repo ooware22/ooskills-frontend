@@ -10,6 +10,7 @@ import { getCourseContentBySlug, getAudioUrl, getFlatSlides } from '@/data/cours
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchMyEnrollments, saveProgress, fetchMyProgress } from '@/store/slices/enrollmentSlice';
 import axiosClient from '@/lib/axios';
+import { cn } from '@/lib/utils';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -25,6 +26,14 @@ import {
   ChevronDownIcon,
   LockClosedIcon,
   ChevronUpIcon,
+  DocumentArrowDownIcon,
+  ArrowDownTrayIcon,
+  DocumentTextIcon,
+  DocumentIcon,
+  PhotoIcon,
+  PresentationChartBarIcon,
+  VideoCameraIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
 import type { Slide, QuizQuestion, CourseContentModule, CourseContent, Quiz } from '@/data/courseContent';
@@ -867,6 +876,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const [completedModules, setCompletedModules] = useState<number[]>([]);
   const [quizScores, setQuizScores] = useState<Record<string, number>>({});
   const [expandedModules, setExpandedModules] = useState<number[]>([0]);
+  const [showMaterials, setShowMaterials] = useState(false);
 
   // Audio state
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -1483,37 +1493,61 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                     {currentSlide.title}
                   </motion.h2>
 
-                  {/* Slide visual content */}
-                  <motion.div key={`content-${currentSlideIdx}`}
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                    className="mb-8" dir="rtl"
-                  >
-                    <SlideContent slide={currentSlide} />
-                  </motion.div>
+                  {/* Slide visual content — respects displayMode */}
+                  {(() => {
+                    const mode = currentSlide.displayMode || 'both';
+                    const hasNarration = currentSlide.narration_script.speakers.length > 0;
+                    return (
+                      <>
+                        {/* Display mode indicator + toggle */}
+                        {mode !== 'both' && (
+                          <div className="flex items-center gap-2 mb-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                              mode === 'narration' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                            }`}>
+                              {mode === 'narration' ? <><DocumentTextIcon className="w-3.5 h-3.5" /> Narration</> : <><PhotoIcon className="w-3.5 h-3.5" /> Slide</>}
+                            </span>
+                          </div>
+                        )}
 
-                  {/* Narration */}
-                  {showNarration && currentSlide.narration_script.speakers.length > 0 && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className="mt-8 border-t border-white/5 pt-6"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-semibold text-gold flex items-center gap-2">
-                          <SpeakerWaveIcon className="w-4 h-4" />
-                          النَّص الصَّوتي
-                        </h3>
-                        <button onClick={() => setShowNarration(false)}
-                          className="text-xs text-gray-500 hover:text-gray-300">إخفاء</button>
-                      </div>
-                      <NarrationPanel slide={currentSlide} />
-                    </motion.div>
-                  )}
+                        {/* Slide content (show if mode is 'slide' or 'both') */}
+                        {(mode === 'slide' || mode === 'both') && (
+                          <motion.div key={`content-${currentSlideIdx}`}
+                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                            className="mb-8" dir="rtl"
+                          >
+                            <SlideContent slide={currentSlide} />
+                          </motion.div>
+                        )}
 
-                  {!showNarration && (
-                    <button onClick={() => setShowNarration(true)}
-                      className="mt-4 text-xs text-gray-500 hover:text-gold transition-colors">
-                      عرض النَّص الصَّوتي ↓
-                    </button>
-                  )}
+                        {/* Narration (show if mode is 'narration' or 'both') */}
+                        {(mode === 'narration' || mode === 'both') && hasNarration && showNarration && (
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className={mode === 'both' ? "mt-8 border-t border-white/5 pt-6" : "mt-4"}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-sm font-semibold text-gold flex items-center gap-2">
+                                <SpeakerWaveIcon className="w-4 h-4" />
+                                النَّص الصَّوتي
+                              </h3>
+                              {mode === 'both' && (
+                                <button onClick={() => setShowNarration(false)}
+                                  className="text-xs text-gray-500 hover:text-gray-300">إخفاء</button>
+                              )}
+                            </div>
+                            <NarrationPanel slide={currentSlide} />
+                          </motion.div>
+                        )}
+
+                        {mode === 'both' && !showNarration && (
+                          <button onClick={() => setShowNarration(true)}
+                            className="mt-4 text-xs text-gray-500 hover:text-gold transition-colors">
+                            عرض النَّص الصَّوتي ↓
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </>
               )}
             </div>
@@ -1549,6 +1583,23 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
           </button>
         </div>
 
+        {/* Materials button */}
+        {content?.materials && content.materials.length > 0 && (
+          <button
+            onClick={() => setShowMaterials(!showMaterials)}
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-colors relative",
+              showMaterials ? "bg-gold/20 text-gold" : "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white"
+            )}
+            title="Course Materials"
+          >
+            <DocumentArrowDownIcon className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-oxford text-[9px] font-bold rounded-full flex items-center justify-center">
+              {content.materials.length}
+            </span>
+          </button>
+        )}
+
         {/* Next */}
         <button onClick={goNext} disabled={
           currentSlideIdx === flatSlides.length - 1 &&
@@ -1558,6 +1609,64 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
           <ChevronRightIcon className="w-5 h-5 rtl:rotate-180" />
         </button>
       </div>
+
+      {/* Materials Panel (slide-up) */}
+      <AnimatePresence>
+        {showMaterials && content?.materials && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-24 right-4 z-40 w-80 bg-[#1a2238] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <DocumentArrowDownIcon className="w-4 h-4 text-gold" />
+                Course Materials
+              </h3>
+              <button onClick={() => setShowMaterials(false)} className="text-gray-400 hover:text-white">
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
+              {content.materials.map((mat) => {
+                const TypeIcon = {
+                  pdf: DocumentTextIcon,
+                  word: DocumentIcon,
+                  slides: PresentationChartBarIcon,
+                  video: VideoCameraIcon,
+                  other: FolderIcon,
+                }[mat.type] || FolderIcon;
+                const colors: Record<string, string> = {
+                  pdf: "bg-red-500/10 text-red-400",
+                  word: "bg-blue-500/10 text-blue-400",
+                  slides: "bg-orange-500/10 text-orange-400",
+                  video: "bg-purple-500/10 text-purple-400",
+                  other: "bg-gray-500/10 text-gray-400",
+                };
+                return (
+                  <a
+                    key={mat.id}
+                    href={mat.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-colors group"
+                  >
+                    <span className={cn("w-9 h-9 rounded-lg flex items-center justify-center", colors[mat.type] || colors.other)}>
+                      <TypeIcon className="w-4.5 h-4.5" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate group-hover:text-gold transition-colors">{mat.name}</p>
+                      <p className="text-[10px] text-gray-500 uppercase">{mat.type} • {mat.size}</p>
+                    </div>
+                    <ArrowDownTrayIcon className="w-4 h-4 text-gray-500 group-hover:text-gold transition-colors flex-shrink-0" />
+                  </a>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

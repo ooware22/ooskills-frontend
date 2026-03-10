@@ -50,6 +50,16 @@ export interface SlideVisualContent {
   x_right?: string;
 }
 
+export type LessonDisplayMode = "narration" | "slide" | "both";
+
+export interface CourseMaterial {
+  id: string;
+  name: string;
+  type: "pdf" | "word" | "slides" | "video" | "other";
+  size: string;
+  url: string;
+}
+
 export interface Slide {
   id: number;
   title: string;
@@ -61,6 +71,8 @@ export interface Slide {
   apiAudioUrl?: string;
   /** Lesson UUID from the API — used for saving progress to backend */
   apiLessonId?: string;
+  /** Display mode: narration only, slide only, or both (default) */
+  displayMode?: LessonDisplayMode;
 }
 
 export interface QuizQuestion {
@@ -102,6 +114,7 @@ export interface CourseContent {
   totalQuizQuestions: number;
   audioBasePath: string;
   modules: CourseContentModule[];
+  materials?: CourseMaterial[];
 }
 
 // Audio file mapping: index -> filename in public/audio/courses/medical-spanish/
@@ -119,6 +132,12 @@ export const medicalSpanishCourse: CourseContent = {
   totalSlides: 35,
   totalQuizQuestions: 22,
   audioBasePath: "/audio/courses/medical-spanish",
+  materials: [
+    { id: "mat-1", name: "Medical Spanish Vocabulary Guide.pdf", type: "pdf", size: "2.4 MB", url: "#" },
+    { id: "mat-2", name: "Anatomy Diagrams.pptx", type: "slides", size: "5.1 MB", url: "#" },
+    { id: "mat-3", name: "Drug Interactions Reference.docx", type: "word", size: "890 KB", url: "#" },
+    { id: "mat-4", name: "Patient Communication Scenarios.mp4", type: "video", size: "45 MB", url: "#" },
+  ],
   modules: [
     {
       type: "teaser",
@@ -172,16 +191,19 @@ export const medicalSpanishCourse: CourseContent = {
       slides: [
         {
           id: 1, title: "الْهَيْكَلُ الْعَامُّ: El Cuerpo", slide_type: "pillars", duration_seconds: 32,
+          displayMode: "both",
           visual_content: { pillars: [{ title: "La Cabeza", description: "الرَّأْسُ", icon: "🧠" }, { title: "El Tronco", description: "الْجِذْعُ", icon: "🫁" }, { title: "Las Extremidades", description: "الْأَطْرَافُ", icon: "💪" }] },
           narration_script: { mode: "multi_speaker", speakers: [{ speaker: "نَبِيلْ", emotion: "pédagogue", text: "دَعِينَا نَتَخَيَّلُ الْجِسْمَ، أَوْ 'El Cuerpo'، كَمَبْنَى مُتَكَامِلٍ." }, { speaker: "أَسْمَاءْ", emotion: "curieux", text: "حَسَنًا، 'La Cabeza'. الرَّأْسُ." }, { speaker: "نَبِيلْ", emotion: "amusé", text: "دَاخِلَ الرَّأْسِ يُوجَدُ 'El Cerebro'، أَيِ الدِّمَاغُ." }] }
         },
         {
           id: 2, title: "الْأَعْضَاءُ الْحَيَوِيَّةُ: Órganos Vitales", slide_type: "matrix_2x2", duration_seconds: 32,
+          displayMode: "slide",
           visual_content: { chart_title: "أَهَمُّ الْأَعْضَاءِ", cells: [{ title: "El Corazón", description: "الْقَلْبُ", color: "#ef4444" }, { title: "Los Pulmones", description: "الرِّئَتَانِ", color: "#3b82f6" }, { title: "El Estómago", description: "الْمَعِدَةُ", color: "#f59e0b" }, { title: "El Hígado", description: "الْكَبِدُ", color: "#8b5cf6" }] },
           narration_script: { mode: "multi_speaker", speakers: [{ speaker: "نَبِيلْ", emotion: "sérieux", text: "أَهَمُّ عُضْوٍ هُوَ 'El Corazón'. الْقَلْبُ." }, { speaker: "أَسْمَاءْ", emotion: "réfléchi", text: "'Corazón'... كَلِمَةٌ نَسْمَعُهَا كَثِيرًا، لَكِنْ طِبِّيًّا هِيَ الْمِضَخَّةُ." }] }
         },
         {
           id: 3, title: "نِظَامُ الْحَرَكَةِ: Huesos y Músculos", slide_type: "comparison", duration_seconds: 30,
+          displayMode: "narration",
           visual_content: { comparison_title: "الْهَيْكَلُ وَالْحَرَكَةُ", columns: [{ title: "Los Huesos (الْعِظَامُ)", items: ["El Cráneo (الْجُمْجُمَةُ)", "La Costilla (الضِّلْعُ)"] }, { title: "Los Músculos (الْعَضَلَاتُ)", items: ["El Bíceps (الْعَضَلَةُ الثُّنَائِيَّةُ)", "El Tendón (الْوَتَرُ)"] }] },
           narration_script: { mode: "multi_speaker", speakers: [{ speaker: "أَسْمَاءْ", emotion: "curieux", text: "كَيْفَ نَقُولُ 'عَظْم'؟" }, { speaker: "نَبِيلْ", emotion: "direct", text: "الْعَظْمُ هُوَ 'El Hueso'. حَرْفُ H لَا يُنْطَقُ فِي الْإِسْبَانِيَّةِ." }] }
         },

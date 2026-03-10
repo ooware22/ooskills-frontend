@@ -444,7 +444,17 @@
       "jsonHint": "الصق ملف JSON للدورة أدناه. سيبقى حقل الصورة فارغاً — يمكنك رفعها لاحقاً.",
       "applyJson": "تطبيق JSON",
       "jsonApplied": "تم تطبيق JSON — راجع النموذج واحفظ",
-      "importFile": "استيراد ملف"
+      "importFile": "استيراد ملف",
+      "courseMaterials": "مواد الدورة",
+      "addMaterial": "إضافة مادة",
+      "noMaterialsYet": "لم تتم إضافة مواد بعد. انقر على \"إضافة مادة\" لإرفاق ملفات PDF أو شرائح أو فيديوهات وغيرها.",
+      "materialName": "اسم المادة...",
+      "uploadFile": "رفع",
+      "materialTypePdf": "PDF",
+      "materialTypeWord": "Word",
+      "materialTypeSlides": "شرائح",
+      "materialTypeVideo": "فيديو",
+      "materialTypeOther": "أخرى"
     },
     "courseContent": {
       "title": "محتوى الدورة",
@@ -512,7 +522,17 @@
       "applyQuizJson": "تطبيق JSON",
       "quizJsonApplied": "تم تطبيق JSON — تم تحميل الأسئلة",
       "scenarioDescription": "وصف السيناريو",
-      "importFile": "استيراد ملف"
+      "importFile": "استيراد ملف",
+      "displayMode": "وضع العرض",
+      "narrationOnly": "سرد فقط",
+      "slideOnly": "شريحة فقط",
+      "both": "كلاهما",
+      "narrationOnlyDesc": "عرض نص السرد فقط",
+      "slideOnlyDesc": "عرض المحتوى المرئي فقط",
+      "bothDesc": "عرض السرد + الشريحة",
+      "slideContent": "محتوى الشريحة",
+      "uploadSlide": "رفع شريحة",
+      "slideFileHint": "يقبل صور (PNG، JPG)، ملفات PDF، وملفات PowerPoint (PPTX)"
     },
     "categoryManagement": {
       "title": "إدارة الفئات",

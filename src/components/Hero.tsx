@@ -366,7 +366,7 @@ export default function Hero({ data }: HeroProps) {
               className="hidden lg:block absolute -top-8 end-8 z-20"
             >
               <div className="w-16 h-16 bg-gradient-to-br from-gold to-amber-400 rounded-2xl shadow-lg flex items-center justify-center rotate-12">
-                <GraduationCap className="w-8 h-8 text-oxford" />
+                <GraduationCap className="w-8 h-8 text-white" />
               </div>
             </motion.div>
 
@@ -395,7 +395,7 @@ export default function Hero({ data }: HeroProps) {
                   ease: "easeInOut",
                 },
               }}
-              className="hidden lg:block absolute top-1/3 -end-10 z-20"
+              className="hidden lg:block absolute top-1/3 end-0 z-20"
             >
               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl shadow-lg flex items-center justify-center -rotate-6">
                 <Monitor className="w-7 h-7 text-white" />
@@ -459,7 +459,7 @@ export default function Hero({ data }: HeroProps) {
                   ease: "easeInOut",
                 },
               }}
-              className="hidden lg:block absolute -bottom-10 -start-6 z-20"
+              className="hidden lg:block absolute -bottom-6 start-0 z-20"
             >
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg flex items-center justify-center">
                 <Rocket className="w-8 h-8 text-white" />
@@ -491,7 +491,7 @@ export default function Hero({ data }: HeroProps) {
                   ease: "easeInOut",
                 },
               }}
-              className="hidden lg:block absolute -top-4 -start-8 z-20"
+              className="hidden lg:block absolute -top-4 start-0 z-20"
             >
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg flex items-center justify-center rotate-12">
                 <Zap className="w-6 h-6 text-white" />

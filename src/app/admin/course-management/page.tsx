@@ -20,6 +20,12 @@ import {
   ArrowUpTrayIcon,
   PhotoIcon,
   CodeBracketIcon,
+  PaperClipIcon,
+  DocumentTextIcon,
+  DocumentIcon,
+  PresentationChartBarIcon,
+  VideoCameraIcon,
+  FolderIcon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
@@ -44,6 +50,14 @@ import type { AdminCourse, AdminCourseCreatePayload } from "@/services/adminCour
 
 type ModalMode = "add" | "edit" | "view" | "delete" | null;
 
+interface CourseMaterial {
+  id: string;
+  name: string;
+  type: "pdf" | "word" | "slides" | "video" | "other";
+  size: string;
+  url: string;
+}
+
 interface CourseForm {
   title: string;
   slug: string;
@@ -60,6 +74,7 @@ interface CourseForm {
   certificate: boolean;
   image: string;
   status: string;
+  materials: CourseMaterial[];
 }
 
 const emptyForm: CourseForm = {
@@ -78,6 +93,7 @@ const emptyForm: CourseForm = {
   certificate: true,
   image: "",
   status: "draft",
+  materials: [],
 };
 
 const levelColor = (level: string) => {
@@ -237,6 +253,7 @@ export default function CourseManagementPage() {
         certificate: parsed.certificate ?? true,
         image: "",
         status: parsed.status || "draft",
+        materials: [],
       });
       setImageFile(null);
       setImagePreview(null);
@@ -266,6 +283,7 @@ export default function CourseManagementPage() {
       certificate: course.certificate,
       image: course.image,
       status: course.status || "draft",
+      materials: (course as any).materials || [],
     });
     setImageFile(null);
     setImagePreview(course.image || null);
@@ -1121,6 +1139,98 @@ export default function CourseManagementPage() {
                           </button>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* ═══════ Course Materials ═══════ */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-medium text-silver dark:text-white/50 flex items-center gap-1.5"><PaperClipIcon className="w-3.5 h-3.5" /> {t("admin.courseManagement.courseMaterials")}</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newMat: CourseMaterial = {
+                            id: `mat-${Date.now()}`,
+                            name: "",
+                            type: "pdf",
+                            size: "—",
+                            url: "#",
+                          };
+                          setFormData({ ...formData, materials: [...formData.materials, newMat] });
+                        }}
+                        className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"
+                      >
+                        <PlusCircleIcon className="w-4 h-4" />
+                        {t("admin.courseManagement.addMaterial")}
+                      </button>
+                    </div>
+                    {formData.materials.length === 0 && (
+                      <p className="text-xs text-silver dark:text-white/30 italic py-2">{t("admin.courseManagement.noMaterialsYet")}</p>
+                    )}
+                    <div className="space-y-2">
+                      {formData.materials.map((mat, idx) => {
+                        const TypeIcon = {
+                          pdf: DocumentTextIcon,
+                          word: DocumentIcon,
+                          slides: PresentationChartBarIcon,
+                          video: VideoCameraIcon,
+                          other: FolderIcon,
+                        }[mat.type] || FolderIcon;
+                        const typeColor = {
+                          pdf: "text-red-500 bg-red-500/10",
+                          word: "text-blue-500 bg-blue-500/10",
+                          slides: "text-orange-500 bg-orange-500/10",
+                          video: "text-purple-500 bg-purple-500/10",
+                          other: "text-gray-500 bg-gray-500/10",
+                        }[mat.type] || "text-gray-500 bg-gray-500/10";
+                        return (
+                          <div key={mat.id} className="flex items-center gap-2 p-2.5 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
+                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${typeColor}`}><TypeIcon className="w-4 h-4" /></span>
+                            <input
+                              type="text"
+                              placeholder={t("admin.courseManagement.materialName")}
+                              value={mat.name}
+                              onChange={(e) => {
+                                const updated = [...formData.materials];
+                                updated[idx] = { ...updated[idx], name: e.target.value };
+                                setFormData({ ...formData, materials: updated });
+                              }}
+                              className="flex-1 px-2.5 py-1.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50"
+                            />
+                            <select
+                              value={mat.type}
+                              onChange={(e) => {
+                                const updated = [...formData.materials];
+                                updated[idx] = { ...updated[idx], type: e.target.value as CourseMaterial["type"] };
+                                setFormData({ ...formData, materials: updated });
+                              }}
+                              className="px-2 py-1.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs text-oxford dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/50"
+                            >
+                              <option value="pdf" className="text-black">{t("admin.courseManagement.materialTypePdf")}</option>
+                              <option value="word" className="text-black">{t("admin.courseManagement.materialTypeWord")}</option>
+                              <option value="slides" className="text-black">{t("admin.courseManagement.materialTypeSlides")}</option>
+                              <option value="video" className="text-black">{t("admin.courseManagement.materialTypeVideo")}</option>
+                              <option value="other" className="text-black">{t("admin.courseManagement.materialTypeOther")}</option>
+                            </select>
+                            <button
+                              type="button"
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors"
+                            >
+                              <ArrowUpTrayIcon className="w-3.5 h-3.5" />
+                              {t("admin.courseManagement.uploadFile")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData({ ...formData, materials: formData.materials.filter((_, i) => i !== idx) });
+                              }}
+                              className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <MinusCircleIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

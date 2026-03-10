@@ -444,7 +444,17 @@
       "jsonHint": "Collez votre JSON de cours ci-dessous. Le champ image restera vide — vous pourrez le télécharger plus tard.",
       "applyJson": "Appliquer le JSON",
       "jsonApplied": "JSON appliqué — vérifiez le formulaire et enregistrez",
-      "importFile": "Importer un fichier"
+      "importFile": "Importer un fichier",
+      "courseMaterials": "Supports de cours",
+      "addMaterial": "Ajouter un support",
+      "noMaterialsYet": "Aucun support ajouté. Cliquez sur \"Ajouter un support\" pour joindre des PDF, diapositives, vidéos, etc.",
+      "materialName": "Nom du support...",
+      "uploadFile": "Télécharger",
+      "materialTypePdf": "PDF",
+      "materialTypeWord": "Word",
+      "materialTypeSlides": "Diapositives",
+      "materialTypeVideo": "Vidéo",
+      "materialTypeOther": "Autre"
     },
     "courseContent": {
       "title": "Contenu du cours",
@@ -512,7 +522,17 @@
       "applyQuizJson": "Appliquer le JSON",
       "quizJsonApplied": "JSON appliqué — questions chargées",
       "scenarioDescription": "Description du scénario",
-      "importFile": "Importer un fichier"
+      "importFile": "Importer un fichier",
+      "displayMode": "Mode d'affichage",
+      "narrationOnly": "Narration seule",
+      "slideOnly": "Diapositive seule",
+      "both": "Les deux",
+      "narrationOnlyDesc": "Afficher uniquement le script de narration",
+      "slideOnlyDesc": "Afficher uniquement le contenu visuel",
+      "bothDesc": "Afficher narration + diapositive",
+      "slideContent": "Contenu de la diapositive",
+      "uploadSlide": "Télécharger la diapositive",
+      "slideFileHint": "Accepte les images (PNG, JPG), les PDF et les fichiers PowerPoint (PPTX)"
     },
     "categoryManagement": {
       "title": "Gestion des catégories",

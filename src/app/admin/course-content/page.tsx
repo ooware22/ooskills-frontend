@@ -25,6 +25,8 @@ import {
   PencilIcon,
   AcademicCapIcon,
   ClipboardDocumentCheckIcon,
+  PhotoIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
@@ -56,6 +58,7 @@ import type {
   SectionModalMode,
   LessonModalMode,
   QuizModalMode,
+  LessonDisplayMode,
 } from "./types";
 import JsonBulkImport from "./JsonBulkImport";
 
@@ -141,15 +144,25 @@ export default function CourseContentPage() {
   const [lessonForm, setLessonForm] = useState({
     title: "", type: "audio" as "slide" | "video" | "text" | "audio", duration_seconds: 0, slide_type: "bullet_points",
     speakers: [] as Speaker[],
+    displayMode: "both" as LessonDisplayMode,
   });
   const audioInputRef = useRef<HTMLInputElement>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
 
+  // Slide file upload
+  const slideInputRef = useRef<HTMLInputElement>(null);
+  const [slideFile, setSlideFile] = useState<File | null>(null);
+  const [slidePreview, setSlidePreview] = useState<string | null>(null);
+
   // Narrator input mode: manual (one-by-one) or json (paste array)
   const [narratorMode, setNarratorMode] = useState<"manual" | "json">("manual");
   const [narratorJson, setNarratorJson] = useState("");
   const [narratorJsonError, setNarratorJsonError] = useState<string | null>(null);
+
+  // Visual content JSON editor
+  const [visualContentJson, setVisualContentJson] = useState("");
+  const [visualContentJsonError, setVisualContentJsonError] = useState<string | null>(null);
 
   // ─── QUIZ MODALS ───
   const [quizModal, setQuizModal] = useState<QuizModalMode>(null);
@@ -225,9 +238,11 @@ export default function CourseContentPage() {
 
   const openAddLesson = (sectionId: string) => {
     setLessonParentId(sectionId);
-    setLessonForm({ title: "", type: "audio", duration_seconds: 0, slide_type: "bullet_points", speakers: [] });
+    setLessonForm({ title: "", type: "audio", duration_seconds: 0, slide_type: "bullet_points", speakers: [], displayMode: "both" });
     setAudioFile(null); setAudioPreview(null);
     setNarratorMode("manual"); setNarratorJson(""); setNarratorJsonError(null);
+    setVisualContentJson(""); setVisualContentJsonError(null);
+    setSlideFile(null); setSlidePreview(null);
     setLessonModal("add");
   };
 
@@ -237,9 +252,15 @@ export default function CourseContentPage() {
     setLessonForm({
       title: lesson.title, type: lesson.type, duration_seconds: lesson.duration_seconds,
       slide_type: lesson.slide_type, speakers,
+      displayMode: (lesson as any).displayMode || "both",
     });
     setAudioFile(null); setAudioPreview(lesson.audioUrl);
     setNarratorMode("manual"); setNarratorJson(speakers.length ? JSON.stringify(speakers, null, 2) : ""); setNarratorJsonError(null);
+    // Visual content
+    const vc = lesson.content?.visual_content;
+    setVisualContentJson(vc && Object.keys(vc).length > 0 ? JSON.stringify(vc, null, 2) : "");
+    setVisualContentJsonError(null);
+    setSlideFile(null); setSlidePreview(lesson.content?.visual_content ? (lesson as any).slideUrl || null : null);
     setLessonModal("edit");
   };
 
@@ -959,6 +980,64 @@ export default function CourseContentPage() {
                     <div><label className={LabelClass}>{tc("slideType")}</label>
                       <input type="text" value={lessonForm.slide_type} onChange={(e) => setLessonForm({ ...lessonForm, slide_type: e.target.value })} className={InputClass} /></div>
                   </div>
+
+                  {/* Display Mode */}
+                  <div>
+                    <label className={LabelClass}>{tc("displayMode")}</label>
+                    <div className="flex items-center gap-2">
+                      {[
+                        { value: "narration" as LessonDisplayMode, icon: DocumentTextIcon, label: tc("narrationOnly"), desc: tc("narrationOnlyDesc") },
+                        { value: "slide" as LessonDisplayMode, icon: PhotoIcon, label: tc("slideOnly"), desc: tc("slideOnlyDesc") },
+                        { value: "both" as LessonDisplayMode, icon: Squares2X2Icon, label: tc("both"), desc: tc("bothDesc") },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setLessonForm({ ...lessonForm, displayMode: opt.value })}
+                          className={cn(
+                            "flex-1 p-3 rounded-xl border-2 text-center transition-all text-xs font-medium",
+                            lessonForm.displayMode === opt.value
+                              ? "border-gold bg-gold/10 text-gold"
+                              : "border-gray-200 dark:border-white/10 text-silver dark:text-white/50 hover:border-gold/30"
+                          )}
+                        >
+                          <opt.icon className="w-5 h-5 mx-auto mb-1" />
+                          <div className="text-sm mb-0.5">{opt.label}</div>
+                          <div className="text-[10px] opacity-70">{opt.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Visual Content — File Upload (when slide or both) */}
+                  {(lessonForm.displayMode === "slide" || lessonForm.displayMode === "both") && (
+                    <div>
+                      <label className={LabelClass}>{tc("slideContent")}</label>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 border border-dashed border-gray-300 dark:border-white/20 rounded-xl">
+                        <button type="button" onClick={() => slideInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors">
+                          <ArrowUpTrayIcon className="w-4 h-4" /> {tc("uploadSlide")}
+                        </button>
+                        <span className="text-xs text-silver dark:text-white/40 truncate">{slideFile?.name || slidePreview || tc("noFileSelected")}</span>
+                        <input ref={slideInputRef} type="file" accept="image/*,.pdf,.pptx,.ppt" onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            setSlideFile(f);
+                            if (f.type.startsWith("image/")) {
+                              setSlidePreview(URL.createObjectURL(f));
+                            } else {
+                              setSlidePreview(f.name);
+                            }
+                          }
+                        }} className="hidden" />
+                      </div>
+                      {slidePreview && slideFile?.type.startsWith("image/") && (
+                        <div className="mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
+                          <img src={slidePreview} alt="Slide preview" className="w-full max-h-48 object-contain bg-gray-100 dark:bg-white/5" />
+                        </div>
+                      )}
+                      <p className="text-[10px] text-silver dark:text-white/30 mt-1.5">{tc("slideFileHint")}</p>
+                    </div>
+                  )}
 
                   {/* Audio Upload */}
                   <div>
