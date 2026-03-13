@@ -61,6 +61,7 @@ export interface FinalQuizResult {
   feedback: FinalQuizFeedback[];
   attempt_number: number;
   remaining_attempts: number | null;
+  motivation_audio_url?: string;
   certificate?: {
     id: string;
     code: string;

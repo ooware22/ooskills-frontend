@@ -74,6 +74,7 @@ type FinalQuizData = {
   pass_threshold: number;
   max_attempts: number;
   xp_reward: number;
+  motivation_audio?: string;
 };
 
 
@@ -180,6 +181,10 @@ export default function CourseContentPage() {
   const [fqModal, setFqModal] = useState<"edit" | "delete" | null>(null);
   const [fqSaving, setFqSaving] = useState(false);
   const [fqForm, setFqForm] = useState({ title: "Final Quiz", num_questions: 10, pass_threshold: 70, max_attempts: 3, xp_reward: 50 });
+  const fqAudioInputRef = useRef<HTMLInputElement>(null);
+  const [fqAudioFile, setFqAudioFile] = useState<File | null>(null);
+  const [fqAudioPreview, setFqAudioPreview] = useState<string | null>(null);
+  const [fqClearAudio, setFqClearAudio] = useState(false);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SECTION CRUD
@@ -451,6 +456,9 @@ export default function CourseContentPage() {
       max_attempts: finalQuiz?.max_attempts ?? 3,
       xp_reward: finalQuiz?.xp_reward ?? 50,
     });
+    setFqAudioFile(null);
+    setFqAudioPreview(finalQuiz?.motivation_audio || null);
+    setFqClearAudio(false);
     setFqModal(mode);
   };
 
@@ -459,7 +467,21 @@ export default function CourseContentPage() {
     setFqSaving(true);
     try {
       const { default: api } = await import("@/lib/axios");
-      const res = await api.post("/formation/final-quiz/admin/upsert/", { course_id: courseId, ...fqForm });
+      const formData = new FormData();
+      formData.append('course_id', courseId);
+      formData.append('title', fqForm.title);
+      formData.append('num_questions', String(fqForm.num_questions));
+      formData.append('pass_threshold', String(fqForm.pass_threshold));
+      formData.append('max_attempts', String(fqForm.max_attempts));
+      formData.append('xp_reward', String(fqForm.xp_reward));
+      if (fqAudioFile) {
+        formData.append('motivation_audio', fqAudioFile);
+      } else if (fqClearAudio) {
+        formData.append('clear_motivation_audio', 'true');
+      }
+      const res = await api.post("/formation/final-quiz/admin/upsert/", formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       setFinalQuiz(res.data);
       showToast(finalQuiz ? "Final quiz updated!" : "Final quiz created!");
       setFqModal(null);
@@ -496,7 +518,7 @@ export default function CourseContentPage() {
     setQuizForm({
       ...quizForm, questions: [...quizForm.questions, {
         id: uid(), type: questionType, question: "", options: defaultOptions[questionType] || ["", "", "", ""],
-        correct_answer: 1, explanation: "", difficulty: "easy", category: "general",
+        correct_answer: 0, explanation: "", difficulty: "easy", category: "general",
       }],
     });
   };
@@ -508,7 +530,7 @@ export default function CourseContentPage() {
       scenario: ["", "", ""],
     };
     const q = [...quizForm.questions];
-    q[qIdx] = { ...q[qIdx], type: newType, options: defaultOptions[newType] || ["", "", "", ""], correct_answer: 1 };
+    q[qIdx] = { ...q[qIdx], type: newType, options: defaultOptions[newType] || ["", "", "", ""], correct_answer: 0 };
     setQuizForm({ ...quizForm, questions: q });
   };
 
@@ -745,19 +767,28 @@ export default function CourseContentPage() {
                 <ArrowPathIcon className="w-4 h-4 animate-spin" /> Loading...
               </div>
             ) : finalQuiz ? (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {[
-                  { label: "Title", value: finalQuiz.title },
-                  { label: "Questions", value: finalQuiz.num_questions },
-                  { label: "Pass threshold", value: `${finalQuiz.pass_threshold}%` },
-                  { label: "Max attempts", value: finalQuiz.max_attempts },
-                  { label: "XP reward", value: finalQuiz.xp_reward },
-                ].map(item => (
-                  <div key={item.label} className="p-3 bg-purple-500/5 rounded-xl">
-                    <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider mb-0.5">{item.label}</p>
-                    <p className="text-sm font-semibold text-oxford dark:text-white">{item.value}</p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {[
+                    { label: "Title", value: finalQuiz.title },
+                    { label: "Questions", value: finalQuiz.num_questions },
+                    { label: "Pass threshold", value: `${finalQuiz.pass_threshold}%` },
+                    { label: "Max attempts", value: finalQuiz.max_attempts },
+                    { label: "XP reward", value: finalQuiz.xp_reward },
+                  ].map(item => (
+                    <div key={item.label} className="p-3 bg-purple-500/5 rounded-xl">
+                      <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider mb-0.5">{item.label}</p>
+                      <p className="text-sm font-semibold text-oxford dark:text-white">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {finalQuiz.motivation_audio && (
+                  <div className="flex items-center gap-2 p-3 bg-gold/5 rounded-xl border border-gold/20">
+                    <span className="text-gold text-sm">🎧</span>
+                    <span className="text-xs text-gold font-medium">Motivation audio attached</span>
+                    <audio src={finalQuiz.motivation_audio} controls className="h-8 ml-auto" />
                   </div>
-                ))}
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
@@ -825,6 +856,45 @@ export default function CourseContentPage() {
                   <p className="text-xs text-silver dark:text-white/40">
                     The questions will be randomly drawn from all section quizzes in this course.
                   </p>
+
+                  {/* Motivation Audio Upload */}
+                  <div className="border-t border-gray-200 dark:border-white/10 pt-4">
+                    <label className={LabelClass}>🎧 Motivation Audio (plays when student fails)</label>
+                    <input
+                      ref={fqAudioInputRef}
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setFqAudioFile(file);
+                          setFqAudioPreview(URL.createObjectURL(file));
+                          setFqClearAudio(false);
+                        }
+                      }}
+                    />
+                    {fqAudioPreview && !fqClearAudio ? (
+                      <div className="flex items-center gap-3 p-3 bg-gold/5 rounded-xl border border-gold/20">
+                        <audio src={fqAudioPreview} controls className="flex-1 h-8" />
+                        <button
+                          type="button"
+                          onClick={() => { setFqAudioFile(null); setFqAudioPreview(null); setFqClearAudio(true); }}
+                          className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => fqAudioInputRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl text-sm text-silver dark:text-white/40 hover:border-gold/50 hover:text-gold transition-colors"
+                      >
+                        📂 Upload audio file
+                      </button>
+                    )}
+                  </div>
                   <div className="flex gap-3 pt-3">
                     <button onClick={() => setFqModal(null)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
                     <button onClick={saveFinalQuiz} disabled={fqSaving} className="flex-1 px-4 py-2.5 bg-purple-500 text-white rounded-xl text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 shadow-md">
@@ -1247,13 +1317,13 @@ export default function CourseContentPage() {
                       {q.type === "true_false" ? (
                         <div className="grid grid-cols-2 gap-2">
                           {["Vrai", "Faux"].map((label, oIdx) => (
-                            <button key={oIdx} type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx + 1)}
+                            <button key={oIdx} type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx)}
                               className={cn("px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all",
-                                q.correct_answer === oIdx + 1
+                                q.correct_answer === oIdx
                                   ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                   : "border-gray-200 dark:border-white/10 text-oxford dark:text-white hover:border-gray-300 dark:hover:border-white/20"
                               )}>
-                              {q.correct_answer === oIdx + 1 && <CheckCircleIcon className="w-4 h-4 inline mr-1.5" />}
+                              {q.correct_answer === oIdx && <CheckCircleIcon className="w-4 h-4 inline mr-1.5" />}
                               {label}
                             </button>
                           ))}
@@ -1263,12 +1333,12 @@ export default function CourseContentPage() {
                           {q.options.map((opt, oIdx) => (
                             <div key={oIdx} className="relative">
                               <input type="text" value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
-                                className={cn(InputClass, q.correct_answer === oIdx + 1 && "ring-2 ring-emerald-500/50 border-emerald-500")} placeholder={q.type === "scenario" ? `Response ${oIdx + 1}` : `Option ${oIdx + 1}`} />
-                              <button type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx + 1)}
+                                className={cn(InputClass, q.correct_answer === oIdx && "ring-2 ring-emerald-500/50 border-emerald-500")} placeholder={q.type === "scenario" ? `Response ${oIdx + 1}` : `Option ${oIdx + 1}`} />
+                              <button type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx)}
                                 className={cn("absolute end-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                                  q.correct_answer === oIdx + 1 ? "border-emerald-500 bg-emerald-500" : "border-gray-300 dark:border-white/20 hover:border-emerald-400"
+                                  q.correct_answer === oIdx ? "border-emerald-500 bg-emerald-500" : "border-gray-300 dark:border-white/20 hover:border-emerald-400"
                                 )}>
-                                {q.correct_answer === oIdx + 1 && <CheckCircleIcon className="w-3 h-3 text-white" />}
+                                {q.correct_answer === oIdx && <CheckCircleIcon className="w-3 h-3 text-white" />}
                               </button>
                             </div>
                           ))}
