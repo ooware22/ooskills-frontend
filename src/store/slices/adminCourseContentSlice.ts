@@ -314,6 +314,7 @@ const adminCourseContentSlice = createSlice({
                         sequence: action.payload.sequence,
                         duration_seconds: action.payload.duration_seconds,
                         audioUrl: action.payload.audioUrl,
+                        diapositiveUrl: action.payload.diapositiveUrl,
                         content: action.payload.content,
                         slide_type: action.payload.slide_type,
                     });
@@ -344,6 +345,7 @@ const adminCourseContentSlice = createSlice({
                             sequence: action.payload.sequence,
                             duration_seconds: action.payload.duration_seconds,
                             audioUrl: action.payload.audioUrl,
+                            diapositiveUrl: action.payload.diapositiveUrl,
                             content: action.payload.content,
                             slide_type: action.payload.slide_type,
                         };

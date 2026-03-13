@@ -1,0 +1,78 @@
+# Course Materials & Lesson Display Modes
+
+Add course-level downloadable materials (PDF, Word, slides, video files) and per-lesson display mode choice (narration script, slide visual, or both) — all **frontend-only with mock/hardcoded data**.
+
+## Proposed Changes
+
+### Course Materials — Types & Data
+
+#### [MODIFY] [types.ts](file:///c:/DEV/ooskills-frontend/src/app/admin/course-content/types.ts)
+- Add `CourseMaterial` interface: `{ id, name, type: "pdf"|"word"|"slides"|"video"|"other", size, url }`
+- This type will be used in both admin and student views
+
+#### [MODIFY] [courseContent.ts](file:///c:/DEV/ooskills-frontend/src/data/courseContent.ts) 
+- Add `materials?: CourseMaterial[]` to [CourseContent](file:///c:/DEV/ooskills-frontend/src/data/courseContent.ts#97-106) interface
+- Add sample mock materials to the existing `medicalSpanishCourse` (e.g., 2-3 mock PDFs, a slide deck)
+
+---
+
+### Course Materials — Admin UI
+
+#### [MODIFY] [course-management/page.tsx](file:///c:/DEV/ooskills-frontend/src/app/admin/course-management/page.tsx)
+- Add a **"Materials"** section inside the Add/Edit course modal (below existing fields)
+- Provide an "Add Material" button that creates a mock entry with:
+  - Name input
+  - File type selector (PDF / Word / Slides / Video)
+  - A fake "Upload" button (stores mock URL)
+- Show the list of attached materials with delete option
+- Add `materials` field to the [CourseForm](file:///c:/DEV/ooskills-frontend/src/app/admin/course-management/page.tsx#47-64) interface and `emptyForm`
+
+---
+
+### Lesson Display Mode — Types
+
+#### [MODIFY] [types.ts](file:///c:/DEV/ooskills-frontend/src/app/admin/course-content/types.ts)
+- Add `displayMode?: "narration" | "slide" | "both"` to [AdminLesson](file:///c:/DEV/ooskills-frontend/src/app/admin/course-content/types.ts#32-42) type
+
+#### [MODIFY] [courseContent.ts](file:///c:/DEV/ooskills-frontend/src/data/courseContent.ts)
+- Add `displayMode?: "narration" | "slide" | "both"` to [Slide](file:///c:/DEV/ooskills-frontend/src/data/courseContent.ts#53-65) interface
+- Set different display modes on a few mock slides for testing (some narration-only, some slide-only, some both)
+
+---
+
+### Lesson Display Mode — Admin UI
+
+#### [MODIFY] [course-content/page.tsx](file:///c:/DEV/ooskills-frontend/src/app/admin/course-content/page.tsx)
+- Add a **display mode selector** (3 radio/toggle buttons) to the lesson add/edit form:
+  - 📝 **Narration Only** — show narration script
+  - 🖼️ **Slide Only** — show visual content/schemas
+  - 📝🖼️ **Both** — show narration + slide together (default)
+- Persist the choice in `lessonForm` and save it with the lesson data
+
+---
+
+### Lesson Display Mode — Student Player
+
+#### [MODIFY] [learn/page.tsx](file:///c:/DEV/ooskills-frontend/src/app/courses/[id]/learn/page.tsx)
+- Update the main lesson view to check `slide.displayMode` (defaulting to `"both"`)
+- **`"narration"`**: Show only the [NarrationPanel](file:///c:/DEV/ooskills-frontend/src/app/courses/%5Bid%5D/learn/page.tsx#706-733), hide [SlideContent](file:///c:/DEV/ooskills-frontend/src/app/courses/%5Bid%5D/learn/page.tsx#40-153)
+- **`"slide"`**: Show only [SlideContent](file:///c:/DEV/ooskills-frontend/src/app/courses/%5Bid%5D/learn/page.tsx#40-153), hide [NarrationPanel](file:///c:/DEV/ooskills-frontend/src/app/courses/%5Bid%5D/learn/page.tsx#706-733)
+- **`"both"`** (default/current): Show both side-by-side (current behavior)
+- Add a small toggle button so the student can switch between views even within a lesson
+
+---
+
+### Course Materials — Student View
+
+#### [MODIFY] [learn/page.tsx](file:///c:/DEV/ooskills-frontend/src/app/courses/[id]/learn/page.tsx)
+- Add a **"Materials"** tab or collapsible section in the course sidebar
+- List all materials with file-type icons (📄 PDF, 📝 Word, 📊 Slides, 🎥 Video)
+- Each material has a "Download" link (opens mock URL)
+
+## Verification Plan
+
+### Manual Verification
+1. **Admin — Course Materials**: Navigate to `/admin/course-management`, click "Add Course" or "Edit" on an existing course. Scroll down to see the Materials section. Add a material, set name and type, verify it appears in the list. Delete it and verify removal.
+2. **Admin — Lesson Display Mode**: Navigate to `/admin/course-content?courseId=<id>`, expand a section, click "Add Lesson" or edit one. Verify the display mode selector appears with 3 options (Narration / Slide / Both).
+3. **Student — Display Modes**: Navigate to `/courses/medical-spanish-vocabulary/learn`. Navigate through slides — some should show narration only, some slides only, some both, depending on the mock data.
+4. **Student — Materials Panel**: In the learn page, verify the materials section appears in the sidebar with downloadable links.

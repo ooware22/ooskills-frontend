@@ -252,7 +252,7 @@ export default function CourseContentPage() {
     setLessonForm({
       title: lesson.title, type: lesson.type, duration_seconds: lesson.duration_seconds,
       slide_type: lesson.slide_type, speakers,
-      displayMode: (lesson as any).displayMode || "both",
+      displayMode: (lesson as any).display_mode || (lesson as any).displayMode || "both",
     });
     setAudioFile(null); setAudioPreview(lesson.audioUrl);
     setNarratorMode("manual"); setNarratorJson(speakers.length ? JSON.stringify(speakers, null, 2) : ""); setNarratorJsonError(null);
@@ -260,7 +260,7 @@ export default function CourseContentPage() {
     const vc = lesson.content?.visual_content;
     setVisualContentJson(vc && Object.keys(vc).length > 0 ? JSON.stringify(vc, null, 2) : "");
     setVisualContentJsonError(null);
-    setSlideFile(null); setSlidePreview(lesson.content?.visual_content ? (lesson as any).slideUrl || null : null);
+    setSlideFile(null); setSlidePreview(lesson.diapositiveUrl || null);
     setLessonModal("edit");
   };
 
@@ -272,7 +272,7 @@ export default function CourseContentPage() {
     setLessonParentId(sectionId); setSelectedLesson(lesson); setLessonModal("delete");
   };
 
-  const closeLessonModal = () => { setLessonModal(null); setSelectedLesson(null); setAudioFile(null); setAudioPreview(null); };
+  const closeLessonModal = () => { setLessonModal(null); setSelectedLesson(null); setAudioFile(null); setAudioPreview(null); setSlideFile(null); setSlidePreview(null); };
 
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -294,8 +294,10 @@ export default function CourseContentPage() {
         sequence: section ? section.lessons_list.length : 0,
         duration_seconds: lessonForm.duration_seconds,
         slide_type: lessonForm.slide_type,
+        display_mode: lessonForm.displayMode,
         content,
         audioFile: audioFile || undefined,
+        diapositiveFile: slideFile || undefined,
       }));
       if (createLesson.fulfilled.match(result)) {
         showToast(tc("lessonAdded"));
@@ -308,8 +310,10 @@ export default function CourseContentPage() {
           type: lessonForm.type,
           duration_seconds: lessonForm.duration_seconds,
           slide_type: lessonForm.slide_type,
+          display_mode: lessonForm.displayMode,
           content,
           audioFile: audioFile || undefined,
+          diapositiveFile: slideFile || undefined,
         },
       }));
       if (updateLesson.fulfilled.match(result)) {
@@ -662,6 +666,7 @@ export default function CourseContentPage() {
                                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", lesson.type === "audio" ? "bg-blue-500/10 text-blue-500" : "bg-amber-500/10 text-amber-500")}>{lesson.type}</span>
                                     <span className="text-xs text-silver dark:text-white/40">{lesson.duration_seconds}s</span>
                                     {lesson.audioUrl && <span className="text-xs text-emerald-500">♪ Audio</span>}
+                                    {lesson.diapositiveUrl && <span className="text-xs text-purple-500">📊 Diapositive</span>}
                                   </div>
                                 </div>
                               </div>
@@ -944,6 +949,14 @@ export default function CourseContentPage() {
                     <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
                       <p className="text-xs text-silver dark:text-white/40 mb-2">{tc("audioFile")}</p>
                       <audio controls src={selectedLesson.audioUrl} className="w-full" />
+                    </div>
+                  )}
+                  {selectedLesson.diapositiveUrl && (
+                    <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                      <p className="text-xs text-silver dark:text-white/40 mb-2">Diapositive</p>
+                      <a href={selectedLesson.diapositiveUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-gold hover:underline flex items-center gap-1.5">
+                        <PhotoIcon className="w-4 h-4" /> Voir la diapositive
+                      </a>
                     </div>
                   )}
                   {selectedLesson.content?.narration_script?.speakers?.length > 0 && (

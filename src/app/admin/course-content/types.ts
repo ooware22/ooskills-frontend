@@ -46,6 +46,7 @@ export interface AdminLesson {
   sequence: number;
   duration_seconds: number;
   audioUrl: string | null;
+  diapositiveUrl: string | null;
   content: LessonContent;
   slide_type: string;
   displayMode?: LessonDisplayMode;

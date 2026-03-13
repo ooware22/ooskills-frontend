@@ -30,6 +30,7 @@ import {
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import axiosClient from "@/lib/axios";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
@@ -1212,13 +1213,59 @@ export default function CourseManagementPage() {
                               <option value="video" className="text-black">{t("admin.courseManagement.materialTypeVideo")}</option>
                               <option value="other" className="text-black">{t("admin.courseManagement.materialTypeOther")}</option>
                             </select>
-                            <button
-                              type="button"
-                              className="flex items-center gap-1 px-2.5 py-1.5 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors"
+                            <label
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors cursor-pointer"
                             >
                               <ArrowUpTrayIcon className="w-3.5 h-3.5" />
                               {t("admin.courseManagement.uploadFile")}
-                            </button>
+                              <input
+                                type="file"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  // Update name from filename if empty
+                                  const updated = [...formData.materials];
+                                  if (!updated[idx].name) {
+                                    updated[idx] = { ...updated[idx], name: file.name.replace(/\.[^/.]+$/, '') };
+                                  }
+                                  // Compute human-readable size
+                                  const sizeKB = file.size / 1024;
+                                  const sizeStr = sizeKB > 1024
+                                    ? `${(sizeKB / 1024).toFixed(1)} MB`
+                                    : `${Math.round(sizeKB)} KB`;
+                                  updated[idx] = { ...updated[idx], size: sizeStr };
+                                  setFormData({ ...formData, materials: updated });
+                                  // Upload via API if we have a course ID (edit mode)
+                                  if (selectedCourse?.id) {
+                                    try {
+                                      const fd = new FormData();
+                                      fd.append('course', selectedCourse.id);
+                                      fd.append('name', updated[idx].name || file.name);
+                                      fd.append('type', updated[idx].type);
+                                      fd.append('size', sizeStr);
+                                      fd.append('file', file);
+                                      fd.append('sequence', String(idx));
+                                      const res = await axiosClient.post('/formation/course-materials/', fd, {
+                                        headers: { 'Content-Type': 'multipart/form-data' },
+                                      });
+                                      // Update local state with backend response
+                                      const finalUpdated = [...formData.materials];
+                                      finalUpdated[idx] = {
+                                        ...finalUpdated[idx],
+                                        id: res.data.id,
+                                        url: res.data.download_url || res.data.url || res.data.file || '#',
+                                        size: res.data.size || sizeStr,
+                                      };
+                                      setFormData({ ...formData, materials: finalUpdated });
+                                    } catch (err) {
+                                      console.error('Failed to upload material:', err);
+                                    }
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
                             <button
                               type="button"
                               onClick={() => {

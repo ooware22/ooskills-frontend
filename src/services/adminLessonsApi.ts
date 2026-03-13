@@ -28,8 +28,10 @@ export interface AdminLesson {
     sequence: number;
     duration_seconds: number;
     audioUrl: string | null;
+    diapositiveUrl: string | null;
     content: LessonContent;
     slide_type: string;
+    display_mode?: 'narration' | 'slide' | 'both';
 }
 
 export interface LessonCreatePayload {
@@ -39,8 +41,10 @@ export interface LessonCreatePayload {
     sequence: number;
     duration_seconds: number;
     slide_type: string;
+    display_mode?: 'narration' | 'slide' | 'both';
     content?: LessonContent;
     audioFile?: File | null;
+    diapositiveFile?: File | null;
 }
 
 export interface LessonUpdatePayload {
@@ -49,8 +53,10 @@ export interface LessonUpdatePayload {
     sequence?: number;
     duration_seconds?: number;
     slide_type?: string;
+    display_mode?: 'narration' | 'slide' | 'both';
     content?: LessonContent;
     audioFile?: File | null;
+    diapositiveFile?: File | null;
 }
 
 // =============================================================================
@@ -65,9 +71,9 @@ export interface LessonUpdatePayload {
 function buildLessonFormData(
     data: LessonCreatePayload | LessonUpdatePayload,
 ): { body: FormData | Record<string, unknown>; headers: Record<string, string> } {
-    const { audioFile, ...rest } = data;
+    const { audioFile, diapositiveFile, ...rest } = data;
 
-    if (audioFile) {
+    if (audioFile || diapositiveFile) {
         const fd = new FormData();
 
         // Append all scalar fields
@@ -80,13 +86,18 @@ function buildLessonFormData(
             }
         }
 
-        // Append the file under the backend field name 'audioUrl'
-        fd.append('audioUrl', audioFile);
+        // Append files under the backend field names
+        if (audioFile) {
+            fd.append('audioUrl', audioFile);
+        }
+        if (diapositiveFile) {
+            fd.append('diapositiveUrl', diapositiveFile);
+        }
 
         return { body: fd, headers: { 'Content-Type': 'multipart/form-data' } };
     }
 
-    // No file — send as JSON (exclude audioFile key entirely)
+    // No file — send as JSON (exclude file keys entirely)
     return { body: rest as Record<string, unknown>, headers: {} };
 }
 
@@ -112,7 +123,7 @@ const adminLessonsApi = {
         const { body, headers } = buildLessonFormData(data);
         const response = await axiosClient.post<AdminLesson>(ENDPOINT, body, {
             headers,
-            timeout: data.audioFile ? UPLOAD_TIMEOUT : undefined,
+            timeout: (data.audioFile || data.diapositiveFile) ? UPLOAD_TIMEOUT : undefined,
         });
         return response.data;
     },
@@ -124,7 +135,7 @@ const adminLessonsApi = {
         const { body, headers } = buildLessonFormData(data);
         const response = await axiosClient.patch<AdminLesson>(`${ENDPOINT}${id}/`, body, {
             headers,
-            timeout: data.audioFile ? UPLOAD_TIMEOUT : undefined,
+            timeout: (data.audioFile || data.diapositiveFile) ? UPLOAD_TIMEOUT : undefined,
         });
         return response.data;
     },

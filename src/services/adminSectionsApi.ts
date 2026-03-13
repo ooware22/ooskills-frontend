@@ -19,6 +19,7 @@ export interface AdminSectionLesson {
     sequence: number;
     duration_seconds: number;
     audioUrl: string | null;
+    diapositiveUrl: string | null;
     content: {
         visual_content: Record<string, unknown>;
         narration_script: {

@@ -769,9 +769,9 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
     if (staticContent) return; // static content available, skip API
     let cancelled = false;
     setContentLoading(true);
-    axiosClient
-      .get(`/formation/sections/?course=${slug}`)
-      .then((res) => {
+    (async () => {
+      try {
+        const res = await axiosClient.get(`/formation/sections/?course=${slug}`);
         if (cancelled) return;
         const sections = Array.isArray(res.data) ? res.data : res.data.results || [];
         // Transform API sections → CourseContent
@@ -794,35 +794,41 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                 narration_script: c.narration_script || { mode: 'dialogue', speakers: [] },
                 apiAudioUrl: lesson.audioUrl || undefined,
                 apiLessonId: lesson.id || undefined,
+                displayMode: lesson.display_mode || 'both',
+                diapositiveUrl: lesson.diapositiveUrl || undefined,
               };
             });
             // Transform quiz if present
             let quiz: Quiz | undefined;
             if (section.quiz) {
-              const sq = section.quiz;
+              const q = section.quiz;
               quiz = {
-                title: typeof sq.title === 'object'
-                  ? sq.title.fr || sq.title.en || sq.title.ar || 'Quiz'
-                  : sq.title || 'Quiz',
-                intro_text: sq.intro_text || '',
-                pass_threshold: sq.pass_threshold ?? 70,
-                apiQuizId: sq.id || undefined,
-                questions: (sq.questions || []).map((q: any, qi: number): QuizQuestion => ({
+                title: typeof q.title === 'object'
+                  ? q.title.fr || q.title.en || ''
+                  : q.title || 'Quiz',
+                intro_text: typeof q.intro_text === 'object'
+                  ? q.intro_text.fr || q.intro_text.en || ''
+                  : q.intro_text || '',
+                pass_threshold: q.pass_threshold || 70,
+                apiQuizId: q.id,
+                questions: (q.questions || []).map((qn: any, qi: number): QuizQuestion => ({
                   id: qi + 1,
-                  apiQuestionId: q.id ? String(q.id) : undefined,
-                  type: q.type || 'multiple_choice',
-                  question: typeof q.text === 'object'
-                    ? q.text.fr || q.text.en || q.text.ar || ''
-                    : q.text || q.question || '',
-                  options: (q.options || []).map((o: any) =>
-                    typeof o === 'object' ? o.text || o.fr || '' : String(o),
-                  ),
-                  correct_answer: q.correct_answer ?? 0,
-                  explanation: typeof q.explanation === 'object'
-                    ? q.explanation.fr || q.explanation.en || ''
-                    : q.explanation || '',
-                  difficulty: q.difficulty || 'medium',
-                  category: q.category || '',
+                  apiQuestionId: qn.id,
+                  type: qn.type || 'multiple_choice',
+                  question: typeof qn.question === 'object'
+                    ? qn.question.fr || qn.question.en || ''
+                    : qn.question || '',
+                  options: Array.isArray(qn.options)
+                    ? qn.options.map((opt: any) =>
+                        typeof opt === 'object' ? opt.fr || opt.en || '' : opt
+                      )
+                    : [],
+                  correct_answer: qn.correct_answer ?? 0,
+                  explanation: typeof qn.explanation === 'object'
+                    ? qn.explanation.fr || qn.explanation.en || ''
+                    : qn.explanation || '',
+                  difficulty: qn.difficulty || 'easy',
+                  category: qn.category || 'general',
                 })),
               };
             }
@@ -833,13 +839,20 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                 : section.title || '',
               slides,
               quiz,
-              sequence: section.sequence || 0,
+              sequence: section.sequence ?? 0,
               audioFileIndex: section.audioFileIndex || 0,
             };
           });
 
         const totalSlides = modules.reduce((s, m) => s + m.slides.length, 0);
         const totalQuiz = modules.reduce((s, m) => s + (m.quiz?.questions.length || 0), 0);
+
+        // Also fetch course detail to get materials
+        let materials: any[] = [];
+        try {
+          const courseRes = await axiosClient.get(`/formation/courses/${slug}/`);
+          materials = courseRes.data?.materials || [];
+        } catch { /* materials are optional */ }
 
         setApiContent({
           courseId: 0,
@@ -849,14 +862,20 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
           totalQuizQuestions: totalQuiz,
           audioBasePath: '',
           modules,
+          materials: materials.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            type: m.type || 'other',
+            size: m.size || '',
+            url: m.download_url || m.url || m.file || '#',
+          })),
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('Failed to fetch course content:', err);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setContentLoading(false);
-      });
+      }
+    })();
     return () => { cancelled = true; };
   }, [slug, staticContent]);
 
@@ -1516,6 +1535,34 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                             className="mb-8" dir="rtl"
                           >
+                            {/* Diapositive file (image/pdf) */}
+                            {currentSlide.diapositiveUrl && (
+                              <div className="mb-6">
+                                {currentSlide.diapositiveUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) ? (
+                                  <img
+                                    src={currentSlide.diapositiveUrl}
+                                    alt={currentSlide.title}
+                                    className="w-full max-h-[500px] object-contain rounded-2xl border border-white/10 bg-white/5"
+                                  />
+                                ) : currentSlide.diapositiveUrl.match(/\.pdf$/i) ? (
+                                  <iframe
+                                    src={currentSlide.diapositiveUrl}
+                                    className="w-full h-[500px] rounded-2xl border border-white/10 bg-white/5"
+                                    title={currentSlide.title}
+                                  />
+                                ) : (
+                                  <a
+                                    href={currentSlide.diapositiveUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-5 py-3 bg-gold/10 text-gold rounded-xl text-sm font-semibold hover:bg-gold/20 transition-colors"
+                                  >
+                                    <PresentationChartBarIcon className="w-5 h-5" />
+                                    Voir la diapositive
+                                  </a>
+                                )}
+                              </div>
+                            )}
                             <SlideContent slide={currentSlide} />
                           </motion.div>
                         )}
@@ -1645,22 +1692,28 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                   other: "bg-gray-500/10 text-gray-400",
                 };
                 return (
-                  <a
+                  <div
                     key={mat.id}
-                    href={mat.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-colors group"
                   >
-                    <span className={cn("w-9 h-9 rounded-lg flex items-center justify-center", colors[mat.type] || colors.other)}>
+                    <span className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", colors[mat.type] || colors.other)}>
                       <TypeIcon className="w-4.5 h-4.5" />
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate group-hover:text-gold transition-colors">{mat.name}</p>
+                      <p className="text-sm text-white truncate">{mat.name}</p>
                       <p className="text-[10px] text-gray-500 uppercase">{mat.type} • {mat.size}</p>
                     </div>
-                    <ArrowDownTrayIcon className="w-4 h-4 text-gray-500 group-hover:text-gold transition-colors flex-shrink-0" />
-                  </a>
+                    <a
+                      href={mat.url}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors flex-shrink-0"
+                    >
+                      <ArrowDownTrayIcon className="w-3.5 h-3.5" />
+                      Télécharger
+                    </a>
+                  </div>
                 );
               })}
             </div>

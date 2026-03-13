@@ -73,6 +73,8 @@ export interface Slide {
   apiLessonId?: string;
   /** Display mode: narration only, slide only, or both (default) */
   displayMode?: LessonDisplayMode;
+  /** Diapositive URL from the API (Supabase storage) */
+  diapositiveUrl?: string;
 }
 
 export interface QuizQuestion {
