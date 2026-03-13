@@ -28,6 +28,7 @@ export const MOCK_SECTIONS: AdminSection[] = [
           },
         },
         slide_type: "bullet_points",
+        diapositiveUrl: null,
       },
     ],
     quiz: null,
@@ -65,6 +66,7 @@ export const MOCK_SECTIONS: AdminSection[] = [
           },
         },
         slide_type: "pillars",
+        diapositiveUrl: null,
       },
     ],
     quiz: {

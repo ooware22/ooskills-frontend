@@ -9,7 +9,21 @@ import { getCourseContentBySlug, getAudioUrl, getFlatSlides } from '@/data/cours
 
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchMyEnrollments, saveProgress, fetchMyProgress } from '@/store/slices/enrollmentSlice';
-import axiosClient from '@/lib/axios';
+import {
+  fetchCourseContentBySlug,
+  fetchQuizAttempts,
+  submitQuizAttempt,
+  fetchFinalQuizConfig,
+  generateFinalQuizQuestions,
+  submitFinalQuiz,
+  resetFinalQuiz,
+  selectFinalQuizConfig,
+  selectFinalQuizQuestions,
+  selectFinalQuizResult,
+  selectFinalQuizLoading,
+  selectFinalQuizError,
+  selectQuizPassedScores,
+} from '@/store/slices/learnSlice';
 import { cn } from '@/lib/utils';
 import {
   ChevronLeftIcon,
@@ -347,48 +361,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
   );
 }
 
-/* ─────────────── Final Quiz Component (API-driven) ─────────────── */
-interface FinalQuizConfig {
-  id: string;
-  title: string;
-  num_questions: number;
-  pass_threshold: number;
-  max_attempts: number;
-  remaining_attempts: number | null;
-  has_passed: boolean;
-}
-
-interface FinalQuizQuestion {
-  id: string;
-  type: string;
-  question: string;
-  options: string[];
-  difficulty: string;
-  category: string;
-}
-
-interface FinalQuizFeedback {
-  question_id: string;
-  selected: number | null;
-  correct_answer: number;
-  is_correct: boolean;
-  explanation: string;
-}
-
-interface FinalQuizResult {
-  score: number;
-  passed: boolean;
-  xp_earned: number;
-  feedback: FinalQuizFeedback[];
-  attempt_number: number;
-  remaining_attempts: number | null;
-  certificate?: {
-    id: string;
-    code: string;
-    score: number;
-    pdf_url: string | null;
-  };
-}
+/* ─────────────── Final Quiz Component (Redux-driven) ─────────────── */
 
 function FinalQuizView({
   courseSlug,
@@ -399,47 +372,51 @@ function FinalQuizView({
   courseId: string;
   onDone: () => void;
 }) {
+  const dispatch = useAppDispatch();
+
+  // Redux state
+  const config = useAppSelector(selectFinalQuizConfig);
+  const questions = useAppSelector(selectFinalQuizQuestions);
+  const result = useAppSelector(selectFinalQuizResult);
+  const loading = useAppSelector(selectFinalQuizLoading);
+  const error = useAppSelector(selectFinalQuizError);
+
+  // Local UI state
   const [phase, setPhase] = useState<'intro' | 'quiz' | 'results' | 'certificate'>('intro');
-  const [config, setConfig] = useState<FinalQuizConfig | null>(null);
-  const [questions, setQuestions] = useState<FinalQuizQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [result, setResult] = useState<FinalQuizResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load config on mount
+  // Load config on mount, reset on unmount
   useEffect(() => {
-    setLoading(true);
-    axiosClient.get(`/formation/final-quiz/config/?course=${courseSlug}`)
-      .then(res => setConfig(res.data))
-      .catch(err => setError(err.response?.data?.detail || 'Failed to load final quiz config'))
-      .finally(() => setLoading(false));
-  }, [courseSlug]);
+    dispatch(fetchFinalQuizConfig(courseSlug));
+    return () => { dispatch(resetFinalQuiz()); };
+  }, [courseSlug, dispatch]);
+
+  // Transition phase when result arrives
+  useEffect(() => {
+    if (result) {
+      if (result.passed && result.certificate) {
+        setPhase('certificate');
+      } else {
+        setPhase('results');
+      }
+    }
+  }, [result]);
 
   // Generate questions
   const handleStartQuiz = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axiosClient.post('/formation/final-quiz/generate/', { course_id: courseId });
-      setQuestions(res.data.questions);
+    const resultAction = await dispatch(generateFinalQuizQuestions(courseId));
+    if (generateFinalQuizQuestions.fulfilled.match(resultAction)) {
       setPhase('quiz');
       setCurrentQ(0);
       setAnswers({});
       setSelected(null);
-      setShowExplanation(false);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to generate questions');
     }
-    setLoading(false);
   };
 
   // Handle answer selection
   const handleSelect = (idx: number) => {
-    if (showExplanation) return;
     setSelected(idx);
     setAnswers(prev => ({ ...prev, [questions[currentQ].id]: idx }));
   };
@@ -448,28 +425,15 @@ function FinalQuizView({
   const handleNext = async () => {
     const isLast = currentQ === questions.length - 1;
     if (isLast) {
-      // Submit quiz
-      setLoading(true);
-      try {
-        const res = await axiosClient.post('/formation/final-quiz/submit/', {
-          course_id: courseId,
-          question_ids: questions.map(q => q.id),
-          answers: { ...answers, [questions[currentQ].id]: selected },
-        });
-        setResult(res.data);
-        if (res.data.passed && res.data.certificate) {
-          setPhase('certificate');
-        } else {
-          setPhase('results');
-        }
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to submit quiz');
-      }
-      setLoading(false);
+      // Submit quiz via Redux
+      dispatch(submitFinalQuiz({
+        courseId,
+        questionIds: questions.map(q => q.id),
+        answers: { ...answers, [questions[currentQ].id]: selected! },
+      }));
     } else {
       setCurrentQ(prev => prev + 1);
       setSelected(null);
-      setShowExplanation(false);
     }
   };
 
@@ -746,7 +710,8 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const router = useRouter();
   const slug = id;
   const dispatch = useAppDispatch();
-  const { getProgress, updateProgress } = useEnrollment();
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const { getProgress, updateProgress } = useEnrollment(userId);
 
   // Redux enrollment state
   const enrollments = useAppSelector((s) => s.enrollment.enrollments);
@@ -759,125 +724,16 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   // Only consider enrollment data loaded once the fetch has actually completed at least once
   const enrollmentLoaded = lastFetchedEnrollments !== null && !enrollmentsLoading;
 
-  // Course data — try static content first, then API
+  // Course data — try static content first, then API (via Redux)
   const staticContent = getCourseContentBySlug(slug);
-  const [apiContent, setApiContent] = useState<CourseContent | null>(null);
-  const [contentLoading, setContentLoading] = useState(false);
+  const apiContent = useAppSelector((s) => s.learn.courseContent);
+  const contentLoading = useAppSelector((s) => s.learn.contentLoading);
 
   // Fetch content from API if no static content available
   useEffect(() => {
-    if (staticContent) return; // static content available, skip API
-    let cancelled = false;
-    setContentLoading(true);
-    (async () => {
-      try {
-        const res = await axiosClient.get(`/formation/sections/?course=${slug}`);
-        if (cancelled) return;
-        const sections = Array.isArray(res.data) ? res.data : res.data.results || [];
-        // Transform API sections → CourseContent
-        const modules: CourseContentModule[] = sections
-          .sort((a: any, b: any) => a.sequence - b.sequence)
-          .map((section: any) => {
-            const lessons = (section.lessons_list || []).sort(
-              (a: any, b: any) => a.sequence - b.sequence,
-            );
-            const slides: Slide[] = lessons.map((lesson: any, idx: number) => {
-              const c = lesson.content || {};
-              return {
-                id: idx + 1,
-                title: typeof lesson.title === 'object'
-                  ? lesson.title.fr || lesson.title.en || lesson.title.ar || ''
-                  : lesson.title || '',
-                slide_type: lesson.slide_type || c.slide_type || 'bullet_points',
-                duration_seconds: lesson.duration_seconds || 30,
-                visual_content: c.visual_content || c || {},
-                narration_script: c.narration_script || { mode: 'dialogue', speakers: [] },
-                apiAudioUrl: lesson.audioUrl || undefined,
-                apiLessonId: lesson.id || undefined,
-                displayMode: lesson.display_mode || 'both',
-                diapositiveUrl: lesson.diapositiveUrl || undefined,
-              };
-            });
-            // Transform quiz if present
-            let quiz: Quiz | undefined;
-            if (section.quiz) {
-              const q = section.quiz;
-              quiz = {
-                title: typeof q.title === 'object'
-                  ? q.title.fr || q.title.en || ''
-                  : q.title || 'Quiz',
-                intro_text: typeof q.intro_text === 'object'
-                  ? q.intro_text.fr || q.intro_text.en || ''
-                  : q.intro_text || '',
-                pass_threshold: q.pass_threshold || 70,
-                apiQuizId: q.id,
-                questions: (q.questions || []).map((qn: any, qi: number): QuizQuestion => ({
-                  id: qi + 1,
-                  apiQuestionId: qn.id,
-                  type: qn.type || 'multiple_choice',
-                  question: typeof qn.question === 'object'
-                    ? qn.question.fr || qn.question.en || ''
-                    : qn.question || '',
-                  options: Array.isArray(qn.options)
-                    ? qn.options.map((opt: any) =>
-                        typeof opt === 'object' ? opt.fr || opt.en || '' : opt
-                      )
-                    : [],
-                  correct_answer: qn.correct_answer ?? 0,
-                  explanation: typeof qn.explanation === 'object'
-                    ? qn.explanation.fr || qn.explanation.en || ''
-                    : qn.explanation || '',
-                  difficulty: qn.difficulty || 'easy',
-                  category: qn.category || 'general',
-                })),
-              };
-            }
-            return {
-              type: section.type || 'module',
-              title: typeof section.title === 'object'
-                ? section.title.fr || section.title.en || section.title.ar || ''
-                : section.title || '',
-              slides,
-              quiz,
-              sequence: section.sequence ?? 0,
-              audioFileIndex: section.audioFileIndex || 0,
-            };
-          });
-
-        const totalSlides = modules.reduce((s, m) => s + m.slides.length, 0);
-        const totalQuiz = modules.reduce((s, m) => s + (m.quiz?.questions.length || 0), 0);
-
-        // Also fetch course detail to get materials
-        let materials: any[] = [];
-        try {
-          const courseRes = await axiosClient.get(`/formation/courses/${slug}/`);
-          materials = courseRes.data?.materials || [];
-        } catch { /* materials are optional */ }
-
-        setApiContent({
-          courseId: 0,
-          title: modules[0]?.title || slug,
-          totalModules: modules.length,
-          totalSlides,
-          totalQuizQuestions: totalQuiz,
-          audioBasePath: '',
-          modules,
-          materials: materials.map((m: any) => ({
-            id: m.id,
-            name: m.name,
-            type: m.type || 'other',
-            size: m.size || '',
-            url: m.download_url || m.url || m.file || '#',
-          })),
-        });
-      } catch (err) {
-        console.error('Failed to fetch course content:', err);
-      } finally {
-        if (!cancelled) setContentLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [slug, staticContent]);
+    if (staticContent) return;
+    dispatch(fetchCourseContentBySlug(slug));
+  }, [slug, staticContent, dispatch]);
 
   const content = staticContent || apiContent;
   const courseTitle = content?.title || slug;
@@ -930,54 +786,38 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   }, [slug, getProgress]);
 
   // Load quiz attempts from backend API to prevent redo of PASSED quizzes
+  const quizPassedScores = useAppSelector(selectQuizPassedScores);
+
   useEffect(() => {
     if (!content || !isAuthenticated) return;
-    axiosClient.get('/formation/quiz-attempts/')
-      .then((res) => {
-        const attempts = Array.isArray(res.data) ? res.data : res.data.results || [];
-        if (attempts.length === 0) return;
+    dispatch(fetchQuizAttempts());
+  }, [content, isAuthenticated, dispatch]);
 
-        // Build a map of quiz_id → best PASSED score (only passed attempts block redo)
-        const passedScores: Record<string, number> = {};
-        for (const att of attempts) {
-          const qid = att.quiz?.id || att.quiz_id || att.quiz;
-          if (!qid) continue;
-          // Only consider passed attempts
-          if (!att.passed) continue;
-          const score = Number(att.score) || 0;
-          if (!passedScores[String(qid)] || score > passedScores[String(qid)]) {
-            passedScores[String(qid)] = score;
+  // Map passed quiz scores to module indexes
+  useEffect(() => {
+    if (!content || Object.keys(quizPassedScores).length === 0) return;
+
+    const apiScores: Record<string, number> = {};
+    content.modules.forEach((mod, mi) => {
+      if (mod.quiz?.apiQuizId && quizPassedScores[String(mod.quiz.apiQuizId)] !== undefined) {
+        apiScores[`mod_${mi}`] = quizPassedScores[String(mod.quiz.apiQuizId)];
+      }
+    });
+
+    if (Object.keys(apiScores).length > 0) {
+      setQuizScores(prev => ({ ...prev, ...apiScores }));
+      setCompletedModules(prev => {
+        const newCompleted = [...prev];
+        for (const key of Object.keys(apiScores)) {
+          const mi = parseInt(key.replace('mod_', ''));
+          if (!isNaN(mi) && !newCompleted.includes(mi)) {
+            newCompleted.push(mi);
           }
         }
-
-        // Match quiz IDs to module indexes
-        const apiScores: Record<string, number> = {};
-        content.modules.forEach((mod, mi) => {
-          if (mod.quiz?.apiQuizId && passedScores[String(mod.quiz.apiQuizId)] !== undefined) {
-            apiScores[`mod_${mi}`] = passedScores[String(mod.quiz.apiQuizId)];
-          }
-        });
-
-        // Merge with existing quizScores (API takes priority)
-        if (Object.keys(apiScores).length > 0) {
-          setQuizScores(prev => ({ ...prev, ...apiScores }));
-          // Also mark modules with passed quizzes as completed
-          setCompletedModules(prev => {
-            const newCompleted = [...prev];
-            for (const key of Object.keys(apiScores)) {
-              const mi = parseInt(key.replace('mod_', ''));
-              if (!isNaN(mi) && !newCompleted.includes(mi)) {
-                newCompleted.push(mi);
-              }
-            }
-            return newCompleted;
-          });
-        }
-      })
-      .catch((err) => {
-        console.error('[Quiz] Failed to load quiz attempts:', err);
+        return newCompleted;
       });
-  }, [content, isAuthenticated]);
+    }
+  }, [quizPassedScores, content]);
 
   // Save progress on changes (localStorage backup)
   useEffect(() => {
@@ -1020,7 +860,8 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
         current_slide: flat.slideIndexInModule,
         last_position: Math.floor(audioTimeRef.current),
         time_spent_delta: Math.floor(flat.slide.duration_seconds * 0.3),
-        completed,
+        // NEVER downgrade: if slide is already completed, always send completed=true
+        completed: completed || completedSlides.includes(slideIdx),
       };
 
       const doSave = () => {
@@ -1041,53 +882,61 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
         saveTimerRef.current = setTimeout(doSave, 1500); // debounce navigation
       }
     },
-    [flatSlides, isAuthenticated, dispatch],
+    [flatSlides, isAuthenticated, dispatch, completedSlides],
   );
 
   // Load progress from API on mount
+  const progressRecords = useAppSelector((s) => s.enrollment.progress);
+
   useEffect(() => {
     if (!enrollmentId || !isAuthenticated) return;
-    let cancelled = false;
-    axiosClient
-      .get(`/formation/progress/?enrollment=${enrollmentId}`)
-      .then((res) => {
-        if (cancelled) return;
-        const records = Array.isArray(res.data) ? res.data : res.data.results || [];
-        if (records.length === 0) return;
+    dispatch(fetchMyProgress(enrollmentId));
+  }, [enrollmentId, isAuthenticated, dispatch]);
 
-        // Build a set of completed lesson IDs
-        const completedLessonIds = new Set(
-          records.filter((r: any) => r.completed).map((r: any) => r.lesson),
-        );
+  // Map API progress to slide indices
+  const hasRestoredFromApi = useRef(false);
 
-        // Map completed lessons to slide indices
-        const completedIdxs: number[] = [];
-        let lastSlideIdx = 0;
-        flatSlides.forEach((flat, idx) => {
-          if (flat.slide.apiLessonId && completedLessonIds.has(flat.slide.apiLessonId)) {
-            completedIdxs.push(idx);
-          }
-          // Find the most recent non-completed lesson to restore position
-          if (flat.slide.apiLessonId) {
-            const record = records.find((r: any) => r.lesson === flat.slide.apiLessonId);
-            if (record && !record.completed) {
-              lastSlideIdx = idx;
-            }
-          }
-        });
+  useEffect(() => {
+    if (progressRecords.length === 0 || flatSlides.length === 0) return;
 
-        if (completedIdxs.length > 0) {
-          setCompletedSlides(completedIdxs);
-          // If all are completed, start at last; otherwise start at the next uncompleted
-          const nextUncompleted = flatSlides.findIndex(
-            (_, idx) => !completedIdxs.includes(idx),
-          );
-          setCurrentSlideIdx(nextUncompleted >= 0 ? nextUncompleted : lastSlideIdx);
+    const completedLessonIds = new Set(
+      progressRecords.filter((r) => r.completed).map((r) => r.lesson),
+    );
+
+    const apiCompletedIdxs: number[] = [];
+    let lastSlideIdx = 0;
+    flatSlides.forEach((flat, idx) => {
+      if (flat.slide.apiLessonId && completedLessonIds.has(flat.slide.apiLessonId)) {
+        apiCompletedIdxs.push(idx);
+      }
+      if (flat.slide.apiLessonId) {
+        const record = progressRecords.find((r) => r.lesson === flat.slide.apiLessonId);
+        if (record && !record.completed) {
+          lastSlideIdx = idx;
         }
-      })
-      .catch((err) => console.error('Failed to load progress:', err));
-    return () => { cancelled = true; };
-  }, [enrollmentId, isAuthenticated, flatSlides]);
+      }
+    });
+
+    if (apiCompletedIdxs.length > 0) {
+      // MERGE with existing completedSlides — never remove entries
+      setCompletedSlides(prev => {
+        const merged = new Set([...prev, ...apiCompletedIdxs]);
+        return Array.from(merged).sort((a, b) => a - b);
+      });
+
+      // Only auto-navigate on the FIRST load (when user hasn't started reading yet)
+      if (!hasRestoredFromApi.current) {
+        hasRestoredFromApi.current = true;
+        const nextUncompleted = flatSlides.findIndex(
+          (_, idx) => !apiCompletedIdxs.includes(idx),
+        );
+        // If all completed, stay where user is; otherwise go to first uncompleted
+        if (nextUncompleted >= 0) {
+          setCurrentSlideIdx(nextUncompleted);
+        }
+      }
+    }
+  }, [progressRecords, flatSlides]);
 
   // Audio handling — prefer API audio URL (Supabase), fall back to static audio
   const currentFlat = flatSlides[currentSlideIdx];
@@ -1152,8 +1001,8 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
         // Save the completed slide to API
         saveProgressToApi(currentSlideIdx, true);
       }
-      // Save navigation to API (non-completed, debounced)
-      saveProgressToApi(idx, false);
+      // Save navigation to API — preserve existing completed status
+      saveProgressToApi(idx, completedSlides.includes(idx));
     }
   }, [flatSlides.length, completedSlides, currentSlideIdx, saveProgressToApi]);
 
@@ -1204,14 +1053,10 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
 
       // Submit quiz attempt to backend API if we have a real quiz ID
       if (mod.quiz?.apiQuizId && isAuthenticated) {
-        axiosClient.post('/formation/quiz-attempts/', {
-          quiz_id: mod.quiz.apiQuizId,
+        dispatch(submitQuizAttempt({
+          quizId: mod.quiz.apiQuizId,
           answers,
-        }).then((res) => {
-          console.log('[Quiz] Submitted to backend, passed:', res.data.passed, 'xp_earned:', res.data.xp_earned);
-        }).catch((err) => {
-          console.error('[Quiz] Failed to submit attempt:', err);
-        });
+        }));
       }
 
       setShowQuiz(false);

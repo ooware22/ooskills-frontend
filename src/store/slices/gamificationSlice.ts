@@ -79,6 +79,7 @@ export interface XPProfile {
   progress: number;                      // 0–100
   streak_days: number;
   longest_streak: number;
+  visible_on_leaderboard: boolean;
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -93,6 +94,7 @@ interface GamificationState {
   xpForNextLevel: number;
   streak: number;
   longestStreak: number;
+  visibleOnLeaderboard: boolean;
   profileLoading: boolean;
   profileError: string | null;
   lastFetchedProfile: number | null;
@@ -161,6 +163,7 @@ const initialState: GamificationState = {
   xpForNextLevel: 100,
   streak: 0,
   longestStreak: 0,
+  visibleOnLeaderboard: true,
   profileLoading: false,
   profileError: null,
   lastFetchedProfile: null,
@@ -232,10 +235,30 @@ export const fetchLeaderboard = createAsyncThunk(
   "gamification/fetchLeaderboard",
   async (period: "weekly" | "alltime", { getState }) => {
     const { data } = await api.get(`/gamification/leaderboard/?period=${period}`);
-    return {
-      period,
-      entries: extractResults<LeaderboardEntry>(data),
-    };
+    const entries = extractResults<LeaderboardEntry>(data);
+
+    // Mark the current user in the results
+    const state = getState() as RootState;
+    const currentUserId = state.auth?.user?.id;
+    if (currentUserId) {
+      entries.forEach((entry) => {
+        entry.isCurrentUser = String(entry.user?.id) === String(currentUserId);
+      });
+    }
+
+    return { period, entries };
+  },
+);
+
+/** Toggle the current user's leaderboard visibility */
+export const toggleLeaderboardVisibility = createAsyncThunk(
+  "gamification/toggleVisibility",
+  async (_, { getState, dispatch }) => {
+    const { data } = await api.post("/gamification/profile/toggle-visibility/");
+    // Refresh the leaderboard to reflect the change
+    const state = (getState() as RootState).gamification;
+    dispatch(fetchLeaderboard(state.leaderboardPeriod));
+    return data as { visible_on_leaderboard: boolean };
   },
 );
 
@@ -365,6 +388,7 @@ const gamificationSlice = createSlice({
           state.xpForNextLevel = data.xp_for_next_level ?? data.xp_for_current_level;
           state.streak = data.streak_days;
           state.longestStreak = data.longest_streak;
+          state.visibleOnLeaderboard = data.visible_on_leaderboard ?? true;
           state.lastFetchedProfile = Date.now();
           state._initialProfileLoaded = true;
 
@@ -453,6 +477,14 @@ const gamificationSlice = createSlice({
         state.leaderboardLoading = false;
       });
 
+    // ── Toggle Visibility ─────────────────────────────────────────
+    builder
+      .addCase(toggleLeaderboardVisibility.fulfilled, (state, action) => {
+        state.visibleOnLeaderboard = action.payload.visible_on_leaderboard;
+        // Invalidate profile cache
+        state.lastFetchedProfile = null;
+      });
+
     // ── Reset on logout ──────────────────────────────────────────
     builder
       .addCase(logout.fulfilled, () => initialState)
@@ -494,6 +526,7 @@ export const selectXPHistory = (state: RootState) => state.gamification.xpHistor
 export const selectXPHistoryLoading = (state: RootState) => state.gamification.xpHistoryLoading;
 export const selectLeaderboardPeriod = (state: RootState) => state.gamification.leaderboardPeriod;
 export const selectLevelTitleI18n = (state: RootState) => state.gamification.levelTitleI18n;
+export const selectVisibleOnLeaderboard = (state: RootState) => state.gamification.visibleOnLeaderboard;
 
 /** Returns 0–1 progress toward next level */
 export const selectLevelProgress = (state: RootState) => {

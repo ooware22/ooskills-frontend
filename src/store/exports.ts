@@ -312,3 +312,34 @@ export {
   LEVEL_THRESHOLDS,
 } from "./slices/gamificationSlice";
 export type { LevelInfo, Achievement, LeaderboardEntry, XPTransaction, XPProfile } from "./slices/gamificationSlice";
+
+// =============================================================================
+// LEARN SLICE EXPORTS
+// =============================================================================
+
+export {
+  default as learnReducer,
+  fetchCourseContentBySlug,
+  fetchQuizAttempts,
+  submitQuizAttempt,
+  fetchFinalQuizConfig,
+  generateFinalQuizQuestions,
+  submitFinalQuiz,
+  resetLearnState,
+  resetFinalQuiz,
+  clearContentError,
+  clearFinalQuizError,
+  // Selectors
+  selectLearnState,
+  selectCourseContent,
+  selectContentLoading,
+  selectContentError,
+  selectQuizPassedScores,
+  selectFinalQuizConfig,
+  selectFinalQuizQuestions,
+  selectFinalQuizResult,
+  selectFinalQuizLoading,
+  selectFinalQuizError,
+} from "./slices/learnSlice";
+export type { FinalQuizConfig, FinalQuizQuestion, FinalQuizResult } from "./slices/learnSlice";
+

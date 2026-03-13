@@ -24,11 +24,16 @@ function getEnrolledIds(): number[] {
   }
 }
 
-/** Progress map now supports both numeric IDs (legacy) and string slugs as keys */
-function getProgressMap(): Record<string, CourseProgress> {
+/** Progress map keyed per-user when userId is provided */
+function getProgressStorageKey(userId?: string | null): string {
+  if (userId) return `${PROGRESS_KEY}_${userId}`;
+  return PROGRESS_KEY;
+}
+
+function getProgressMap(userId?: string | null): Record<string, CourseProgress> {
   if (typeof window === 'undefined') return {};
   try {
-    const data = localStorage.getItem(PROGRESS_KEY);
+    const data = localStorage.getItem(getProgressStorageKey(userId));
     return data ? JSON.parse(data) : {};
   } catch {
     return {};
@@ -46,7 +51,11 @@ function createDefaultProgress(): CourseProgress {
   };
 }
 
-export function useEnrollment() {
+/**
+ * @param userId — optional user ID to isolate progress per student.
+ *                  When provided, localStorage progress is stored separately.
+ */
+export function useEnrollment(userId?: string | null) {
   const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -75,22 +84,22 @@ export function useEnrollment() {
       setEnrolledIds(updated);
 
       // Initialize progress
-      const progress = getProgressMap();
+      const progress = getProgressMap(userId);
       if (!progress[courseId]) {
         progress[courseId] = createDefaultProgress();
-        localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+        localStorage.setItem(getProgressStorageKey(userId), JSON.stringify(progress));
       }
     }
-  }, []);
+  }, [userId]);
 
   /**
    * Get progress by course key (slug or numeric ID).
    * Accepts string (slug) or number (legacy ID).
    */
   const getProgress = useCallback((courseKey: string | number): CourseProgress | null => {
-    const progress = getProgressMap();
+    const progress = getProgressMap(userId);
     return progress[String(courseKey)] || null;
-  }, []);
+  }, [userId]);
 
   /**
    * Update progress by course key (slug or numeric ID).
@@ -98,7 +107,7 @@ export function useEnrollment() {
    */
   const updateProgress = useCallback((courseKey: string | number, updates: Partial<CourseProgress>) => {
     const key = String(courseKey);
-    const progress = getProgressMap();
+    const progress = getProgressMap(userId);
     // Auto-init if missing (API-enrolled courses won't have localStorage entry)
     if (!progress[key]) {
       progress[key] = createDefaultProgress();
@@ -108,8 +117,8 @@ export function useEnrollment() {
       ...updates,
       lastAccessedAt: new Date().toISOString(),
     };
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
-  }, []);
+    localStorage.setItem(getProgressStorageKey(userId), JSON.stringify(progress));
+  }, [userId]);
 
   const getEnrolledCourses = useCallback(() => {
     return enrolledIds;
@@ -117,3 +126,4 @@ export function useEnrollment() {
 
   return { isEnrolled, enroll, getProgress, updateProgress, getEnrolledCourses, loaded };
 }
+

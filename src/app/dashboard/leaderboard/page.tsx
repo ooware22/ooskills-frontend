@@ -6,6 +6,8 @@ import {
   ChartBarIcon,
   CalendarDaysIcon,
   ClockIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 import StudentHeader from "@/components/student/StudentHeader";
 import LevelAvatar from "@/components/student/LevelAvatar";
@@ -14,8 +16,11 @@ import {
   selectLeaderboard,
   selectGamification,
   selectLeaderboardLoading,
+  selectVisibleOnLeaderboard,
   setLeaderboardPeriod,
   fetchLeaderboard,
+  fetchGamificationProfile,
+  toggleLeaderboardVisibility,
   LEVEL_THRESHOLDS,
   selectLevelProgress,
 } from "@/store/slices/gamificationSlice";
@@ -27,6 +32,12 @@ export default function LeaderboardPage() {
   const leaderboard = useAppSelector(selectLeaderboard);
   const leaderboardLoading = useAppSelector(selectLeaderboardLoading);
   const { leaderboardPeriod } = useAppSelector(selectGamification);
+  const visibleOnLeaderboard = useAppSelector(selectVisibleOnLeaderboard);
+
+  // Fetch profile (for level-up detection + visibility state) and leaderboard
+  useEffect(() => {
+    dispatch(fetchGamificationProfile());
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchLeaderboard(leaderboardPeriod));
@@ -99,6 +110,35 @@ export default function LeaderboardPage() {
           </div>
         </motion.div>
 
+        {/* Visibility toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="flex items-center justify-between mb-4 px-1"
+        >
+          <button
+            onClick={() => dispatch(toggleLeaderboardVisibility())}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+              visibleOnLeaderboard
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                : "bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500/20"
+            }`}
+          >
+            {visibleOnLeaderboard ? (
+              <>
+                <EyeIcon className="w-4 h-4" />
+                Visible sur le classement
+              </>
+            ) : (
+              <>
+                <EyeSlashIcon className="w-4 h-4" />
+                Masqué du classement
+              </>
+            )}
+          </button>
+        </motion.div>
+
         {/* Leaderboard table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -106,6 +146,20 @@ export default function LeaderboardPage() {
           transition={{ delay: 0.1 }}
           className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden"
         >
+          {leaderboardLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <ChartBarIcon className="w-12 h-12 text-silver/30 dark:text-white/10 mb-3" />
+              <p className="text-sm font-medium text-silver dark:text-white/40">
+                {leaderboardPeriod === "weekly"
+                  ? (t("gamification.leaderboard.emptyWeekly") || "No XP earned this week yet. Start learning!")
+                  : (t("gamification.leaderboard.emptyAlltime") || "No learners on the leaderboard yet.")}
+              </p>
+            </div>
+          ) : (
           <div className="divide-y divide-gray-100 dark:divide-white/5">
             {leaderboard.map((entry, index) => {
               const levelInfo = LEVEL_THRESHOLDS.find((l) => l.level === entry.level);
@@ -178,8 +232,10 @@ export default function LeaderboardPage() {
               );
             })}
           </div>
+          )}
         </motion.div>
       </div>
     </div>
   );
 }
+
