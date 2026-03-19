@@ -17,6 +17,7 @@ import {
   generateFinalQuizQuestions,
   submitFinalQuiz,
   resetFinalQuiz,
+  resetLearnState,
   selectFinalQuizConfig,
   selectFinalQuizQuestions,
   selectFinalQuizResult,
@@ -748,12 +749,34 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const staticContent = getCourseContentBySlug(slug);
   const apiContent = useAppSelector((s) => s.learn.courseContent);
   const contentLoading = useAppSelector((s) => s.learn.contentLoading);
+  const currentSlugInStore = useAppSelector((s) => s.learn.currentSlug);
 
-  // Fetch content from API if no static content available
+  // Reset learn state + local player state ONLY when switching to a DIFFERENT course
+  useEffect(() => {
+    if (currentSlugInStore && currentSlugInStore !== slug) {
+      dispatch(resetLearnState());
+      setCurrentSlideIdx(0);
+      setCompletedSlides([]);
+      setCompletedModules([]);
+      setQuizScores({});
+      setExpandedModules([0]);
+      setShowQuiz(false);
+      setShowFinalQuiz(false);
+      setShowMaterials(false);
+      setIsPlaying(false);
+      setAudioTime(0);
+      setAudioDuration(0);
+      hasRestoredFromApi.current = false;
+      lastSavedSlideRef.current = -1;
+    }
+  }, [slug, currentSlugInStore, dispatch]);
+
+  // Fetch content from API if no static content and not already loaded for this slug
   useEffect(() => {
     if (staticContent) return;
+    if (currentSlugInStore === slug && apiContent) return; // already loaded
     dispatch(fetchCourseContentBySlug(slug));
-  }, [slug, staticContent, dispatch]);
+  }, [slug, staticContent, currentSlugInStore, apiContent, dispatch]);
 
   const content = staticContent || apiContent;
   const courseTitle = content?.title || slug;

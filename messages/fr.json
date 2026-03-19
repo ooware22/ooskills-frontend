@@ -420,7 +420,7 @@
       "lastUpdated": "Dernière mise à jour",
       "levelInitialisation": "Initialisation",
       "levelApprofondissement": "Approfondissement",
-      "levelAdvanced": "Avancé",
+      "levelEtudeDeCas": "Étude de cas",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce cours ?",
       "confirmDeleteDesc": "Cette action est irréversible. Le cours sera définitivement supprimé.",
       "courseAdded": "Cours ajouté avec succès !",

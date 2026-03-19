@@ -101,7 +101,7 @@ const levelColor = (level: string) => {
   switch (level) {
     case "initialisation": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
     case "approfondissement": return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
-    case "advanced": return "bg-red-500/10 text-red-600 dark:text-red-400";
+    case "etude_de_cas": return "bg-red-500/10 text-red-600 dark:text-red-400";
     default: return "bg-gray-500/10 text-gray-600";
   }
 };
@@ -198,7 +198,7 @@ export default function CourseManagementPage() {
     switch (level) {
       case "initialisation": return tc("levelInitialisation");
       case "approfondissement": return tc("levelApprofondissement");
-      case "advanced": return tc("levelAdvanced");
+      case "etude_de_cas": return tc("levelEtudeDeCas");
       default: return level;
     }
   };
@@ -389,10 +389,19 @@ export default function CourseManagementPage() {
 
   const handleDelete = async () => {
     if (selectedCourse) {
+      setSaveError(null);
       const result = await dispatch(deleteAdminCourse(selectedCourse.id));
       if (deleteAdminCourse.fulfilled.match(result)) {
         showToast(tc("courseDeleted"));
         closeModal();
+      } else {
+        const errMsg = typeof result.payload === 'string'
+          ? result.payload
+          : (result.payload && typeof result.payload === 'object' && 'detail' in (result.payload as Record<string, unknown>))
+            ? String((result.payload as Record<string, unknown>).detail)
+            : tc("deleteError") || "Failed to delete course. It may have existing orders or enrollments.";
+        setSaveError(errMsg);
+        showToast(errMsg);
       }
     }
   };
@@ -460,7 +469,7 @@ export default function CourseManagementPage() {
               <option value="all" className="text-black">{tc("allLevels")}</option>
               <option value="initialisation" className="text-black">{tc("levelInitialisation")}</option>
               <option value="approfondissement" className="text-black">{tc("levelApprofondissement")}</option>
-              <option value="advanced" className="text-black">{tc("levelAdvanced")}</option>
+              <option value="etude_de_cas" className="text-black">{tc("levelEtudeDeCas")}</option>
             </select>
 
             {/* Category Filter */}
@@ -744,6 +753,12 @@ export default function CourseManagementPage() {
                       <p className="text-xs text-silver dark:text-white/40">{selectedCourse.slug}</p>
                     </div>
                   </div>
+                  {/* Delete error message */}
+                  {saveError && (
+                    <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
+                      <p className="text-xs text-red-700 dark:text-red-300">{saveError}</p>
+                    </div>
+                  )}
                   <div className="flex gap-3 pt-2">
                     <button onClick={closeModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                       {t("admin.common.cancel")}
@@ -939,7 +954,7 @@ export default function CourseManagementPage() {
                       >
                         <option value="initialisation" className="text-black">{tc("levelInitialisation")}</option>
                         <option value="approfondissement" className="text-black">{tc("levelApprofondissement")}</option>
-                        <option value="advanced" className="text-black">{tc("levelAdvanced")}</option>
+                        <option value="etude_de_cas" className="text-black">{tc("levelEtudeDeCas")}</option>
                       </select>
                     </div>
                   </div>
@@ -1268,7 +1283,17 @@ export default function CourseManagementPage() {
                             </label>
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
+                                // If the material has a real backend ID (not a temp ID), delete from server
+                                if (mat.id && !mat.id.startsWith('mat-')) {
+                                  try {
+                                    await axiosClient.delete(`/formation/course-materials/${mat.id}/`);
+                                  } catch (err) {
+                                    console.error('Failed to delete material:', err);
+                                    showToast(tc("deleteError") || "Failed to delete material");
+                                    return;
+                                  }
+                                }
                                 setFormData({ ...formData, materials: formData.materials.filter((_, i) => i !== idx) });
                               }}
                               className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"

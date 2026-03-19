@@ -19,6 +19,7 @@ export type { FinalQuizConfig, FinalQuizQuestion, FinalQuizResult };
 interface LearnState {
   // Course content (from API)
   courseContent: CourseContent | null;
+  currentSlug: string | null;
   contentLoading: boolean;
   contentError: string | null;
 
@@ -36,6 +37,7 @@ interface LearnState {
 
 const initialState: LearnState = {
   courseContent: null,
+  currentSlug: null,
   contentLoading: false,
   contentError: null,
 
@@ -190,6 +192,7 @@ const learnSlice = createSlice({
       })
       .addCase(fetchCourseContentBySlug.fulfilled, (state, action) => {
         state.courseContent = action.payload;
+        state.currentSlug = action.meta.arg; // track which slug was fetched
         state.contentLoading = false;
       })
       .addCase(fetchCourseContentBySlug.rejected, (state, action) => {
