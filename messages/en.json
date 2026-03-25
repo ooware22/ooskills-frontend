@@ -744,6 +744,7 @@
     "payment_payNow": "Pay Now",
     "payment_processing": "Processing Payment",
     "payment_doNotClose": "Please do not close this window...",
+    "payment_redirecting": "Redirecting to payment page...",
     "payment_success": "Payment Successful!",
     "payment_receiptSent": "A receipt has been sent to your email.",
     "payment_failed": "Payment Failed",

@@ -29,7 +29,7 @@ interface EnrollDialogProps {
 }
 
 type PaymentMethod = "edahabia" | "cib";
-type DialogStep = "choose" | "checkout" | "processing" | "success" | "error";
+type DialogStep = "choose" | "processing" | "success" | "error";
 
 export default function EnrollDialog({
   open,
@@ -46,12 +46,6 @@ export default function EnrollDialog({
   const [step, setStep] = useState<DialogStep>("choose");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("edahabia");
 
-  // Simulated card form fields (frontend-only)
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCVV, setCardCVV] = useState("");
-  const [cardName, setCardName] = useState("");
-
   const isFree = coursePrice === 0;
   const discount =
     courseOriginalPrice > coursePrice
@@ -62,40 +56,28 @@ export default function EnrollDialog({
 
   useEffect(() => {
     if (open) {
-      setStep(isFree ? "choose" : "choose");
+      setStep("choose");
       setPaymentMethod("edahabia");
-      setCardNumber("");
-      setCardExpiry("");
-      setCardCVV("");
-      setCardName("");
     }
-  }, [open, isFree]);
-
-  const handleProceedToCheckout = () => {
-    if (isFree) {
-      handleConfirmPayment();
-    } else {
-      setStep("checkout");
-    }
-  };
+  }, [open]);
 
   const handleConfirmPayment = async () => {
     setStep("processing");
     try {
       if (isFree) {
+        // Free course → direct enrollment
         const res = await dispatch(enrollInCourse(courseId)).unwrap();
         if (res) {
           await dispatch(fetchMyEnrollments());
           setStep("success");
         }
       } else {
-        const res = await dispatch(
+        // Paid course → create order → redirect to Chargily
+        await dispatch(
           createOrder({ courseIds: [courseId], paymentMethod }),
         ).unwrap();
-        if (res) {
-          await dispatch(fetchMyEnrollments());
-          setStep("success");
-        }
+        // If createOrder succeeds, the browser will redirect to Chargily checkout_url
+        // The processing spinner stays visible until the redirect happens
       }
     } catch {
       setStep("error");
@@ -108,25 +90,6 @@ export default function EnrollDialog({
     dispatch(clearOrderError());
     onClose();
   };
-
-  // Format card number with spaces
-  const formatCardNumber = (val: string) => {
-    const nums = val.replace(/\D/g, "").slice(0, 16);
-    return nums.replace(/(.{4})/g, "$1 ").trim();
-  };
-
-  // Format expiry as MM/YY
-  const formatExpiry = (val: string) => {
-    const nums = val.replace(/\D/g, "").slice(0, 4);
-    if (nums.length > 2) return nums.slice(0, 2) + "/" + nums.slice(2);
-    return nums;
-  };
-
-  const isCardValid =
-    cardNumber.replace(/\s/g, "").length === 16 &&
-    cardExpiry.length === 5 &&
-    cardCVV.length >= 3 &&
-    cardName.trim().length > 2;
 
   if (!open) return null;
 
@@ -294,7 +257,7 @@ export default function EnrollDialog({
                       {t("cancel") || "Cancel"}
                     </button>
                     <button
-                      onClick={handleProceedToCheckout}
+                      onClick={handleConfirmPayment}
                       className="flex-1 py-3 bg-gold hover:bg-gold/90 text-oxford font-semibold rounded-xl transition-colors text-sm"
                     >
                       {isFree
@@ -305,163 +268,26 @@ export default function EnrollDialog({
                 </>
               )}
 
-              {/* ───── STEP 2: Simulated Chargily Checkout Page ───── */}
-              {step === "checkout" && (
-                <>
-                  {/* Chargily header */}
-                  <div className="flex items-center gap-3 mb-6 pe-8">
-                    <Image
-                      src="/chargili.jpg"
-                      alt="Chargily"
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div>
-                      <h3 className="text-lg font-bold text-oxford dark:text-white">
-                        Chargily Pay
-                      </h3>
-                      <p className="text-xs text-silver dark:text-gray-400">
-                        {t("payment_checkout") || "Secure Checkout"}
-                      </p>
-                    </div>
-                    <div className="ms-auto flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-100 dark:border-white/10">
-                      <Image
-                        src={paymentMethod === "edahabia" ? "/EDAHABIA.png" : "/CIB.png"}
-                        alt={paymentMethod.toUpperCase()}
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 rounded-full object-cover"
-                      />
-                      <span className="text-[10px] font-semibold text-oxford dark:text-white uppercase">
-                        {paymentMethod}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 mb-5 flex items-center justify-between">
-                    <span className="text-sm text-silver dark:text-gray-400">
-                      {t("payment_total") || "Total"}
-                    </span>
-                    <span className="text-xl font-bold text-oxford dark:text-white">
-                      {coursePrice.toLocaleString()} {t("currency")}
-                    </span>
-                  </div>
-
-                  {/* Card form */}
-                  <div className="space-y-3 mb-5">
-                    <div>
-                      <label className="block text-xs font-medium text-silver dark:text-gray-400 mb-1.5">
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                        placeholder="0000 0000 0000 0000"
-                        maxLength={19}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 focus:outline-none focus:border-gold dark:focus:border-gold transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-silver dark:text-gray-400 mb-1.5">
-                        Name on Card
-                      </label>
-                      <input
-                        type="text"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="JOHN DOE"
-                        className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 focus:outline-none focus:border-gold dark:focus:border-gold transition-colors uppercase"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-silver dark:text-gray-400 mb-1.5">
-                          Expiry
-                        </label>
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                          placeholder="MM/YY"
-                          maxLength={5}
-                          className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 focus:outline-none focus:border-gold dark:focus:border-gold transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-silver dark:text-gray-400 mb-1.5">
-                          CVV
-                        </label>
-                        <input
-                          type="password"
-                          value={cardCVV}
-                          onChange={(e) => setCardCVV(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                          placeholder="***"
-                          maxLength={4}
-                          className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 focus:outline-none focus:border-gold dark:focus:border-gold transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setStep("choose")}
-                      className="flex-1 py-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white font-medium rounded-xl transition-colors text-sm"
-                    >
-                      {t("cancel") || "Cancel"}
-                    </button>
-                    <button
-                      onClick={handleConfirmPayment}
-                      disabled={!isCardValid}
-                      className={`flex-1 py-3 font-semibold rounded-xl transition-colors text-sm flex items-center justify-center gap-2 ${
-                        isCardValid
-                          ? "bg-gold hover:bg-gold/90 text-oxford"
-                          : "bg-gray-200 dark:bg-white/10 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                      }`}
-                    >
-                      <LockClosedIcon className="w-4 h-4" />
-                      {t("confirmEnroll") || "Confirm Payment"}
-                    </button>
-                  </div>
-
-                  {/* Security footer */}
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-center gap-1.5">
-                    <LockClosedIcon className="w-3 h-3 text-silver dark:text-gray-500" />
-                    <span className="text-[10px] text-silver dark:text-gray-500">
-                      SSL Encrypted
-                    </span>
-                    <span className="text-[10px] text-silver dark:text-gray-500">·</span>
-                    <span className="text-[10px] text-silver dark:text-gray-500">
-                      Chargily Pay
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {/* ───── STEP 3: Processing ───── */}
+              {/* ───── STEP 2: Processing ───── */}
               {step === "processing" && (
                 <div className="py-8 text-center">
                   <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
                   <p className="text-sm text-silver dark:text-gray-400">
-                    {t("payment_processing") || "Processing Payment..."}
+                    {isFree
+                      ? (t("payment_processing") || "Processing...")
+                      : (t("payment_redirecting") || "Redirecting to payment page...")}
                   </p>
                 </div>
               )}
 
-              {/* ───── STEP 4: Success ───── */}
+              {/* ───── STEP 3: Success (free courses only) ───── */}
               {step === "success" && (
                 <div className="py-6 text-center">
                   <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircleIcon className="w-8 h-8 text-emerald-500" />
                   </div>
                   <h3 className="text-lg font-bold text-oxford dark:text-white mb-2">
-                    {isFree
-                      ? (t("enrolled") || "Enrolled!")
-                      : (t("payment_success") || "Payment Successful!")}
+                    {t("enrolled") || "Enrolled!"}
                   </h3>
                   <p className="text-sm text-silver dark:text-gray-400 mb-6">
                     {t("enrollSuccess") || "You have been successfully enrolled."}
@@ -475,7 +301,7 @@ export default function EnrollDialog({
                 </div>
               )}
 
-              {/* ───── STEP 5: Error ───── */}
+              {/* ───── STEP 4: Error ───── */}
               {step === "error" && (
                 <div className="py-6 text-center">
                   <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">

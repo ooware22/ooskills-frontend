@@ -713,6 +713,7 @@
     "payment_payNow": "ادفع الآن",
     "payment_processing": "جاري معالجة الدفع",
     "payment_doNotClose": "يرجى عدم إغلاق هذه النافذة...",
+    "payment_redirecting": "جاري التحويل إلى صفحة الدفع...",
     "payment_success": "تم الدفع بنجاح!",
     "payment_receiptSent": "تم إرسال إيصال إلى بريدك الإلكتروني.",
     "payment_failed": "فشل الدفع",

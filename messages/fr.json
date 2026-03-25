@@ -713,6 +713,7 @@
     "payment_payNow": "Payer maintenant",
     "payment_processing": "Traitement du paiement",
     "payment_doNotClose": "Veuillez ne pas fermer cette fenêtre...",
+    "payment_redirecting": "Redirection vers la page de paiement...",
     "payment_success": "Paiement réussi !",
     "payment_receiptSent": "Un reçu a été envoyé à votre email.",
     "payment_failed": "Échec du paiement",

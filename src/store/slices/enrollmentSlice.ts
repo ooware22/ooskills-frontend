@@ -34,6 +34,7 @@ export interface Order {
   status: "pending" | "paid" | "failed" | "refunded";
   paymentMethod: string;
   paymentRef: string;
+  checkout_url?: string;
   items: OrderItem[];
   created_at: string;
   updated_at: string;
@@ -184,6 +185,14 @@ export const createOrder = createAsyncThunk(
         course_ids: payload.courseIds,
         paymentMethod: payload.paymentMethod,
       });
+
+      // If Chargily checkout_url is returned, redirect to payment page
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+        // Return the order but the page will navigate away
+        return data as Order;
+      }
+
       return data as Order;
     } catch (err: any) {
       const msg = err?.response?.data?.detail || "Order creation failed";
