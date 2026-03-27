@@ -251,7 +251,8 @@
       "coursesList": "Cours",
       "categoriesList": "Catégories",
       "gamification": "Gamification",
-      "achievements": "Réalisations"
+      "achievements": "Réalisations",
+      "promoCodes": "Codes Promo"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -718,6 +719,8 @@
     "payment_receiptSent": "Un reçu a été envoyé à votre email.",
     "payment_failed": "Échec du paiement",
     "payment_failedDesc": "Une erreur est survenue lors du paiement. Veuillez réessayer.",
+    "promo_placeholder": "Code promo",
+    "promo_apply": "Appliquer",
     "rating_section": {
       "title": "Notes & Avis",
       "reviewsCount": "avis",

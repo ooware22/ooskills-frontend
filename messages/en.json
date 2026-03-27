@@ -282,7 +282,8 @@
       "coursesList": "Courses",
       "categoriesList": "Categories",
       "gamification": "Gamification",
-      "achievements": "Achievements"
+      "achievements": "Achievements",
+      "promoCodes": "Promo Codes"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -749,6 +750,8 @@
     "payment_receiptSent": "A receipt has been sent to your email.",
     "payment_failed": "Payment Failed",
     "payment_failedDesc": "Something went wrong with your payment. Please try again.",
+    "promo_placeholder": "Promo code",
+    "promo_apply": "Apply",
     "rating_section": {
       "title": "Ratings & Reviews",
       "reviewsCount": "reviews",

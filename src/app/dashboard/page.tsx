@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BookOpenIcon,
@@ -11,6 +11,9 @@ import {
   ArrowRightIcon,
   AcademicCapIcon,
   TrophyIcon,
+  GiftIcon,
+  UserPlusIcon,
+  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { FireIcon } from "@heroicons/react/24/solid";
 import { useI18n } from "@/lib/i18n";
@@ -23,6 +26,8 @@ import LevelUpModal from "@/components/student/LevelUpModal";
 import XPGainToast from "@/components/student/XPGainToast";
 import AchievementToast from "@/components/student/AchievementToast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { giftApi, type CourseGift } from "@/services/promoGiftApi";
+import axiosClient from "@/lib/axios";
 import {
   fetchMyEnrollments,
   fetchMyQuizAttempts,
@@ -70,6 +75,44 @@ export default function StudentDashboard() {
       dispatch(fetchAchievements());
     }
   }, [dispatch, isAuthenticated]);
+
+  // ── Gift & Referral state ────────────────────────────────────────────
+  const [sentGifts, setSentGifts] = useState<CourseGift[]>([]);
+  const [receivedGifts, setReceivedGifts] = useState<CourseGift[]>([]);
+  const [referralCode, setReferralCode] = useState("");
+  const [referralLoaded, setReferralLoaded] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    giftApi.mySent().then(setSentGifts).catch(() => {});
+    giftApi.myReceived().then(setReceivedGifts).catch(() => {});
+    axiosClient.get('/auth/my-referral-code/')
+      .then((r: any) => {
+        const code = r.data?.code;
+        if (code) {
+          setReferralCode(code);
+          setReferralLoaded(true);
+        } else {
+          // Code doesn't exist yet, generate via POST
+          axiosClient.post('/auth/my-referral-code/')
+            .then((r2: any) => { setReferralCode(r2.data?.code || ''); setReferralLoaded(true); })
+            .catch(() => { setReferralCode(''); setReferralLoaded(true); });
+        }
+      })
+      .catch(() => {
+        axiosClient.post('/auth/my-referral-code/')
+          .then((r: any) => { setReferralCode(r.data?.code || ''); setReferralLoaded(true); })
+          .catch(() => { setReferralCode(''); setReferralLoaded(true); });
+      });
+  }, [isAuthenticated]);
+
+  const copyReferralLink = () => {
+    const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
+    navigator.clipboard.writeText(link);
+    setReferralCopied(true);
+    setTimeout(() => setReferralCopied(false), 2000);
+  };
 
   // ── Computed stats ──────────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -224,6 +267,93 @@ export default function StudentDashboard() {
         {/* XP Progress Bar */}
         <div className="mb-8">
           <XPProgressBar />
+        </div>
+
+        {/* ── Gifts & Referral Row ── */}
+        <div className="grid lg:grid-cols-2 gap-4 mb-8">
+          {/* My Gifts */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10"
+          >
+            <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center gap-2">
+              <GiftIcon className="w-4 h-4 text-gold" />
+              <h3 className="text-sm font-semibold text-oxford dark:text-white">
+                Mes Cadeaux
+              </h3>
+            </div>
+            {sentGifts.length === 0 && receivedGifts.length === 0 ? (
+              <div className="p-6 text-center">
+                <GiftIcon className="w-8 h-8 text-silver/30 mx-auto mb-2" />
+                <p className="text-xs text-silver dark:text-white/50">Aucun cadeau pour le moment</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-48 overflow-y-auto">
+                {[...sentGifts.map(g => ({ ...g, _dir: 'sent' as const })), ...receivedGifts.map(g => ({ ...g, _dir: 'received' as const }))]
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .slice(0, 6)
+                  .map((g) => (
+                    <div key={g.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-oxford dark:text-white truncate">
+                          {g._dir === 'sent' ? `→ ${g.recipient_email}` : `← ${g.sender_name}`}
+                        </p>
+                        <p className="text-[10px] text-silver dark:text-white/40 truncate">{g.course_title}</p>
+                      </div>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                        g.status === 'claimed' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : g.status === 'expired' ? 'bg-red-50 dark:bg-red-500/10 text-red-500'
+                          : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {g.status === 'claimed' ? 'Réclamé' : g.status === 'expired' ? 'Expiré' : 'En attente'}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Referral / Invite Friends */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10"
+          >
+            <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center gap-2">
+              <UserPlusIcon className="w-4 h-4 text-gold" />
+              <h3 className="text-sm font-semibold text-oxford dark:text-white">Inviter des amis</h3>
+            </div>
+            <div className="p-5">
+              <p className="text-xs text-silver dark:text-white/50 mb-4">
+                Partagez votre lien de parrainage et gagnez des récompenses quand vos amis s&apos;inscrivent.
+              </p>
+              {referralCode ? (
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-oxford dark:text-white truncate">
+                    {referralCode}
+                  </div>
+                  <button
+                    onClick={copyReferralLink}
+                    className={`px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                      referralCopied
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-gold hover:bg-gold/90 text-oxford'
+                    }`}
+                  >
+                    <ClipboardDocumentIcon className="w-4 h-4" />
+                    {referralCopied ? 'Copié !' : 'Copier'}
+                  </button>
+                </div>
+              ) : !referralLoaded ? (
+                <p className="text-xs text-silver dark:text-white/40 italic">Chargement...</p>
+              ) : (
+                <p className="text-xs text-silver dark:text-white/40 italic">Code indisponible pour le moment.</p>
+              )}
+            </div>
+          </motion.div>
         </div>
 
         {/* Recent Achievements */}

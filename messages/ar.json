@@ -251,7 +251,8 @@
       "coursesList": "الدورات",
       "categoriesList": "الفئات",
       "gamification": "التلعيب",
-      "achievements": "الإنجازات"
+      "achievements": "الإنجازات",
+      "promoCodes": "أكواد الخصم"
     },
     "dashboard": {
       "title": "لوحة التحكم",
@@ -718,6 +719,8 @@
     "payment_receiptSent": "تم إرسال إيصال إلى بريدك الإلكتروني.",
     "payment_failed": "فشل الدفع",
     "payment_failedDesc": "حدث خطأ أثناء الدفع. يرجى المحاولة مرة أخرى.",
+    "promo_placeholder": "كود الخصم",
+    "promo_apply": "تطبيق",
     "rating_section": {
       "title": "التقييمات والمراجعات",
       "reviewsCount": "مراجعات",

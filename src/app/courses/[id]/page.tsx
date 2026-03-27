@@ -8,6 +8,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EnrollDialog from "@/components/EnrollDialog";
+import GiftDialog from "@/components/GiftDialog";
 import CourseRatingSection from "@/components/CourseRatingSection";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -28,6 +29,7 @@ import {
   PlayCircleIcon,
   HeartIcon,
   ShieldCheckIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 
@@ -55,6 +57,7 @@ export default function CourseDetailPage({
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
 
   // Check if user is enrolled in this course (compare by slug)
   const enrolled = enrollments.some((e) => e.course_slug === slug);
@@ -436,10 +439,24 @@ export default function CourseDetailPage({
                     {t("enrollNow")}
                   </button>
                 )}
-                <button className="w-full py-3.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
-                  <HeartIcon className="w-4 h-4" />
-                  {t("addToWishlist")}
-                </button>
+                <div className="flex gap-2">
+                  <button className="flex-1 py-3.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
+                    <HeartIcon className="w-4 h-4" />
+                    {t("addToWishlist")}
+                  </button>
+                  {course.price > 0 && (
+                    <button
+                      onClick={() => {
+                        if (!isAuthenticated) { router.push('/signin'); return; }
+                        setGiftDialogOpen(true);
+                      }}
+                      className="py-3.5 px-4 bg-gold/10 hover:bg-gold/20 text-gold font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                      title="Offrir ce cours"
+                    >
+                      <GiftIcon className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
 
                 {/* Course Info */}
                 <div className="mt-6 pt-6 border-t border-gray-100 dark:border-white/5 space-y-4">
@@ -507,6 +524,16 @@ export default function CourseDetailPage({
           courseTitle={course.title}
           coursePrice={course.price}
           courseOriginalPrice={course.originalPrice}
+        />
+      )}
+
+      {/* Gift Dialog */}
+      {course && (
+        <GiftDialog
+          open={giftDialogOpen}
+          onClose={() => setGiftDialogOpen(false)}
+          courseId={String(course.id)}
+          courseTitle={course.title}
         />
       )}
     </>

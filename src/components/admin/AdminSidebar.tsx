@@ -72,6 +72,7 @@ const navItems: NavItem[] = [
     children: [
       { href: "/admin/course-management", labelKey: "coursesList", icon: BookOpen },
       { href: "/admin/course-categories", labelKey: "categoriesList", icon: Tag },
+      { href: "/admin/promo-codes", labelKey: "promoCodes", icon: Tag },
     ],
   },
   {

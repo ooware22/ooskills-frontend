@@ -176,6 +176,8 @@ function SlideContent({ slide }: { slide: Slide }) {
 }
 
 /* ─────────────── Quiz Component ─────────────── */
+const MAX_QUIZ_ATTEMPTS = 3;
+
 function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule['quiz']>; onComplete: (score: number, answers: Record<string, number>) => void }) {
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -183,14 +185,15 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
   const [scores, setScores] = useState<boolean[]>([]);
   const [selections, setSelections] = useState<(number | null)[]>([]);
   const [showResults, setShowResults] = useState(false);
-  // Accumulate answers keyed by real question ID (apiQuestionId or fallback id)
   const [answersMap, setAnswersMap] = useState<Record<string, number>>({});
+  // Attempt tracking — corrections only show on last attempt or when passed
+  const [attemptCount, setAttemptCount] = useState(1);
 
   const question = quiz.questions[currentQ];
   const isLast = currentQ === quiz.questions.length - 1;
 
-  // Reset the quiz so the student can try again
   const handleRetry = () => {
+    setAttemptCount(prev => prev + 1);
     setCurrentQ(0);
     setSelected(null);
     setShowExplanation(false);
@@ -223,6 +226,8 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
   const correctCount = scores.filter(Boolean).length;
   const pct = quiz.questions.length > 0 ? Math.round((correctCount / quiz.questions.length) * 100) : 0;
   const passed = pct >= (quiz.pass_threshold || 70);
+  // Show corrections only when passed OR all attempts used
+  const showCorrections = passed || attemptCount >= MAX_QUIZ_ATTEMPTS;
 
   /* ─── Results Summary ─── */
   if (showResults) {
@@ -242,53 +247,60 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           <p className="text-gray-400 text-sm mt-2">
             {correctCount} / {quiz.questions.length} إجابات صحيحة
           </p>
+          {!passed && !showCorrections && (
+            <p className="text-gray-500 text-xs mt-2">
+              المحاولة {attemptCount} / {MAX_QUIZ_ATTEMPTS} — ستظهر التصحيحات بعد استنفاد المحاولات
+            </p>
+          )}
         </motion.div>
 
-        {/* Question-by-question review */}
-        <div className="space-y-4 mb-8">
-          {quiz.questions.map((q, qi) => {
-            const userAnswer = selections[qi];
-            const isCorrect = userAnswer === q.correct_answer;
-            return (
-              <motion.div key={qi} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: qi * 0.05 }}
-                className={`p-5 rounded-xl border ${
-                  isCorrect ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
-                }`}>
-                <div className="flex items-start gap-3 mb-3">
-                  <span className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
-                    isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+        {/* Question-by-question review — only when corrections are unlocked */}
+        {showCorrections && (
+          <div className="space-y-4 mb-8">
+            {quiz.questions.map((q, qi) => {
+              const userAnswer = selections[qi];
+              const isCorrect = userAnswer === q.correct_answer;
+              return (
+                <motion.div key={qi} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: qi * 0.05 }}
+                  className={`p-5 rounded-xl border ${
+                    isCorrect ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
                   }`}>
-                    {isCorrect ? '✓' : '✗'}
-                  </span>
-                  <h4 className="text-white font-semibold text-right flex-1" dir="rtl">{q.question}</h4>
-                </div>
-
-                <div className="space-y-2 mr-10" dir="rtl">
-                  {q.options.map((opt, oi) => {
-                    let optCls = 'text-gray-500';
-                    if (oi === q.correct_answer) optCls = 'text-emerald-400 font-semibold';
-                    else if (oi === userAnswer && oi !== q.correct_answer) optCls = 'text-red-400 line-through';
-                    return (
-                      <div key={oi} className={`flex items-center gap-2 text-sm ${optCls}`}>
-                        {oi === q.correct_answer && <span>✅</span>}
-                        {oi === userAnswer && oi !== q.correct_answer && <span>❌</span>}
-                        {oi !== q.correct_answer && oi !== userAnswer && <span className="w-5 inline-block" />}
-                        <span>{opt}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {q.explanation && (
-                  <div className="mt-3 mr-10 p-3 bg-white/5 rounded-lg border border-white/5" dir="rtl">
-                    <p className="text-gray-400 text-xs">{q.explanation}</p>
+                  <div className="flex items-start gap-3 mb-3">
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
+                      isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                    <h4 className="text-white font-semibold text-right flex-1" dir="rtl">{q.question}</h4>
                   </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
+
+                  <div className="space-y-2 mr-10" dir="rtl">
+                    {q.options.map((opt, oi) => {
+                      let optCls = 'text-gray-500';
+                      if (oi === q.correct_answer) optCls = 'text-emerald-400 font-semibold';
+                      else if (oi === userAnswer && oi !== q.correct_answer) optCls = 'text-red-400 line-through';
+                      return (
+                        <div key={oi} className={`flex items-center gap-2 text-sm ${optCls}`}>
+                          {oi === q.correct_answer && <span>✅</span>}
+                          {oi === userAnswer && oi !== q.correct_answer && <span>❌</span>}
+                          {oi !== q.correct_answer && oi !== userAnswer && <span className="w-5 inline-block" />}
+                          <span>{opt}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {q.explanation && (
+                    <div className="mt-3 mr-10 p-3 bg-white/5 rounded-lg border border-white/5" dir="rtl">
+                      <p className="text-gray-400 text-xs">{q.explanation}</p>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="text-center flex items-center justify-center gap-4">
@@ -328,8 +340,10 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           {question.options.map((opt, i) => {
             let cls = 'border-white/10 hover:border-white/20 bg-white/5';
             if (showExplanation) {
-              if (i === question.correct_answer) cls = 'border-emerald-500 bg-emerald-500/10';
+              if (i === selected && i === question.correct_answer) cls = 'border-emerald-500 bg-emerald-500/10';
               else if (i === selected && i !== question.correct_answer) cls = 'border-red-500 bg-red-500/10';
+              // Don't reveal the correct answer inline if corrections are locked
+              else if (showCorrections && i === question.correct_answer) cls = 'border-emerald-500 bg-emerald-500/10';
             } else if (i === selected) {
               cls = 'border-gold bg-gold/10';
             }
@@ -342,7 +356,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           })}
         </div>
 
-        {showExplanation && (
+        {showExplanation && showCorrections && question.explanation && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl" dir="rtl">
             <p className="text-gray-300 text-sm">{question.explanation}</p>
@@ -557,6 +571,9 @@ function FinalQuizView({
 
   /* ─── Results (Failed) ─── */
   if (phase === 'results' && result) {
+    // Only show corrections on last attempt (remaining_attempts === 0)
+    const showFinalCorrections = result.remaining_attempts === 0;
+
     return (
       <div className="max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -568,6 +585,11 @@ function FinalQuizView({
               ? `المحاولات المتبقية: ${result.remaining_attempts}`
               : 'محاولات غير محدودة'}
           </p>
+          {!showFinalCorrections && result.remaining_attempts !== null && (
+            <p className="text-gray-500 text-xs mt-2">
+              ستظهر التصحيحات بعد استنفاد جميع المحاولات
+            </p>
+          )}
         </motion.div>
 
         {/* Motivational Audio */}
@@ -590,50 +612,51 @@ function FinalQuizView({
           </motion.div>
         )}
 
-        {/* Feedback per question */}
-        <div className="space-y-4 mb-8">
-          {result.feedback.map((fb, qi) => (
-            <motion.div key={qi} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: qi * 0.05 }}
-              className={`p-5 rounded-xl border ${
-                fb.is_correct ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
-              }`}>
-              <div className="flex items-start gap-3 mb-3">
-                <span className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
-                  fb.is_correct ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+        {/* Feedback per question — only on last attempt */}
+        {showFinalCorrections && (
+          <div className="space-y-4 mb-8">
+            {result.feedback.map((fb, qi) => (
+              <motion.div key={qi} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: qi * 0.05 }}
+                className={`p-5 rounded-xl border ${
+                  fb.is_correct ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
                 }`}>
-                  {fb.is_correct ? '✓' : '✗'}
-                </span>
-                <div className="flex-1 text-right" dir="rtl">
-                  {/* Find the question text from our questions array */}
-                  <h4 className="text-white font-semibold mb-2">
-                    {questions.find(q => q.id === fb.question_id)?.question || `سؤال ${qi + 1}`}
-                  </h4>
-                  <div className="space-y-1 text-sm">
-                    {questions.find(q => q.id === fb.question_id)?.options.map((opt, oi) => {
-                      let optCls = 'text-gray-500';
-                      if (oi === fb.correct_answer) optCls = 'text-emerald-400 font-semibold';
-                      else if (oi === fb.selected && oi !== fb.correct_answer) optCls = 'text-red-400 line-through';
-                      return (
-                        <div key={oi} className={`flex items-center gap-2 ${optCls}`}>
-                          {oi === fb.correct_answer && <span>✅</span>}
-                          {oi === fb.selected && oi !== fb.correct_answer && <span>❌</span>}
-                          {oi !== fb.correct_answer && oi !== fb.selected && <span className="w-5 inline-block" />}
-                          <span>{opt}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {fb.explanation && (
-                    <div className="mt-2 p-2 bg-white/5 rounded-lg border border-white/5">
-                      <p className="text-gray-400 text-xs">{fb.explanation}</p>
+                <div className="flex items-start gap-3 mb-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
+                    fb.is_correct ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {fb.is_correct ? '✓' : '✗'}
+                  </span>
+                  <div className="flex-1 text-right" dir="rtl">
+                    <h4 className="text-white font-semibold mb-2">
+                      {questions.find(q => q.id === fb.question_id)?.question || `سؤال ${qi + 1}`}
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      {questions.find(q => q.id === fb.question_id)?.options.map((opt, oi) => {
+                        let optCls = 'text-gray-500';
+                        if (oi === fb.correct_answer) optCls = 'text-emerald-400 font-semibold';
+                        else if (oi === fb.selected && oi !== fb.correct_answer) optCls = 'text-red-400 line-through';
+                        return (
+                          <div key={oi} className={`flex items-center gap-2 ${optCls}`}>
+                            {oi === fb.correct_answer && <span>✅</span>}
+                            {oi === fb.selected && oi !== fb.correct_answer && <span>❌</span>}
+                            {oi !== fb.correct_answer && oi !== fb.selected && <span className="w-5 inline-block" />}
+                            <span>{opt}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
+                    {fb.explanation && (
+                      <div className="mt-2 p-2 bg-white/5 rounded-lg border border-white/5">
+                        <p className="text-gray-400 text-xs">{fb.explanation}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         <div className="text-center flex items-center justify-center gap-4">
           {result.remaining_attempts !== 0 && (
@@ -1129,6 +1152,13 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const toggleModule = (idx: number) => {
     setExpandedModules(prev => prev.includes(idx) ? prev.filter(x => x !== idx) : [...prev, idx]);
   };
+
+  // Auto-expand sidebar module when the current slide changes to a different module
+  useEffect(() => {
+    if (currentFlat && !expandedModules.includes(currentFlat.moduleIndex)) {
+      setExpandedModules(prev => [...prev, currentFlat.moduleIndex]);
+    }
+  }, [currentSlideIdx, currentFlat]);
 
   // Sidebar resize handlers
   const handleResizeStart = useCallback((e: React.PointerEvent) => {

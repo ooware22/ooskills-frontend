@@ -67,6 +67,14 @@ import JsonBulkImport from "./JsonBulkImport";
 // =============================================================================
 const uid = () => crypto.randomUUID();
 
+type FinalQuizAudioEntry = {
+  id: string;
+  min_percentage: number;
+  max_percentage: number;
+  label: string;
+  audio: string | null;
+};
+
 type FinalQuizData = {
   id: string;
   title: string;
@@ -75,6 +83,16 @@ type FinalQuizData = {
   max_attempts: number;
   xp_reward: number;
   motivation_audio?: string;
+  audio_entries?: FinalQuizAudioEntry[];
+};
+
+type FqAudioRow = {
+  id: string;           // existing backend id or '' for new
+  min_percentage: number;
+  max_percentage: number;
+  label: string;
+  audioFile: File | null;  // new upload
+  audioPreview: string | null; // existing URL or object URL
 };
 
 
@@ -185,6 +203,10 @@ export default function CourseContentPage() {
   const [fqAudioFile, setFqAudioFile] = useState<File | null>(null);
   const [fqAudioPreview, setFqAudioPreview] = useState<string | null>(null);
   const [fqClearAudio, setFqClearAudio] = useState(false);
+
+  // Percentage-based audio entries
+  const [fqAudioRows, setFqAudioRows] = useState<FqAudioRow[]>([]);
+  const fqAudioRowRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SECTION CRUD
@@ -459,7 +481,29 @@ export default function CourseContentPage() {
     setFqAudioFile(null);
     setFqAudioPreview(finalQuiz?.motivation_audio || null);
     setFqClearAudio(false);
+    // Load existing audio entries
+    setFqAudioRows(
+      (finalQuiz?.audio_entries || []).map(e => ({
+        id: e.id,
+        min_percentage: e.min_percentage,
+        max_percentage: e.max_percentage,
+        label: e.label,
+        audioFile: null,
+        audioPreview: e.audio,
+      }))
+    );
     setFqModal(mode);
+  };
+
+  // Audio row helpers
+  const addAudioRow = () => setFqAudioRows(prev => [...prev, { id: '', min_percentage: 0, max_percentage: 100, label: '', audioFile: null, audioPreview: null }]);
+  const removeAudioRow = (idx: number) => setFqAudioRows(prev => prev.filter((_, i) => i !== idx));
+  const updateAudioRow = (idx: number, field: keyof FqAudioRow, val: unknown) => {
+    setFqAudioRows(prev => { const rows = [...prev]; rows[idx] = { ...rows[idx], [field]: val }; return rows; });
+  };
+  const handleAudioRowFile = (idx: number, file: File) => {
+    updateAudioRow(idx, 'audioFile', file);
+    updateAudioRow(idx, 'audioPreview', URL.createObjectURL(file));
   };
 
   const saveFinalQuiz = async () => {
@@ -479,6 +523,21 @@ export default function CourseContentPage() {
       } else if (fqClearAudio) {
         formData.append('clear_motivation_audio', 'true');
       }
+
+      // Append percentage-based audio entries
+      fqAudioRows.forEach((row, i) => {
+        if (row.id) formData.append(`audio_entries[${i}].id`, row.id);
+        formData.append(`audio_entries[${i}].min_percentage`, String(row.min_percentage));
+        formData.append(`audio_entries[${i}].max_percentage`, String(row.max_percentage));
+        formData.append(`audio_entries[${i}].label`, row.label);
+        if (row.audioFile) {
+          formData.append(`audio_entries[${i}].audio`, row.audioFile);
+        }
+      });
+      if (fqAudioRows.length === 0) {
+        formData.append('clear_audio_entries', 'true');
+      }
+
       const res = await api.post("/formation/final-quiz/admin/upsert/", formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -785,8 +844,23 @@ export default function CourseContentPage() {
                 {finalQuiz.motivation_audio && (
                   <div className="flex items-center gap-2 p-3 bg-gold/5 rounded-xl border border-gold/20">
                     <span className="text-gold text-sm">🎧</span>
-                    <span className="text-xs text-gold font-medium">Motivation audio attached</span>
+                    <span className="text-xs text-gold font-medium">Legacy motivation audio</span>
                     <audio src={finalQuiz.motivation_audio} controls className="h-8 ml-auto" />
+                  </div>
+                )}
+                {(finalQuiz.audio_entries || []).length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider">Audio by score range</p>
+                    {finalQuiz.audio_entries!.map(entry => (
+                      <div key={entry.id} className="flex items-center gap-2 p-3 bg-purple-500/5 rounded-xl border border-purple-500/20">
+                        <span className="text-purple-500 text-sm">🎧</span>
+                        <span className="text-xs text-purple-500 font-medium">
+                          {entry.min_percentage}%–{entry.max_percentage}%
+                          {entry.label ? ` • ${entry.label}` : ''}
+                        </span>
+                        {entry.audio && <audio src={entry.audio} controls className="h-8 ml-auto" />}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -809,7 +883,7 @@ export default function CourseContentPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setFqModal(null)} />
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className={cn("relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden", fqModal === "delete" ? "max-w-md" : "max-w-lg")}
+              className={cn("relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden max-h-[85vh] overflow-y-auto", fqModal === "delete" ? "max-w-md" : "max-w-lg")}
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-semibold text-oxford dark:text-white">
@@ -857,43 +931,63 @@ export default function CourseContentPage() {
                     The questions will be randomly drawn from all section quizzes in this course.
                   </p>
 
-                  {/* Motivation Audio Upload */}
-                  <div className="border-t border-gray-200 dark:border-white/10 pt-4">
-                    <label className={LabelClass}>🎧 Motivation Audio (plays when student fails)</label>
-                    <input
-                      ref={fqAudioInputRef}
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setFqAudioFile(file);
-                          setFqAudioPreview(URL.createObjectURL(file));
-                          setFqClearAudio(false);
-                        }
-                      }}
-                    />
-                    {fqAudioPreview && !fqClearAudio ? (
-                      <div className="flex items-center gap-3 p-3 bg-gold/5 rounded-xl border border-gold/20">
-                        <audio src={fqAudioPreview} controls className="flex-1 h-8" />
-                        <button
-                          type="button"
-                          onClick={() => { setFqAudioFile(null); setFqAudioPreview(null); setFqClearAudio(true); }}
-                          className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => fqAudioInputRef.current?.click()}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl text-sm text-silver dark:text-white/40 hover:border-gold/50 hover:text-gold transition-colors"
-                      >
-                        📂 Upload audio file
+                  {/* ── Percentage-based Audio Entries ── */}
+                  <div className="border-t border-gray-200 dark:border-white/10 pt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className={LabelClass}>🎧 Audio by Score Percentage</label>
+                      <button type="button" onClick={addAudioRow} className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-400 font-medium">
+                        <PlusCircleIcon className="w-4 h-4" /> Add range
                       </button>
+                    </div>
+                    <p className="text-[10px] text-silver dark:text-white/40 -mt-1">Add different audio files for different score ranges (e.g. 0–20%, 21–40%…)</p>
+
+                    {fqAudioRows.length === 0 && (
+                      <p className="text-xs text-center text-silver dark:text-white/30 py-3">No audio ranges configured yet. Click &quot;Add range&quot; above.</p>
                     )}
+
+                    {fqAudioRows.map((row, idx) => (
+                      <div key={idx} className="p-3 bg-purple-500/5 rounded-xl border border-purple-500/10 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-purple-500">Range #{idx + 1}</span>
+                          <button type="button" onClick={() => removeAudioRow(idx)} className="p-1 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                            <MinusCircleIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="text-[10px] text-silver dark:text-white/40">Min %</label>
+                            <input type="number" min={0} max={100} value={row.min_percentage} onChange={e => updateAudioRow(idx, 'min_percentage', Number(e.target.value))} className={InputClass} />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-silver dark:text-white/40">Max %</label>
+                            <input type="number" min={0} max={100} value={row.max_percentage} onChange={e => updateAudioRow(idx, 'max_percentage', Number(e.target.value))} className={InputClass} />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-silver dark:text-white/40">Label</label>
+                            <input type="text" value={row.label} onChange={e => updateAudioRow(idx, 'label', e.target.value)} className={InputClass} placeholder="e.g. Keep trying!" />
+                          </div>
+                        </div>
+                        {/* Audio file */}
+                        <input
+                          ref={el => { fqAudioRowRefs.current[idx] = el; }}
+                          type="file" accept="audio/*" className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAudioRowFile(idx, f); }}
+                        />
+                        {row.audioPreview ? (
+                          <div className="flex items-center gap-2">
+                            <audio src={row.audioPreview} controls className="flex-1 h-8" />
+                            <button type="button" onClick={() => { updateAudioRow(idx, 'audioFile', null); updateAudioRow(idx, 'audioPreview', null); }} className="p-1 text-red-400 hover:text-red-500">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => fqAudioRowRefs.current[idx]?.click()}
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-purple-500/30 rounded-lg text-xs text-purple-400 hover:border-purple-500/60 transition-colors">
+                            📂 Upload audio
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                   <div className="flex gap-3 pt-3">
                     <button onClick={() => setFqModal(null)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>

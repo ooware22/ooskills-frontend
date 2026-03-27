@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   LockClosedIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 import { useTranslations } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -18,6 +19,7 @@ import {
   clearEnrollError,
   clearOrderError,
 } from "@/store/slices/enrollmentSlice";
+import { promoApi, type PromoValidateResponse } from "@/services/promoGiftApi";
 
 interface EnrollDialogProps {
   open: boolean;
@@ -46,11 +48,18 @@ export default function EnrollDialog({
   const [step, setStep] = useState<DialogStep>("choose");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("edahabia");
 
-  const isFree = coursePrice === 0;
+  // ── Promo code state ──
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoResult, setPromoResult] = useState<PromoValidateResponse | null>(null);
+  const [promoError, setPromoError] = useState("");
+
+  const effectivePrice = promoResult?.valid ? promoResult.final_price : coursePrice;
+  const isFree = effectivePrice === 0;
   const discount =
-    courseOriginalPrice > coursePrice
+    courseOriginalPrice > effectivePrice
       ? Math.round(
-          ((courseOriginalPrice - coursePrice) / courseOriginalPrice) * 100,
+          ((courseOriginalPrice - effectivePrice) / courseOriginalPrice) * 100,
         )
       : 0;
 
@@ -58,8 +67,33 @@ export default function EnrollDialog({
     if (open) {
       setStep("choose");
       setPaymentMethod("edahabia");
+      setPromoCode("");
+      setPromoResult(null);
+      setPromoError("");
     }
   }, [open]);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError("");
+    setPromoResult(null);
+    try {
+      const result = await promoApi.validate(promoCode.trim(), courseId);
+      setPromoResult(result);
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || "Code invalide.";
+      setPromoError(msg);
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode("");
+    setPromoResult(null);
+    setPromoError("");
+  };
 
   const handleConfirmPayment = async () => {
     setStep("processing");
@@ -139,7 +173,7 @@ export default function EnrollDialog({
                   </p>
 
                   {/* Order summary */}
-                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 mb-5">
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 mb-4">
                     <div className="flex items-baseline justify-between">
                       <span className="text-sm text-silver dark:text-gray-400">
                         {t("payment_total") || "Total"}
@@ -153,7 +187,7 @@ export default function EnrollDialog({
                         <span className="text-2xl font-bold text-oxford dark:text-white">
                           {isFree
                             ? (t("free") || "Free")
-                            : `${coursePrice.toLocaleString()} ${t("currency")}`}
+                            : `${effectivePrice.toLocaleString()} ${t("currency")}`}
                         </span>
                         {discount > 0 && (
                           <span className="px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md">
@@ -162,7 +196,57 @@ export default function EnrollDialog({
                         )}
                       </div>
                     </div>
+
+                    {/* Promo discount line */}
+                    {promoResult?.valid && (
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-white/10">
+                        <div className="flex items-center gap-1.5">
+                          <TagIcon className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            {promoResult.code}
+                          </span>
+                          <button
+                            onClick={handleRemovePromo}
+                            className="text-xs text-red-400 hover:text-red-500 underline ms-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                          -{promoResult.discount_amount.toLocaleString()} {t("currency")}
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* ── Promo code input ── */}
+                  {coursePrice > 0 && !promoResult?.valid && (
+                    <div className="mb-4">
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <TagIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-silver dark:text-gray-500" />
+                          <input
+                            type="text"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                            placeholder={t("promo_placeholder") || "Code promo"}
+                            className="w-full ps-9 pe-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white placeholder-silver dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all"
+                          />
+                        </div>
+                        <button
+                          onClick={handleApplyPromo}
+                          disabled={promoLoading || !promoCode.trim()}
+                          className="px-4 py-2.5 bg-oxford dark:bg-white/10 hover:bg-oxford/90 dark:hover:bg-white/15 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {promoLoading ? "..." : (t("promo_apply") || "Appliquer")}
+                        </button>
+                      </div>
+                      {promoError && (
+                        <p className="text-xs text-red-500 mt-1.5">{promoError}</p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Payment methods (paid only) */}
                   {!isFree && (
