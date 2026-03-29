@@ -444,7 +444,7 @@ export default function CourseDetailPage({
                     <HeartIcon className="w-4 h-4" />
                     {t("addToWishlist")}
                   </button>
-                  {course.price > 0 && (
+                  {enrolled && course.price > 0 && (
                     <button
                       onClick={() => {
                         if (!isAuthenticated) { router.push('/signin'); return; }
