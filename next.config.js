@@ -41,4 +41,13 @@ const nextConfig = {
 
 const withNextIntl = require("next-intl/plugin")("./src/i18n.ts");
 
-module.exports = withNextIntl(nextConfig);
+const intlConfig = withNextIntl(nextConfig);
+
+if (intlConfig.experimental && intlConfig.experimental.turbo) {
+  delete intlConfig.experimental.turbo;
+  if (Object.keys(intlConfig.experimental).length === 0) {
+    delete intlConfig.experimental;
+  }
+}
+
+module.exports = intlConfig;

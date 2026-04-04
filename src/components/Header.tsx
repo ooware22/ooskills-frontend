@@ -144,6 +144,7 @@ export default function Header() {
                 height={60}
                 className="h-6 w-auto"
                 priority
+                loading="eager"
               />
             ) : (
               <Image
@@ -153,6 +154,7 @@ export default function Header() {
                 height={60}
                 className="h-6 w-auto"
                 priority
+                loading="eager"
               />
             )}
           </a>
