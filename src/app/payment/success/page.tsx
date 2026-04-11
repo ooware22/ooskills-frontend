@@ -1,25 +1,76 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import axiosClient from "@/lib/axios";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("order");
   const courseSlug = searchParams.get("course");
+  const [verifying, setVerifying] = useState(Boolean(orderId));
+  const [verificationMsg, setVerificationMsg] = useState(
+    "Verifying your enrollment...",
+  );
 
-  // Auto-redirect to the course page after 3 seconds
   useEffect(() => {
-    if (courseSlug) {
+    let cancelled = false;
+
+    const verifyPaymentAndEnrollment = async () => {
+      if (!orderId) {
+        if (!cancelled) setVerifying(false);
+        return;
+      }
+
+      // Retry briefly because webhook and provider callbacks can arrive a bit later.
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        if (cancelled) return;
+
+        try {
+          const response = await axiosClient.post(
+            `/formation/orders/${orderId}/confirm-payment/`,
+          );
+          if (response.status === 200) {
+            if (!cancelled) {
+              setVerificationMsg("Enrollment confirmed. Redirecting...");
+              setVerifying(false);
+            }
+            return;
+          }
+        } catch {
+          // Keep retrying a few times; webhook might still be processing.
+        }
+
+        setVerificationMsg(`Finalizing payment... (${attempt}/5)`);
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+
+      if (!cancelled) {
+        setVerificationMsg(
+          "Payment received. Enrollment may take a few seconds.",
+        );
+        setVerifying(false);
+      }
+    };
+
+    verifyPaymentAndEnrollment();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  // Auto-redirect after verification attempts complete.
+  useEffect(() => {
+    if (courseSlug && !verifying) {
       const timer = setTimeout(() => {
         router.push(`/courses/${courseSlug}`);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [courseSlug, router]);
+  }, [courseSlug, verifying, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-oxford p-4">
@@ -35,9 +86,7 @@ export default function PaymentSuccessPage() {
         <p className="text-silver dark:text-gray-400 mb-2">
           Your payment has been processed successfully.
         </p>
-        <p className="text-silver dark:text-gray-400 mb-8">
-          You are now enrolled in the course. Redirecting...
-        </p>
+        <p className="text-silver dark:text-gray-400 mb-8">{verificationMsg}</p>
 
         {orderId && (
           <p className="text-xs text-silver dark:text-gray-500 mb-6">

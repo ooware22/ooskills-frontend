@@ -110,6 +110,28 @@ export const deleteAdminCourse = createAsyncThunk(
     }
 );
 
+export const previewAdminCourseZip = createAsyncThunk(
+    "adminCoursesManagement/previewZip",
+    async (file: File, { rejectWithValue }) => {
+        try {
+            return await adminCoursesManagementApi.previewCourseZip(file);
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
+export const importAdminCourseFromZip = createAsyncThunk(
+    "adminCoursesManagement/importZip",
+    async ({ file, categoryId, instructorId }: { file: File; categoryId?: string; instructorId?: string }, { rejectWithValue }) => {
+        try {
+            return await adminCoursesManagementApi.importCourseZip(file, categoryId, instructorId);
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
 // =============================================================================
 // SLICE
 // =============================================================================
@@ -186,6 +208,20 @@ const adminCoursesManagementSlice = createSlice({
                 state.totalCount -= 1;
             })
             .addCase(deleteAdminCourse.rejected, (state, action) => {
+                state.saving = false;
+                state.error = action.payload as string;
+            })
+            // Import ZIP
+            .addCase(importAdminCourseFromZip.pending, (state) => {
+                state.saving = true;
+                state.error = null;
+            })
+            .addCase(importAdminCourseFromZip.fulfilled, (state, action) => {
+                state.saving = false;
+                state.courses.unshift(action.payload);
+                state.totalCount += 1;
+            })
+            .addCase(importAdminCourseFromZip.rejected, (state, action) => {
                 state.saving = false;
                 state.error = action.payload as string;
             });

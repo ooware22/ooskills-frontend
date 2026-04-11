@@ -16,10 +16,19 @@ import axiosClient from '@/lib/axios';
 export interface PublicCourseModule {
     id: string;
     title: string;
-    type: string;
     sequence: number;
     lessons: number;
     duration: string;
+}
+
+export interface PublicCourseSection {
+    id: string;
+    title: string;
+    type: string;
+    sequence: number;
+    duration: string;
+    modules_count: number;
+    modules_list?: PublicCourseModule[];
 }
 
 export interface PublicCourse {
@@ -39,7 +48,7 @@ export interface PublicCourse {
     description: string;
     prerequisites: string[];
     whatYouLearn: string[];
-    modules: PublicCourseModule[];
+    sections: PublicCourseSection[];
     language: string;
     certificate: boolean;
     lastUpdated: string;

@@ -186,7 +186,9 @@ export default function CourseDetailPage({
     ((course.originalPrice - course.price) / course.originalPrice) * 100
   );
 
-  const totalLessons = course.modules.reduce((s, m) => s + m.lessons, 0);
+  const totalLessons = course.sections?.reduce((total: number, section: any) => {
+    return total + (section.modules_list || []).reduce((s: number, m: any) => s + (m.lessons || 0), 0);
+  }, 0) || 0;
 
   return (
     <>
@@ -345,35 +347,38 @@ export default function CourseDetailPage({
                     {t("curriculum")}
                   </h2>
                   <span className="text-xs text-silver dark:text-gray-400">
-                    {course.modules.length} sections • {totalLessons} {t("lessons")} •{" "}
+                    {course.sections?.length || 0} sections • {totalLessons} {t("lessons")} •{" "}
                     {course.duration} {t("hours")}
                   </span>
                 </div>
 
                 <div className="space-y-2">
-                  {course.modules.map((mod, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gold/10 rounded-lg flex items-center justify-center">
-                          <span className="text-xs font-bold text-gold">
-                            {String(i + 1).padStart(2, "0")}
-                          </span>
+                  {course.sections?.map((sec: any, i: number) => {
+                    const sectionLessons = (sec.modules_list || []).reduce((s: number, m: any) => s + (m.lessons || 0), 0);
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gold/10 rounded-lg flex items-center justify-center">
+                            <span className="text-xs font-bold text-gold">
+                              {String(sec.sequence || i + 1).padStart(2, "0")}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-oxford dark:text-white">
+                              {sec.title}
+                            </p>
+                            <p className="text-xs text-silver dark:text-gray-400">
+                              {sec.modules_count || 0} modules • {sectionLessons} {t("lessons")} • {sec.duration}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-oxford dark:text-white">
-                            {mod.title}
-                          </p>
-                          <p className="text-xs text-silver dark:text-gray-400">
-                            {mod.lessons} {t("lessons")} • {mod.duration}
-                          </p>
-                        </div>
+                        <ClockIcon className="w-4 h-4 text-silver dark:text-gray-500" />
                       </div>
-                      <ClockIcon className="w-4 h-4 text-silver dark:text-gray-500" />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
 

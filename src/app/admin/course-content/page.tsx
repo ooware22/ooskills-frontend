@@ -154,7 +154,7 @@ export default function CourseContentPage() {
   // ─── SECTION MODALS ───
   const [sectionModal, setSectionModal] = useState<SectionModalMode>(null);
   const [selectedSection, setSelectedSection] = useState<AdminSection | null>(null);
-  const [sectionForm, setSectionForm] = useState({ title: "", type: "module" as "teaser" | "introduction" | "module" | "conclusion" });
+  const [sectionForm, setSectionForm] = useState({ title: "", type: "APPRO" as "TEASER" | "INTRO" | "INIT" | "APPRO" | "CAS" | "CONCL" });
 
   // ─── LESSON MODALS ───
   const [lessonModal, setLessonModal] = useState<LessonModalMode>(null);
@@ -216,7 +216,7 @@ export default function CourseContentPage() {
     setExpandedSections((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
 
-  const openAddSection = () => { setSectionForm({ title: "", type: "module" }); setSectionModal("add"); };
+  const openAddSection = () => { setSectionForm({ title: "", type: "APPRO" }); setSectionModal("add"); };
 
   const openEditSection = (s: AdminSection) => {
     setSelectedSection(s); setSectionForm({ title: s.title, type: s.type }); setSectionModal("edit");
@@ -307,7 +307,12 @@ export default function CourseContentPage() {
   };
 
   const saveLesson = async () => {
-    const section = sections.find((s) => s.id === lessonParentId);
+    let parentModule = null;
+    for (const s of sections) {
+        const mod = s.modules_list?.find(m => m.id === lessonParentId);
+        if (mod) { parentModule = mod; break; }
+    }
+
     const content = {
       visual_content: selectedLesson?.content.visual_content || {},
       narration_script: { mode: "multi_speaker", speakers: lessonForm.speakers },
@@ -315,10 +320,10 @@ export default function CourseContentPage() {
 
     if (lessonModal === "add") {
       const result = await dispatch(createLesson({
-        section: lessonParentId,
+        module: lessonParentId,
         title: lessonForm.title,
         type: lessonForm.type,
-        sequence: section ? section.lessons_list.length : 0,
+        sequence: parentModule ? (parentModule.lessons_list?.length || 0) : 0,
         duration_seconds: lessonForm.duration_seconds,
         slide_type: lessonForm.slide_type,
         display_mode: lessonForm.displayMode,
@@ -352,7 +357,7 @@ export default function CourseContentPage() {
 
   const handleDeleteLesson = async () => {
     if (selectedLesson) {
-      const result = await dispatch(deleteLessonThunk({ id: selectedLesson.id, sectionId: lessonParentId }));
+      const result = await dispatch(deleteLessonThunk({ id: selectedLesson.id, moduleId: lessonParentId }));
       if (deleteLessonThunk.fulfilled.match(result)) {
         showToast(tc("lessonDeleted"));
       }
@@ -698,10 +703,10 @@ export default function CourseContentPage() {
                   <div className="min-w-0">
                     <p className="font-medium text-oxford dark:text-white text-sm truncate">{section.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={cn("inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium", section.type === "teaser" ? "bg-purple-500/10 text-purple-500" : "bg-blue-500/10 text-blue-500")}>
+                      <span className={cn("inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium", section.type === "TEASER" ? "bg-purple-500/10 text-purple-500" : "bg-blue-500/10 text-blue-500")}>
                         {section.type}
                       </span>
-                      <span className="text-xs text-silver dark:text-white/40">{section.lessons_list.length} lessons • {section.duration}</span>
+                      <span className="text-xs text-silver dark:text-white/40">{(section.modules_list || []).reduce((acc, m) => acc + (m.lessons_list?.length || 0), 0)} lessons • {section.duration}</span>
                       {section.quiz && <span className="text-xs text-emerald-500">✓ Quiz</span>}
                     </div>
                   </div>
@@ -722,39 +727,50 @@ export default function CourseContentPage() {
                 {isExpanded && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                     <div className="px-5 pb-5 space-y-4 border-t border-gray-200 dark:border-white/10 pt-4">
-                      {/* Lessons Header */}
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">{tc("lessons")} ({section.lessons_list.length})</p>
-                        <button onClick={() => openAddLesson(section.id)} className="flex items-center gap-1.5 text-xs text-gold hover:text-gold/80 font-medium">
-                          <PlusCircleIcon className="w-4 h-4" /> {tc("addLesson")}
-                        </button>
-                      </div>
-
-                      {/* Lessons List */}
-                      {section.lessons_list.length === 0 ? (
-                        <p className="text-xs text-silver dark:text-white/40 text-center py-3">{tc("noLessons")}</p>
+                      {/* Modules & Lessons List */}
+                      {(!section.modules_list || section.modules_list.length === 0) ? (
+                        <p className="text-xs text-silver dark:text-white/40 text-center py-3">No modules yet.</p>
                       ) : (
-                        <div className="space-y-2">
-                          {section.lessons_list.map((lesson) => (
-                            <div key={lesson.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/[0.03] rounded-xl group">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", lesson.type === "audio" ? "bg-blue-500/10" : "bg-amber-500/10")}>
-                                  {lesson.type === "audio" ? <MusicalNoteIcon className="w-4 h-4 text-blue-500" /> : <DocumentTextIcon className="w-4 h-4 text-amber-500" />}
+                        <div className="space-y-4">
+                          {section.modules_list.map((module) => (
+                            <div key={module.id} className="border border-gray-100 dark:border-white/5 rounded-xl p-4 bg-gray-50/50 dark:bg-white/[0.02]">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-6 h-6 rounded bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">{module.sequence}</span>
+                                  <span className="text-sm font-semibold text-oxford dark:text-white">{module.title}</span>
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium text-oxford dark:text-white truncate">{lesson.title}</p>
-                                  <div className="flex items-center gap-2">
-                                    <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", lesson.type === "audio" ? "bg-blue-500/10 text-blue-500" : "bg-amber-500/10 text-amber-500")}>{lesson.type}</span>
-                                    <span className="text-xs text-silver dark:text-white/40">{lesson.duration_seconds}s</span>
-                                    {lesson.audioUrl && <span className="text-xs text-emerald-500">♪ Audio</span>}
-                                    {lesson.diapositiveUrl && <span className="text-xs text-purple-500">📊 Diapositive</span>}
-                                  </div>
-                                </div>
+                                <button onClick={() => openAddLesson(module.id)} className="flex items-center gap-1.5 text-xs text-gold hover:text-gold/80 font-medium">
+                                  <PlusCircleIcon className="w-4 h-4" /> {tc("addLesson")}
+                                </button>
                               </div>
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => openViewLesson(section.id, lesson)} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"><Eye className="w-3.5 h-3.5" /></button>
-                                <button onClick={() => openEditLesson(section.id, lesson)} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
-                                <button onClick={() => openDeleteLesson(section.id, lesson)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-3.5 h-3.5" /></button>
+                              <div className="space-y-2 pl-2">
+                                {(!module.lessons_list || module.lessons_list.length === 0) ? (
+                                  <p className="text-xs text-silver dark:text-white/40 text-center py-2">{tc("noLessons")}</p>
+                                ) : (
+                                  module.lessons_list.map((lesson) => (
+                                    <div key={lesson.id} className="flex items-center justify-between p-3 bg-white dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 rounded-xl group shadow-sm">
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", lesson.type === "audio" ? "bg-blue-500/10" : "bg-amber-500/10")}>
+                                          {lesson.type === "audio" ? <MusicalNoteIcon className="w-4 h-4 text-blue-500" /> : <DocumentTextIcon className="w-4 h-4 text-amber-500" />}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-medium text-oxford dark:text-white truncate">{lesson.title}</p>
+                                          <div className="flex items-center gap-2">
+                                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", lesson.type === "audio" ? "bg-blue-500/10 text-blue-500" : "bg-amber-500/10 text-amber-500")}>{lesson.type}</span>
+                                            <span className="text-xs text-silver dark:text-white/40">{lesson.duration_seconds}s</span>
+                                            {lesson.audioUrl && <span className="text-xs text-emerald-500">♪ Audio</span>}
+                                            {lesson.diapositiveUrl && <span className="text-xs text-purple-500">📊 Diapositive</span>}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => openViewLesson(module.id, lesson)} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"><Eye className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => openEditLesson(module.id, lesson)} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => openDeleteLesson(module.id, lesson)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-3.5 h-3.5" /></button>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
                               </div>
                             </div>
                           ))}
@@ -1038,9 +1054,14 @@ export default function CourseContentPage() {
                   <div><label className={LabelClass}>{tc("sectionTitle")} <span className="text-red-500">*</span></label>
                     <input type="text" value={sectionForm.title} onChange={(e) => setSectionForm({ ...sectionForm, title: e.target.value })} className={InputClass} /></div>
                   <div><label className={LabelClass}>{tc("sectionType")}</label>
-                    <select value={sectionForm.type} onChange={(e) => setSectionForm({ ...sectionForm, type: e.target.value as "teaser" | "introduction" | "module" | "conclusion" })}
+                    <select value={sectionForm.type} onChange={(e) => setSectionForm({ ...sectionForm, type: e.target.value as "TEASER" | "INTRO" | "INIT" | "APPRO" | "CAS" | "CONCL" })}
                       className={cn(InputClass, "cursor-pointer")}>
-                      <option value="module" className="text-black">Module</option><option value="teaser" className="text-black">Teaser</option><option value="introduction" className="text-black">Introduction</option><option value="conclusion" className="text-black">Conclusion</option>
+                      <option value="TEASER" className="text-black">Teaser</option>
+                      <option value="INTRO" className="text-black">Introduction</option>
+                      <option value="INIT" className="text-black">Initialisation</option>
+                      <option value="APPRO" className="text-black">Approfondissement</option>
+                      <option value="CAS" className="text-black">Cas Pratique</option>
+                      <option value="CONCL" className="text-black">Conclusion</option>
                     </select></div>
                   <div className="flex gap-3 pt-3">
                     <button onClick={closeSectionModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>

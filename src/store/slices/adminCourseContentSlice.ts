@@ -1,8 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import adminSectionsApi from "@/services/adminSectionsApi";
+import adminModulesApi from "@/services/adminModulesApi";
 import adminLessonsApi from "@/services/adminLessonsApi";
 import adminQuizzesApi from "@/services/adminQuizzesApi";
 import type { AdminSection, SectionCreatePayload, SectionUpdatePayload } from "@/services/adminSectionsApi";
+import type { ModuleCreatePayload, ModuleUpdatePayload } from "@/services/adminModulesApi";
 import type { LessonCreatePayload, LessonUpdatePayload } from "@/services/adminLessonsApi";
 import type { QuizCreatePayload, QuizUpdatePayload, QuestionCreatePayload } from "@/services/adminQuizzesApi";
 import { getErrorMessage } from "@/lib/axios";
@@ -95,6 +97,44 @@ export const deleteSection = createAsyncThunk(
 );
 
 // =============================================================================
+// ASYNC THUNKS — MODULES
+// =============================================================================
+
+export const createModule = createAsyncThunk(
+    "adminCourseContent/createModule",
+    async (data: ModuleCreatePayload, { rejectWithValue }) => {
+        try {
+            return await adminModulesApi.create(data);
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
+export const updateModule = createAsyncThunk(
+    "adminCourseContent/updateModule",
+    async ({ id, data }: { id: string; data: ModuleUpdatePayload }, { rejectWithValue }) => {
+        try {
+            return await adminModulesApi.update(id, data);
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
+export const deleteModule = createAsyncThunk(
+    "adminCourseContent/deleteModule",
+    async ({ id, sectionId }: { id: string; sectionId: string }, { rejectWithValue }) => {
+        try {
+            await adminModulesApi.delete(id);
+            return { id, sectionId };
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
+// =============================================================================
 // ASYNC THUNKS — LESSONS
 // =============================================================================
 
@@ -122,10 +162,10 @@ export const updateLesson = createAsyncThunk(
 
 export const deleteLesson = createAsyncThunk(
     "adminCourseContent/deleteLesson",
-    async ({ id, sectionId }: { id: string; sectionId: string }, { rejectWithValue }) => {
+    async ({ id, moduleId }: { id: string; moduleId: string }, { rejectWithValue }) => {
         try {
             await adminLessonsApi.delete(id);
-            return { id, sectionId };
+            return { id, moduleId };
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
@@ -304,21 +344,26 @@ const adminCourseContentSlice = createSlice({
             })
             .addCase(createLesson.fulfilled, (state, action) => {
                 state.saving = false;
-                const sectionId = action.payload.section;
-                const section = state.sections.find((s) => s.id === sectionId);
-                if (section) {
-                    section.lessons_list.push({
-                        id: action.payload.id,
-                        title: action.payload.title,
-                        type: action.payload.type,
-                        sequence: action.payload.sequence,
-                        duration_seconds: action.payload.duration_seconds,
-                        audioUrl: action.payload.audioUrl,
-                        diapositiveUrl: action.payload.diapositiveUrl,
-                        content: action.payload.content,
-                        slide_type: action.payload.slide_type,
-                    });
-                    section.lessons = section.lessons_list.length;
+                const moduleId = action.payload.module;
+                for (const section of state.sections) {
+                    if (!section.modules_list) continue;
+                    const module = section.modules_list.find((m) => m.id === moduleId);
+                    if (module) {
+                        if (!module.lessons_list) module.lessons_list = [];
+                        module.lessons_list.push({
+                            id: action.payload.id,
+                            title: action.payload.title,
+                            type: action.payload.type,
+                            sequence: action.payload.sequence,
+                            duration_seconds: action.payload.duration_seconds,
+                            audioUrl: action.payload.audioUrl,
+                            diapositiveUrl: action.payload.diapositiveUrl,
+                            content: action.payload.content,
+                            slide_type: action.payload.slide_type,
+                        });
+                        module.lessons = module.lessons_list.length;
+                        break;
+                    }
                 }
             })
             .addCase(createLesson.rejected, (state, action) => {
@@ -333,22 +378,26 @@ const adminCourseContentSlice = createSlice({
             })
             .addCase(updateLesson.fulfilled, (state, action) => {
                 state.saving = false;
-                const sectionId = action.payload.section;
-                const section = state.sections.find((s) => s.id === sectionId);
-                if (section) {
-                    const idx = section.lessons_list.findIndex((l) => l.id === action.payload.id);
-                    if (idx !== -1) {
-                        section.lessons_list[idx] = {
-                            id: action.payload.id,
-                            title: action.payload.title,
-                            type: action.payload.type,
-                            sequence: action.payload.sequence,
-                            duration_seconds: action.payload.duration_seconds,
-                            audioUrl: action.payload.audioUrl,
-                            diapositiveUrl: action.payload.diapositiveUrl,
-                            content: action.payload.content,
-                            slide_type: action.payload.slide_type,
-                        };
+                const moduleId = action.payload.module;
+                for (const section of state.sections) {
+                    if (!section.modules_list) continue;
+                    const module = section.modules_list.find((m) => m.id === moduleId);
+                    if (module && module.lessons_list) {
+                        const idx = module.lessons_list.findIndex((l) => l.id === action.payload.id);
+                        if (idx !== -1) {
+                            module.lessons_list[idx] = {
+                                id: action.payload.id,
+                                title: action.payload.title,
+                                type: action.payload.type,
+                                sequence: action.payload.sequence,
+                                duration_seconds: action.payload.duration_seconds,
+                                audioUrl: action.payload.audioUrl,
+                                diapositiveUrl: action.payload.diapositiveUrl,
+                                content: action.payload.content,
+                                slide_type: action.payload.slide_type,
+                            };
+                            break;
+                        }
                     }
                 }
             })
@@ -364,10 +413,14 @@ const adminCourseContentSlice = createSlice({
             })
             .addCase(deleteLesson.fulfilled, (state, action) => {
                 state.saving = false;
-                const section = state.sections.find((s) => s.id === action.payload.sectionId);
-                if (section) {
-                    section.lessons_list = section.lessons_list.filter((l) => l.id !== action.payload.id);
-                    section.lessons = section.lessons_list.length;
+                for (const section of state.sections) {
+                    if (!section.modules_list) continue;
+                    const module = section.modules_list.find((m) => m.id === (action.payload as any).moduleId);
+                    if (module && module.lessons_list) {
+                        module.lessons_list = module.lessons_list.filter((l) => l.id !== action.payload.id);
+                        module.lessons = module.lessons_list.length;
+                        break;
+                    }
                 }
             })
             .addCase(deleteLesson.rejected, (state, action) => {

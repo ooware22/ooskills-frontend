@@ -49,30 +49,32 @@ export interface AdminSectionQuiz {
     xp_reward: number;
 }
 
+import type { AdminModule } from './adminModulesApi';
+
 export interface AdminSection {
     id: string;
     course: string;
     title: string;
-    type: 'teaser' | 'introduction' | 'module' | 'conclusion';
+    type: 'TEASER' | 'INTRO' | 'INIT' | 'APPRO' | 'CAS' | 'CONCL';
     sequence: number;
-    audioFileIndex: number;
-    lessons: number;
+    audioFileIndex?: number;
+    modules: number;
     duration: string;
-    lessons_list: AdminSectionLesson[];
+    modules_list: AdminModule[];
     quiz: AdminSectionQuiz | null;
 }
 
 export interface SectionCreatePayload {
     course: string;
     title: string;
-    type: 'teaser' | 'introduction' | 'module' | 'conclusion';
+    type: 'TEASER' | 'INTRO' | 'INIT' | 'APPRO' | 'CAS' | 'CONCL';
     sequence: number;
     audioFileIndex?: number;
 }
 
 export interface SectionUpdatePayload {
     title?: string;
-    type?: 'teaser' | 'introduction' | 'module' | 'conclusion';
+    type?: 'TEASER' | 'INTRO' | 'INIT' | 'APPRO' | 'CAS' | 'CONCL';
     sequence?: number;
     audioFileIndex?: number;
 }

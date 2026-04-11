@@ -98,7 +98,12 @@ function transformSectionsToContent(
   const modules: CourseContentModule[] = sections
     .sort((a: any, b: any) => a.sequence - b.sequence)
     .map((section: any) => {
-      const lessons = (section.lessons_list || []).sort(
+      // Flatten all lessons from all modules in this section
+      const allLessons = (section.modules_list || []).reduce((acc: any[], m: any) => {
+        return acc.concat(m.lessons_list || []);
+      }, []);
+
+      const lessons = allLessons.sort(
         (a: any, b: any) => a.sequence - b.sequence,
       );
       const slides: Slide[] = lessons.map((lesson: any, idx: number) => {

@@ -22,7 +22,7 @@ export interface LessonContent {
 
 export interface AdminLesson {
     id: string;
-    section: string;
+    module: string;
     title: string;
     type: 'slide' | 'video' | 'text' | 'audio';
     sequence: number;
@@ -35,7 +35,7 @@ export interface AdminLesson {
 }
 
 export interface LessonCreatePayload {
-    section: string;
+    module: string;
     title: string;
     type: 'slide' | 'video' | 'text' | 'audio';
     sequence: number;

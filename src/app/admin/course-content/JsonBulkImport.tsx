@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
-import { createSection, createLesson } from "@/store/slices/adminCourseContentSlice";
+import { createSection, createModule, createLesson } from "@/store/slices/adminCourseContentSlice";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -24,10 +24,16 @@ interface ParsedLesson {
   narration_script: { mode: string; speakers: { text: string; emotion: string; speaker: string }[] };
 }
 
+interface ParsedModule {
+  title: string;
+  sequence: number;
+  lessons: ParsedLesson[];
+}
+
 interface ParsedSection {
   title: string;
-  type: "teaser" | "introduction" | "module" | "conclusion";
-  lessons: ParsedLesson[];
+  type: "TEASER" | "INTRO" | "INIT" | "APPRO" | "CAS" | "CONCL" | "MODULE";
+  modules: ParsedModule[];
 }
 
 interface Props {
@@ -50,32 +56,55 @@ export default function JsonBulkImport({ courseId, existingSectionsCount, onComp
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
+  /** Convert "E|emotion|text\nH|emotion|text" into a speakers array */
+  const parseNarrationString = (narration: string): ParsedLesson["narration_script"] => {
+    const speakers = narration.split("\n").flatMap((line) => {
+      const parts = line.trim().split("|");
+      if (parts.length >= 3) return [{ speaker: parts[0].trim(), emotion: parts[1].trim(), text: parts.slice(2).join("|").trim() }];
+      if (parts.length === 2) return [{ speaker: parts[0].trim(), emotion: "", text: parts[1].trim() }];
+      if (line.trim()) return [{ speaker: "H", emotion: "", text: line.trim() }];
+      return [];
+    });
+    return { mode: "multi_speaker", speakers };
+  };
+
   // ── Parse JSON ──────────────────────────────────────────────────────────
 
   const parseJson = useCallback(() => {
     try {
       const raw = JSON.parse(jsonText);
 
-      // Auto-detect type from top-level key
-      let type: ParsedSection["type"] = "module";
-      let data = raw;
-      if (raw.teaser) { type = "teaser"; data = raw.teaser; }
-      else if (raw.introduction) { type = "introduction"; data = raw.introduction; }
-      else if (raw.module) { type = "module"; data = raw.module; }
-      else if (raw.conclusion) { type = "module"; data = raw; }
+      const formation = raw.formation || {};
+      const type: ParsedSection["type"] = (formation.level as ParsedSection["type"]) || "APPRO";
+      const title = formation.title || "Untitled Section";
 
-      const slides = data.slides || [];
-      if (!slides.length) { setJsonError("No slides found in JSON"); return; }
+      const chapters = raw.chapters || [];
+      if (!chapters.length) { setJsonError("No chapters found in JSON"); return; }
 
-      const lessons: ParsedLesson[] = slides.map((s: Record<string, unknown>) => ({
-        title: (s.title as string) || "Untitled",
-        slide_type: (s.slide_type as string) || "bullet_points",
-        duration_seconds: (s.duration_seconds as number) || 0,
-        visual_content: (s.visual_content as Record<string, unknown>) || {},
-        narration_script: (s.narration_script as ParsedLesson["narration_script"]) || { mode: "multi_speaker", speakers: [] },
+      const modules: ParsedModule[] = chapters.map((c: any, i: number) => ({
+        title: c.title || `Chapter ${i + 1}`,
+        sequence: c.chapter_num || i + 1,
+        lessons: (c.slides || []).map((s: Record<string, unknown>) => {
+          // Handle both 'narration' (raw string) and 'narration_script' (object)
+          let narration_script: ParsedLesson["narration_script"];
+          if (s.narration_script && typeof s.narration_script === "object") {
+            narration_script = s.narration_script as ParsedLesson["narration_script"];
+          } else if (typeof s.narration === "string" && s.narration) {
+            narration_script = parseNarrationString(s.narration as string);
+          } else {
+            narration_script = { mode: "multi_speaker", speakers: [] };
+          }
+          return {
+            title: (s.title as string) || "Untitled",
+            slide_type: (s.slide_type as string) || "bullet_points",
+            duration_seconds: (s.duration_seconds as number) || 0,
+            visual_content: (s.visual_content as Record<string, unknown>) || {},
+            narration_script,
+          };
+        })
       }));
 
-      setParsed({ title: data.title || data.module_title || "Untitled", type, lessons });
+      setParsed({ title, type, modules });
       setJsonError(null);
     } catch (err) {
       setJsonError((err as Error).message);
@@ -88,14 +117,19 @@ export default function JsonBulkImport({ courseId, existingSectionsCount, onComp
   const importAll = useCallback(async () => {
     if (!parsed) return;
     setImporting(true);
-    setProgress({ current: 0, total: parsed.lessons.length });
+
+    let lessonCount = 0;
+    for (const mod of parsed.modules) {
+      lessonCount += mod.lessons.length;
+    }
+    setProgress({ current: 0, total: lessonCount });
 
     try {
       // 1. Create the section
       const sectionResult = await dispatch(createSection({
         course: courseId,
         title: parsed.title,
-        type: parsed.type,
+        type: parsed.type as any,
         sequence: existingSectionsCount + 1,
       }));
 
@@ -106,27 +140,46 @@ export default function JsonBulkImport({ courseId, existingSectionsCount, onComp
       }
 
       const sectionId = sectionResult.payload.id;
+      let currentLesson = 0;
 
-      // 2. Create lessons sequentially
-      for (let i = 0; i < parsed.lessons.length; i++) {
-        const lesson = parsed.lessons[i];
-        await dispatch(createLesson({
-          section: sectionId,
-          title: lesson.title,
-          type: "audio",
-          sequence: i,
-          duration_seconds: lesson.duration_seconds,
-          slide_type: lesson.slide_type,
-          content: {
-            visual_content: lesson.visual_content,
-            narration_script: lesson.narration_script,
-          },
-        }));
-        setProgress({ current: i + 1, total: parsed.lessons.length });
+      // 2. Create modules sequentially
+      for (const mod of parsed.modules) {
+          const moduleResult = await dispatch(createModule({
+              section: sectionId,
+              title: mod.title,
+              sequence: mod.sequence,
+          }));
+
+          if (!createModule.fulfilled.match(moduleResult)) {
+              setJsonError(`Failed to create module ${mod.title}`);
+              setImporting(false);
+              return;
+          }
+
+          const moduleId = moduleResult.payload.id;
+
+          // 3. Create lessons sequentially within module
+          for (let i = 0; i < mod.lessons.length; i++) {
+            const lesson = mod.lessons[i];
+            await dispatch(createLesson({
+              module: moduleId,
+              title: lesson.title,
+              type: "audio",
+              sequence: i,
+              duration_seconds: lesson.duration_seconds,
+              slide_type: lesson.slide_type,
+              content: {
+                visual_content: lesson.visual_content,
+                narration_script: lesson.narration_script,
+              },
+            }));
+            currentLesson++;
+            setProgress({ current: currentLesson, total: lessonCount });
+          }
       }
 
       onComplete(
-        `${tc("importComplete") || "Import complete"} — 1 ${tc("previewSection") || "section"}, ${parsed.lessons.length} ${tc("previewLessons") || "lessons"}`
+        `${tc("importComplete") || "Import complete"} — 1 section, ${parsed.modules.length} modules, ${lessonCount} lessons`
       );
     } catch {
       setJsonError("Import failed — check console for details");
@@ -139,12 +192,14 @@ export default function JsonBulkImport({ courseId, existingSectionsCount, onComp
 
   const typeBadge = (type: string) => {
     const colors: Record<string, string> = {
-      teaser: "bg-purple-500/10 text-purple-500",
-      introduction: "bg-blue-500/10 text-blue-500",
-      module: "bg-gold/10 text-gold",
-      conclusion: "bg-emerald-500/10 text-emerald-500",
+      TEASER: "bg-purple-500/10 text-purple-500",
+      INTRO: "bg-blue-500/10 text-blue-500",
+      INIT: "bg-amber-500/10 text-amber-500",
+      APPRO: "bg-gold/10 text-gold",
+      CAS: "bg-emerald-500/10 text-emerald-500",
+      CONCL: "bg-silver/10 text-silver",
     };
-    return colors[type] || colors.module;
+    return colors[type] || colors.APPRO;
   };
 
   return (
@@ -218,14 +273,15 @@ export default function JsonBulkImport({ courseId, existingSectionsCount, onComp
                     <span className="text-sm font-semibold text-oxford dark:text-white">{parsed.title}</span>
                   </div>
                   <p className="text-xs text-silver dark:text-white/40">
-                    {parsed.lessons.length} {tc("previewLessons") || "lessons"} •{" "}
-                    {Math.round(parsed.lessons.reduce((s, l) => s + l.duration_seconds, 0) / 60)} min
+                    {parsed.modules.length} modules •{" "}
+                    {parsed.modules.reduce((acc, m) => acc + m.lessons.length, 0)} {tc("previewLessons") || "lessons"} •{" "}
+                    {Math.round(parsed.modules.reduce((acc, m) => acc + m.lessons.reduce((s, l) => s + l.duration_seconds, 0), 0) / 60)} min
                   </p>
                 </div>
 
                 {/* Lessons list */}
                 <div className="space-y-1.5 max-h-52 overflow-y-auto">
-                  {parsed.lessons.map((lesson, i) => (
+                  {parsed.modules.flatMap(m => m.lessons).map((lesson, i) => (
                     <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10">
                       <span className="w-6 h-6 rounded-full bg-gold/10 text-gold text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                         {i + 1}

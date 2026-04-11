@@ -44,6 +44,7 @@ export interface AdminCourse {
     certificate: boolean;
     lastUpdated: string;
     status: string;
+    totalSlides?: number;
 }
 
 export interface AdminCourseCreatePayload {
@@ -78,6 +79,23 @@ export interface AdminCourseUpdatePayload {
     certificate?: boolean;
     image?: File | string;
     status?: string;
+}
+
+export interface CourseZipPreviewPlan {
+    title: string;
+    category: string | null;
+    instructor: string | null;
+    sections_count: number;
+    lessons_count: number;
+    sections: {
+        title: string;
+        lessons: {
+            title: string;
+            type: string;
+            audio_file?: string | null;
+            slide_file?: string | null;
+        }[];
+    }[];
 }
 
 export interface CourseListParams {
@@ -182,6 +200,35 @@ const adminCoursesManagementApi = {
      */
     delete: async (slug: string) => {
         await axiosClient.delete(`${ENDPOINT}${slug}/`);
+    },
+
+    /**
+     * Preview a ZIP course import
+     */
+    previewCourseZip: async (file: File) => {
+        const fd = new FormData();
+        fd.append('zip_file', file);
+        const response = await axiosClient.post<CourseZipPreviewPlan>(`${ENDPOINT}import-zip-preview/`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120_000, // 2 min — large ZIP upload
+        });
+        return response.data;
+    },
+
+    /**
+     * Confirm a ZIP course import
+     */
+    importCourseZip: async (file: File, categoryId?: string, instructorId?: string) => {
+        const fd = new FormData();
+        fd.append('zip_file', file);
+        if (categoryId) fd.append('category_id', categoryId);
+        if (instructorId) fd.append('instructor_id', instructorId);
+        
+        const response = await axiosClient.post<AdminCourse>(`${ENDPOINT}import-zip/`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 300_000, // 5 min — large ZIPs with 100+ lessons take time
+        });
+        return response.data;
     },
 };
 
