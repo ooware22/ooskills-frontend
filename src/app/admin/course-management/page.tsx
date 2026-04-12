@@ -171,6 +171,13 @@ export default function CourseManagementPage() {
   const [jsonMode, setJsonMode] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [listJson, setListJson] = useState({
+    prerequisites: "",
+    whatYouLearn: "",
+  });
+  const [listJsonError, setListJsonError] = useState<
+    Partial<Record<"prerequisites" | "whatYouLearn", string>>
+  >({});
 
   // ZIP import state
   const [zipFile, setZipFile] = useState<File | null>(null);
@@ -353,6 +360,11 @@ export default function CourseManagementPage() {
     });
     setImageFile(null);
     setImagePreview(course.image || null);
+    setListJson({
+      prerequisites: JSON.stringify(course.prerequisites || [], null, 2),
+      whatYouLearn: JSON.stringify(course.whatYouLearn || [], null, 2),
+    });
+    setListJsonError({});
     setModalMode("edit");
   };
 
@@ -432,7 +444,12 @@ export default function CourseManagementPage() {
 
   // List item helpers
   const addListItem = (field: "prerequisites" | "whatYouLearn") => {
-    setFormData({ ...formData, [field]: [...formData[field], ""] });
+    const next = [...formData[field], ""];
+    setFormData({ ...formData, [field]: next });
+    setListJson((prev) => ({
+      ...prev,
+      [field]: JSON.stringify(next, null, 2),
+    }));
   };
 
   const updateListItem = (
@@ -443,16 +460,49 @@ export default function CourseManagementPage() {
     const updated = [...formData[field]];
     updated[idx] = value;
     setFormData({ ...formData, [field]: updated });
+    setListJson((prev) => ({
+      ...prev,
+      [field]: JSON.stringify(updated, null, 2),
+    }));
   };
 
   const removeListItem = (
     field: "prerequisites" | "whatYouLearn",
     idx: number,
   ) => {
+    const next = formData[field].filter((_, i) => i !== idx);
     setFormData({
       ...formData,
-      [field]: formData[field].filter((_, i) => i !== idx),
+      [field]: next,
     });
+    setListJson((prev) => ({
+      ...prev,
+      [field]: JSON.stringify(next, null, 2),
+    }));
+  };
+
+  const applyListJson = (field: "prerequisites" | "whatYouLearn") => {
+    try {
+      const parsed = JSON.parse(listJson[field] || "[]");
+      if (!Array.isArray(parsed)) {
+        throw new Error("Value must be a JSON array");
+      }
+      const normalized = parsed
+        .map((item) => (typeof item === "string" ? item.trim() : ""))
+        .filter(Boolean);
+      setFormData((prev) => ({ ...prev, [field]: normalized }));
+      setListJson((prev) => ({
+        ...prev,
+        [field]: JSON.stringify(normalized, null, 2),
+      }));
+      setListJsonError((prev) => ({ ...prev, [field]: "" }));
+      showToast(tc("jsonApplied") || "JSON applied");
+    } catch (err) {
+      setListJsonError((prev) => ({
+        ...prev,
+        [field]: (err as Error).message,
+      }));
+    }
   };
 
   const handleSave = async () => {
@@ -1755,6 +1805,38 @@ export default function CourseManagementPage() {
                         {tc("addPrerequisite")}
                       </button>
                     </div>
+                    <div className="mb-2">
+                      <textarea
+                        rows={4}
+                        value={listJson.prerequisites}
+                        onChange={(e) => {
+                          setListJson((prev) => ({
+                            ...prev,
+                            prerequisites: e.target.value,
+                          }));
+                          setListJsonError((prev) => ({
+                            ...prev,
+                            prerequisites: "",
+                          }));
+                        }}
+                        placeholder={'["item 1", "item 2"]'}
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs text-oxford dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-gold/50"
+                      />
+                      {listJsonError.prerequisites && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {listJsonError.prerequisites}
+                        </p>
+                      )}
+                      <div className="mt-1 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => applyListJson("prerequisites")}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold hover:bg-gold/20"
+                        >
+                          {tc("applyJson") || "Apply JSON"}
+                        </button>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       {formData.prerequisites.map((item, idx) => (
                         <div key={idx} className="flex items-center gap-2">
@@ -1796,6 +1878,38 @@ export default function CourseManagementPage() {
                         <PlusCircleIcon className="w-4 h-4" />
                         {tc("addLearningPoint")}
                       </button>
+                    </div>
+                    <div className="mb-2">
+                      <textarea
+                        rows={4}
+                        value={listJson.whatYouLearn}
+                        onChange={(e) => {
+                          setListJson((prev) => ({
+                            ...prev,
+                            whatYouLearn: e.target.value,
+                          }));
+                          setListJsonError((prev) => ({
+                            ...prev,
+                            whatYouLearn: "",
+                          }));
+                        }}
+                        placeholder={'["point 1", "point 2"]'}
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs text-oxford dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-gold/50"
+                      />
+                      {listJsonError.whatYouLearn && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {listJsonError.whatYouLearn}
+                        </p>
+                      )}
+                      <div className="mt-1 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => applyListJson("whatYouLearn")}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold hover:bg-gold/20"
+                        >
+                          {tc("applyJson") || "Apply JSON"}
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       {formData.whatYouLearn.map((item, idx) => (

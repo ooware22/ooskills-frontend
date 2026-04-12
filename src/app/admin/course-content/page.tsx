@@ -87,14 +87,13 @@ type FinalQuizData = {
 };
 
 type FqAudioRow = {
-  id: string;           // existing backend id or '' for new
+  id: string; // existing backend id or '' for new
   min_percentage: number;
   max_percentage: number;
   label: string;
-  audioFile: File | null;  // new upload
+  audioFile: File | null; // new upload
   audioPreview: string | null; // existing URL or object URL
 };
-
 
 // =============================================================================
 // COMPONENT
@@ -108,21 +107,29 @@ export default function CourseContentPage() {
 
   // Resolve course slug from courses state
   const courseSlug = useSelector((state: RootState) => {
-    const course = state.adminCoursesManagement.courses.find((c) => c.id === courseId);
+    const course = state.adminCoursesManagement.courses.find(
+      (c) => c.id === courseId,
+    );
     return course?.slug || "";
   });
+  const courseRef = courseId || courseSlug;
 
   // Redux state for sections (includes nested lessons)
   const { sections, loading, saving, error } = useSelector(
-    (state: RootState) => state.adminCourseContent
+    (state: RootState) => state.adminCourseContent,
   );
 
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(),
+  );
   const [showBulkImport, setShowBulkImport] = useState(false);
 
   // Toast
   const [toast, setToast] = useState<string | null>(null);
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Translation helper
   const tc = (key: string) => t(`admin.courseContent.${key}`);
@@ -132,20 +139,21 @@ export default function CourseContentPage() {
     dispatch(fetchAdminCourses({}));
   }, [dispatch]);
 
-  // Fetch sections when course slug resolves
+  // Fetch sections when course reference resolves (prefer id, fallback slug)
   useEffect(() => {
-    if (courseSlug) {
-      dispatch(fetchSections(courseSlug));
+    if (courseRef) {
+      dispatch(fetchSections(courseRef));
     }
-  }, [dispatch, courseSlug]);
+  }, [dispatch, courseRef]);
 
   // Fetch final quiz config when courseId resolves
   useEffect(() => {
     if (!courseId) return;
     setFinalQuizLoading(true);
     import("@/lib/axios").then(({ default: api }) => {
-      api.get(`/formation/final-quiz/admin/get/?course_id=${courseId}`)
-        .then(res => setFinalQuiz(res.data))
+      api
+        .get(`/formation/final-quiz/admin/get/?course_id=${courseId}`)
+        .then((res) => setFinalQuiz(res.data))
         .catch(() => setFinalQuiz(null))
         .finally(() => setFinalQuizLoading(false));
     });
@@ -153,15 +161,24 @@ export default function CourseContentPage() {
 
   // ─── SECTION MODALS ───
   const [sectionModal, setSectionModal] = useState<SectionModalMode>(null);
-  const [selectedSection, setSelectedSection] = useState<AdminSection | null>(null);
-  const [sectionForm, setSectionForm] = useState({ title: "", type: "APPRO" as "TEASER" | "INTRO" | "INIT" | "APPRO" | "CAS" | "CONCL" });
+  const [selectedSection, setSelectedSection] = useState<AdminSection | null>(
+    null,
+  );
+  const [sectionForm, setSectionForm] = useState({
+    title: "",
+    type: "APPRO" as "TEASER" | "INTRO" | "INIT" | "APPRO" | "CAS" | "CONCL",
+  });
 
   // ─── LESSON MODALS ───
   const [lessonModal, setLessonModal] = useState<LessonModalMode>(null);
-  const [selectedLesson, setSelectedLesson] = useState<AdminSectionLesson | null>(null);
+  const [selectedLesson, setSelectedLesson] =
+    useState<AdminSectionLesson | null>(null);
   const [lessonParentId, setLessonParentId] = useState<string>("");
   const [lessonForm, setLessonForm] = useState({
-    title: "", type: "audio" as "slide" | "video" | "text" | "audio", duration_seconds: 0, slide_type: "bullet_points",
+    title: "",
+    type: "audio" as "slide" | "video" | "text" | "audio",
+    duration_seconds: 0,
+    slide_type: "bullet_points",
     speakers: [] as Speaker[],
     displayMode: "both" as LessonDisplayMode,
   });
@@ -177,17 +194,27 @@ export default function CourseContentPage() {
   // Narrator input mode: manual (one-by-one) or json (paste array)
   const [narratorMode, setNarratorMode] = useState<"manual" | "json">("manual");
   const [narratorJson, setNarratorJson] = useState("");
-  const [narratorJsonError, setNarratorJsonError] = useState<string | null>(null);
+  const [narratorJsonError, setNarratorJsonError] = useState<string | null>(
+    null,
+  );
 
   // Visual content JSON editor
   const [visualContentJson, setVisualContentJson] = useState("");
-  const [visualContentJsonError, setVisualContentJsonError] = useState<string | null>(null);
+  const [visualContentJsonError, setVisualContentJsonError] = useState<
+    string | null
+  >(null);
 
   // ─── QUIZ MODALS ───
   const [quizModal, setQuizModal] = useState<QuizModalMode>(null);
   const [quizParentId, setQuizParentId] = useState<string>("");
   const [quizForm, setQuizForm] = useState<AdminSectionQuiz>({
-    id: "", title: "", intro_text: "", questions: [], pass_threshold: 70, max_attempts: 3, xp_reward: 10,
+    id: "",
+    title: "",
+    intro_text: "",
+    questions: [],
+    pass_threshold: 70,
+    max_attempts: 3,
+    xp_reward: 10,
   });
   const [quizJsonMode, setQuizJsonMode] = useState(false);
   const [quizJsonText, setQuizJsonText] = useState("");
@@ -198,7 +225,13 @@ export default function CourseContentPage() {
   const [finalQuizLoading, setFinalQuizLoading] = useState(false);
   const [fqModal, setFqModal] = useState<"edit" | "delete" | null>(null);
   const [fqSaving, setFqSaving] = useState(false);
-  const [fqForm, setFqForm] = useState({ title: "Final Quiz", num_questions: 10, pass_threshold: 70, max_attempts: 3, xp_reward: 50 });
+  const [fqForm, setFqForm] = useState({
+    title: "Final Quiz",
+    num_questions: 10,
+    pass_threshold: 70,
+    max_attempts: 3,
+    xp_reward: 50,
+  });
   const fqAudioInputRef = useRef<HTMLInputElement>(null);
   const [fqAudioFile, setFqAudioFile] = useState<File | null>(null);
   const [fqAudioPreview, setFqAudioPreview] = useState<string | null>(null);
@@ -213,35 +246,54 @@ export default function CourseContentPage() {
   // ═══════════════════════════════════════════════════════════════════════════
 
   const toggleSection = (id: string) => {
-    setExpandedSections((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setExpandedSections((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
   };
 
-  const openAddSection = () => { setSectionForm({ title: "", type: "APPRO" }); setSectionModal("add"); };
+  const openAddSection = () => {
+    setSectionForm({ title: "", type: "APPRO" });
+    setSectionModal("add");
+  };
 
   const openEditSection = (s: AdminSection) => {
-    setSelectedSection(s); setSectionForm({ title: s.title, type: s.type }); setSectionModal("edit");
+    setSelectedSection(s);
+    setSectionForm({ title: s.title, type: s.type });
+    setSectionModal("edit");
   };
 
-  const openDeleteSection = (s: AdminSection) => { setSelectedSection(s); setSectionModal("delete"); };
+  const openDeleteSection = (s: AdminSection) => {
+    setSelectedSection(s);
+    setSectionModal("delete");
+  };
 
-  const closeSectionModal = () => { setSectionModal(null); setSelectedSection(null); };
+  const closeSectionModal = () => {
+    setSectionModal(null);
+    setSelectedSection(null);
+  };
 
   const saveSection = async () => {
     if (sectionModal === "add") {
-      const result = await dispatch(createSection({
-        course: courseId,
-        title: sectionForm.title,
-        type: sectionForm.type,
-        sequence: sections.length + 1,
-      }));
+      const result = await dispatch(
+        createSection({
+          course: courseId,
+          title: sectionForm.title,
+          type: sectionForm.type,
+          sequence: sections.length + 1,
+        }),
+      );
       if (createSection.fulfilled.match(result)) {
         showToast(tc("sectionAdded"));
       }
     } else if (sectionModal === "edit" && selectedSection) {
-      const result = await dispatch(updateSection({
-        id: selectedSection.id,
-        data: { title: sectionForm.title, type: sectionForm.type },
-      }));
+      const result = await dispatch(
+        updateSection({
+          id: selectedSection.id,
+          data: { title: sectionForm.title, type: sectionForm.type },
+        }),
+      );
       if (updateSection.fulfilled.match(result)) {
         showToast(tc("sectionUpdated"));
       }
@@ -265,89 +317,136 @@ export default function CourseContentPage() {
 
   const openAddLesson = (sectionId: string) => {
     setLessonParentId(sectionId);
-    setLessonForm({ title: "", type: "audio", duration_seconds: 0, slide_type: "bullet_points", speakers: [], displayMode: "both" });
-    setAudioFile(null); setAudioPreview(null);
-    setNarratorMode("manual"); setNarratorJson(""); setNarratorJsonError(null);
-    setVisualContentJson(""); setVisualContentJsonError(null);
-    setSlideFile(null); setSlidePreview(null);
+    setLessonForm({
+      title: "",
+      type: "audio",
+      duration_seconds: 0,
+      slide_type: "bullet_points",
+      speakers: [],
+      displayMode: "both",
+    });
+    setAudioFile(null);
+    setAudioPreview(null);
+    setNarratorMode("manual");
+    setNarratorJson("");
+    setNarratorJsonError(null);
+    setVisualContentJson("");
+    setVisualContentJsonError(null);
+    setSlideFile(null);
+    setSlidePreview(null);
     setLessonModal("add");
   };
 
   const openEditLesson = (sectionId: string, lesson: AdminSectionLesson) => {
-    setLessonParentId(sectionId); setSelectedLesson(lesson);
+    setLessonParentId(sectionId);
+    setSelectedLesson(lesson);
     const speakers = lesson.content?.narration_script?.speakers || [];
     setLessonForm({
-      title: lesson.title, type: lesson.type, duration_seconds: lesson.duration_seconds,
-      slide_type: lesson.slide_type, speakers,
-      displayMode: (lesson as any).display_mode || (lesson as any).displayMode || "both",
+      title: lesson.title,
+      type: lesson.type,
+      duration_seconds: lesson.duration_seconds,
+      slide_type: lesson.slide_type,
+      speakers,
+      displayMode:
+        (lesson as any).display_mode || (lesson as any).displayMode || "both",
     });
-    setAudioFile(null); setAudioPreview(lesson.audioUrl);
-    setNarratorMode("manual"); setNarratorJson(speakers.length ? JSON.stringify(speakers, null, 2) : ""); setNarratorJsonError(null);
+    setAudioFile(null);
+    setAudioPreview(lesson.audioUrl);
+    setNarratorMode("manual");
+    setNarratorJson(speakers.length ? JSON.stringify(speakers, null, 2) : "");
+    setNarratorJsonError(null);
     // Visual content
     const vc = lesson.content?.visual_content;
-    setVisualContentJson(vc && Object.keys(vc).length > 0 ? JSON.stringify(vc, null, 2) : "");
+    setVisualContentJson(
+      vc && Object.keys(vc).length > 0 ? JSON.stringify(vc, null, 2) : "",
+    );
     setVisualContentJsonError(null);
-    setSlideFile(null); setSlidePreview(lesson.diapositiveUrl || null);
+    setSlideFile(null);
+    setSlidePreview(lesson.diapositiveUrl || null);
     setLessonModal("edit");
   };
 
   const openViewLesson = (sectionId: string, lesson: AdminSectionLesson) => {
-    setLessonParentId(sectionId); setSelectedLesson(lesson); setLessonModal("view");
+    setLessonParentId(sectionId);
+    setSelectedLesson(lesson);
+    setLessonModal("view");
   };
 
   const openDeleteLesson = (sectionId: string, lesson: AdminSectionLesson) => {
-    setLessonParentId(sectionId); setSelectedLesson(lesson); setLessonModal("delete");
+    setLessonParentId(sectionId);
+    setSelectedLesson(lesson);
+    setLessonModal("delete");
   };
 
-  const closeLessonModal = () => { setLessonModal(null); setSelectedLesson(null); setAudioFile(null); setAudioPreview(null); setSlideFile(null); setSlidePreview(null); };
+  const closeLessonModal = () => {
+    setLessonModal(null);
+    setSelectedLesson(null);
+    setAudioFile(null);
+    setAudioPreview(null);
+    setSlideFile(null);
+    setSlidePreview(null);
+  };
 
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) { setAudioFile(file); setAudioPreview(URL.createObjectURL(file)); }
+    if (file) {
+      setAudioFile(file);
+      setAudioPreview(URL.createObjectURL(file));
+    }
   };
 
   const saveLesson = async () => {
     let parentModule = null;
     for (const s of sections) {
-        const mod = s.modules_list?.find(m => m.id === lessonParentId);
-        if (mod) { parentModule = mod; break; }
+      const mod = s.modules_list?.find((m) => m.id === lessonParentId);
+      if (mod) {
+        parentModule = mod;
+        break;
+      }
     }
 
     const content = {
       visual_content: selectedLesson?.content.visual_content || {},
-      narration_script: { mode: "multi_speaker", speakers: lessonForm.speakers },
+      narration_script: {
+        mode: "multi_speaker",
+        speakers: lessonForm.speakers,
+      },
     };
 
     if (lessonModal === "add") {
-      const result = await dispatch(createLesson({
-        module: lessonParentId,
-        title: lessonForm.title,
-        type: lessonForm.type,
-        sequence: parentModule ? (parentModule.lessons_list?.length || 0) : 0,
-        duration_seconds: lessonForm.duration_seconds,
-        slide_type: lessonForm.slide_type,
-        display_mode: lessonForm.displayMode,
-        content,
-        audioFile: audioFile || undefined,
-        diapositiveFile: slideFile || undefined,
-      }));
-      if (createLesson.fulfilled.match(result)) {
-        showToast(tc("lessonAdded"));
-      }
-    } else if (lessonModal === "edit" && selectedLesson) {
-      const result = await dispatch(updateLesson({
-        id: selectedLesson.id,
-        data: {
+      const result = await dispatch(
+        createLesson({
+          module: lessonParentId,
           title: lessonForm.title,
           type: lessonForm.type,
+          sequence: parentModule ? parentModule.lessons_list?.length || 0 : 0,
           duration_seconds: lessonForm.duration_seconds,
           slide_type: lessonForm.slide_type,
           display_mode: lessonForm.displayMode,
           content,
           audioFile: audioFile || undefined,
           diapositiveFile: slideFile || undefined,
-        },
-      }));
+        }),
+      );
+      if (createLesson.fulfilled.match(result)) {
+        showToast(tc("lessonAdded"));
+      }
+    } else if (lessonModal === "edit" && selectedLesson) {
+      const result = await dispatch(
+        updateLesson({
+          id: selectedLesson.id,
+          data: {
+            title: lessonForm.title,
+            type: lessonForm.type,
+            duration_seconds: lessonForm.duration_seconds,
+            slide_type: lessonForm.slide_type,
+            display_mode: lessonForm.displayMode,
+            content,
+            audioFile: audioFile || undefined,
+            diapositiveFile: slideFile || undefined,
+          },
+        }),
+      );
       if (updateLesson.fulfilled.match(result)) {
         showToast(tc("lessonUpdated"));
       }
@@ -357,7 +456,9 @@ export default function CourseContentPage() {
 
   const handleDeleteLesson = async () => {
     if (selectedLesson) {
-      const result = await dispatch(deleteLessonThunk({ id: selectedLesson.id, moduleId: lessonParentId }));
+      const result = await dispatch(
+        deleteLessonThunk({ id: selectedLesson.id, moduleId: lessonParentId }),
+      );
       if (deleteLessonThunk.fulfilled.match(result)) {
         showToast(tc("lessonDeleted"));
       }
@@ -366,22 +467,54 @@ export default function CourseContentPage() {
   };
 
   // Speaker helpers
-  const addSpeaker = () => setLessonForm({ ...lessonForm, speakers: [...lessonForm.speakers, { text: "", emotion: "", speaker: "" }] });
+  const addSpeaker = () =>
+    setLessonForm({
+      ...lessonForm,
+      speakers: [
+        ...lessonForm.speakers,
+        { text: "", emotion: "", speaker: "" },
+      ],
+    });
   const updateSpeaker = (idx: number, field: keyof Speaker, val: string) => {
-    const s = [...lessonForm.speakers]; s[idx] = { ...s[idx], [field]: val }; setLessonForm({ ...lessonForm, speakers: s });
+    const s = [...lessonForm.speakers];
+    s[idx] = { ...s[idx], [field]: val };
+    setLessonForm({ ...lessonForm, speakers: s });
   };
-  const removeSpeaker = (idx: number) => setLessonForm({ ...lessonForm, speakers: lessonForm.speakers.filter((_, i) => i !== idx) });
+  const removeSpeaker = (idx: number) =>
+    setLessonForm({
+      ...lessonForm,
+      speakers: lessonForm.speakers.filter((_, i) => i !== idx),
+    });
 
   // JSON narrator helpers
   const handleNarratorJsonChange = (raw: string) => {
     setNarratorJson(raw);
-    if (!raw.trim()) { setNarratorJsonError(null); setLessonForm({ ...lessonForm, speakers: [] }); return; }
+    if (!raw.trim()) {
+      setNarratorJsonError(null);
+      setLessonForm({ ...lessonForm, speakers: [] });
+      return;
+    }
     try {
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) { setNarratorJsonError("Must be a JSON array"); return; }
-      const valid = parsed.every((s: Record<string, unknown>) => typeof s.text === "string" && typeof s.speaker === "string");
-      if (!valid) { setNarratorJsonError('Each item needs at least "text" and "speaker" fields'); return; }
-      const speakers: Speaker[] = parsed.map((s: Record<string, string>) => ({ text: s.text || "", emotion: s.emotion || "", speaker: s.speaker || "" }));
+      if (!Array.isArray(parsed)) {
+        setNarratorJsonError("Must be a JSON array");
+        return;
+      }
+      const valid = parsed.every(
+        (s: Record<string, unknown>) =>
+          typeof s.text === "string" && typeof s.speaker === "string",
+      );
+      if (!valid) {
+        setNarratorJsonError(
+          'Each item needs at least "text" and "speaker" fields',
+        );
+        return;
+      }
+      const speakers: Speaker[] = parsed.map((s: Record<string, string>) => ({
+        text: s.text || "",
+        emotion: s.emotion || "",
+        speaker: s.speaker || "",
+      }));
       setNarratorJsonError(null);
       setLessonForm({ ...lessonForm, speakers });
     } catch {
@@ -390,7 +523,11 @@ export default function CourseContentPage() {
   };
 
   const switchNarratorMode = (mode: "manual" | "json") => {
-    if (mode === "json" && narratorMode === "manual" && lessonForm.speakers.length > 0) {
+    if (
+      mode === "json" &&
+      narratorMode === "manual" &&
+      lessonForm.speakers.length > 0
+    ) {
       setNarratorJson(JSON.stringify(lessonForm.speakers, null, 2));
     }
     setNarratorJsonError(null);
@@ -404,14 +541,25 @@ export default function CourseContentPage() {
   const openQuizEditor = (sectionId: string, quiz: AdminSectionQuiz | null) => {
     setQuizParentId(sectionId);
     if (quiz) {
-      setQuizForm({ ...quiz }); setQuizModal("edit");
+      setQuizForm({ ...quiz });
+      setQuizModal("edit");
     } else {
-      setQuizForm({ id: uid(), title: "", intro_text: "", questions: [], pass_threshold: 70, max_attempts: 3, xp_reward: 10 });
+      setQuizForm({
+        id: uid(),
+        title: "",
+        intro_text: "",
+        questions: [],
+        pass_threshold: 70,
+        max_attempts: 3,
+        xp_reward: 10,
+      });
       setQuizModal("add");
     }
   };
 
-  const closeQuizModal = () => { setQuizModal(null); };
+  const closeQuizModal = () => {
+    setQuizModal(null);
+  };
 
   const saveQuiz = async () => {
     // For new quizzes, strip client-generated ids from questions
@@ -429,33 +577,37 @@ export default function CourseContentPage() {
     }));
 
     if (isAdd) {
-      const result = await dispatch(createQuiz({
-        quiz: {
-          section: quizParentId,
-          title: quizForm.title,
-          intro_text: quizForm.intro_text,
-          pass_threshold: quizForm.pass_threshold,
-          max_attempts: quizForm.max_attempts,
-          xp_reward: quizForm.xp_reward,
-        },
-        questions,
-      }));
+      const result = await dispatch(
+        createQuiz({
+          quiz: {
+            section: quizParentId,
+            title: quizForm.title,
+            intro_text: quizForm.intro_text,
+            pass_threshold: quizForm.pass_threshold,
+            max_attempts: quizForm.max_attempts,
+            xp_reward: quizForm.xp_reward,
+          },
+          questions,
+        }),
+      );
       if (createQuiz.fulfilled.match(result)) {
         showToast(tc("quizAdded"));
         closeQuizModal();
       }
     } else if (quizModal === "edit" && quizForm.id) {
-      const result = await dispatch(updateQuiz({
-        id: quizForm.id,
-        data: {
-          title: quizForm.title,
-          intro_text: quizForm.intro_text,
-          pass_threshold: quizForm.pass_threshold,
-          max_attempts: quizForm.max_attempts,
-          xp_reward: quizForm.xp_reward,
-        },
-        questions,
-      }));
+      const result = await dispatch(
+        updateQuiz({
+          id: quizForm.id,
+          data: {
+            title: quizForm.title,
+            intro_text: quizForm.intro_text,
+            pass_threshold: quizForm.pass_threshold,
+            max_attempts: quizForm.max_attempts,
+            xp_reward: quizForm.xp_reward,
+          },
+          questions,
+        }),
+      );
       if (updateQuiz.fulfilled.match(result)) {
         showToast(tc("quizUpdated"));
         closeQuizModal();
@@ -466,7 +618,9 @@ export default function CourseContentPage() {
   const handleDeleteQuiz = async (sectionId: string) => {
     const section = sections.find((s) => s.id === sectionId);
     if (section?.quiz) {
-      const result = await dispatch(deleteQuizThunk({ id: section.quiz.id, sectionId }));
+      const result = await dispatch(
+        deleteQuizThunk({ id: section.quiz.id, sectionId }),
+      );
       if (deleteQuizThunk.fulfilled.match(result)) {
         showToast(tc("quizDeleted"));
       }
@@ -488,27 +642,47 @@ export default function CourseContentPage() {
     setFqClearAudio(false);
     // Load existing audio entries
     setFqAudioRows(
-      (finalQuiz?.audio_entries || []).map(e => ({
+      (finalQuiz?.audio_entries || []).map((e) => ({
         id: e.id,
         min_percentage: e.min_percentage,
         max_percentage: e.max_percentage,
         label: e.label,
         audioFile: null,
         audioPreview: e.audio,
-      }))
+      })),
     );
     setFqModal(mode);
   };
 
   // Audio row helpers
-  const addAudioRow = () => setFqAudioRows(prev => [...prev, { id: '', min_percentage: 0, max_percentage: 100, label: '', audioFile: null, audioPreview: null }]);
-  const removeAudioRow = (idx: number) => setFqAudioRows(prev => prev.filter((_, i) => i !== idx));
-  const updateAudioRow = (idx: number, field: keyof FqAudioRow, val: unknown) => {
-    setFqAudioRows(prev => { const rows = [...prev]; rows[idx] = { ...rows[idx], [field]: val }; return rows; });
+  const addAudioRow = () =>
+    setFqAudioRows((prev) => [
+      ...prev,
+      {
+        id: "",
+        min_percentage: 0,
+        max_percentage: 100,
+        label: "",
+        audioFile: null,
+        audioPreview: null,
+      },
+    ]);
+  const removeAudioRow = (idx: number) =>
+    setFqAudioRows((prev) => prev.filter((_, i) => i !== idx));
+  const updateAudioRow = (
+    idx: number,
+    field: keyof FqAudioRow,
+    val: unknown,
+  ) => {
+    setFqAudioRows((prev) => {
+      const rows = [...prev];
+      rows[idx] = { ...rows[idx], [field]: val };
+      return rows;
+    });
   };
   const handleAudioRowFile = (idx: number, file: File) => {
-    updateAudioRow(idx, 'audioFile', file);
-    updateAudioRow(idx, 'audioPreview', URL.createObjectURL(file));
+    updateAudioRow(idx, "audioFile", file);
+    updateAudioRow(idx, "audioPreview", URL.createObjectURL(file));
   };
 
   const saveFinalQuiz = async () => {
@@ -517,35 +691,45 @@ export default function CourseContentPage() {
     try {
       const { default: api } = await import("@/lib/axios");
       const formData = new FormData();
-      formData.append('course_id', courseId);
-      formData.append('title', fqForm.title);
-      formData.append('num_questions', String(fqForm.num_questions));
-      formData.append('pass_threshold', String(fqForm.pass_threshold));
-      formData.append('max_attempts', String(fqForm.max_attempts));
-      formData.append('xp_reward', String(fqForm.xp_reward));
+      formData.append("course_id", courseId);
+      formData.append("title", fqForm.title);
+      formData.append("num_questions", String(fqForm.num_questions));
+      formData.append("pass_threshold", String(fqForm.pass_threshold));
+      formData.append("max_attempts", String(fqForm.max_attempts));
+      formData.append("xp_reward", String(fqForm.xp_reward));
       if (fqAudioFile) {
-        formData.append('motivation_audio', fqAudioFile);
+        formData.append("motivation_audio", fqAudioFile);
       } else if (fqClearAudio) {
-        formData.append('clear_motivation_audio', 'true');
+        formData.append("clear_motivation_audio", "true");
       }
 
       // Append percentage-based audio entries
       fqAudioRows.forEach((row, i) => {
         if (row.id) formData.append(`audio_entries[${i}].id`, row.id);
-        formData.append(`audio_entries[${i}].min_percentage`, String(row.min_percentage));
-        formData.append(`audio_entries[${i}].max_percentage`, String(row.max_percentage));
+        formData.append(
+          `audio_entries[${i}].min_percentage`,
+          String(row.min_percentage),
+        );
+        formData.append(
+          `audio_entries[${i}].max_percentage`,
+          String(row.max_percentage),
+        );
         formData.append(`audio_entries[${i}].label`, row.label);
         if (row.audioFile) {
           formData.append(`audio_entries[${i}].audio`, row.audioFile);
         }
       });
       if (fqAudioRows.length === 0) {
-        formData.append('clear_audio_entries', 'true');
+        formData.append("clear_audio_entries", "true");
       }
 
-      const res = await api.post("/formation/final-quiz/admin/upsert/", formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post(
+        "/formation/final-quiz/admin/upsert/",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
       setFinalQuiz(res.data);
       showToast(finalQuiz ? "Final quiz updated!" : "Final quiz created!");
       setFqModal(null);
@@ -561,7 +745,9 @@ export default function CourseContentPage() {
     setFqSaving(true);
     try {
       const { default: api } = await import("@/lib/axios");
-      await api.delete(`/formation/final-quiz/admin/delete/?course_id=${courseId}`);
+      await api.delete(
+        `/formation/final-quiz/admin/delete/?course_id=${courseId}`,
+      );
       setFinalQuiz(null);
       showToast("Final quiz removed.");
       setFqModal(null);
@@ -580,10 +766,20 @@ export default function CourseContentPage() {
       scenario: ["", "", ""],
     };
     setQuizForm({
-      ...quizForm, questions: [...quizForm.questions, {
-        id: uid(), type: questionType, question: "", options: defaultOptions[questionType] || ["", "", "", ""],
-        correct_answer: 0, explanation: "", difficulty: "easy", category: "general",
-      }],
+      ...quizForm,
+      questions: [
+        ...quizForm.questions,
+        {
+          id: uid(),
+          type: questionType,
+          question: "",
+          options: defaultOptions[questionType] || ["", "", "", ""],
+          correct_answer: 0,
+          explanation: "",
+          difficulty: "easy",
+          category: "general",
+        },
+      ],
     });
   };
 
@@ -594,36 +790,52 @@ export default function CourseContentPage() {
       scenario: ["", "", ""],
     };
     const q = [...quizForm.questions];
-    q[qIdx] = { ...q[qIdx], type: newType, options: defaultOptions[newType] || ["", "", "", ""], correct_answer: 0 };
+    q[qIdx] = {
+      ...q[qIdx],
+      type: newType,
+      options: defaultOptions[newType] || ["", "", "", ""],
+      correct_answer: 0,
+    };
     setQuizForm({ ...quizForm, questions: q });
   };
 
   const updateQuestion = (idx: number, field: string, val: unknown) => {
-    const q = [...quizForm.questions]; q[idx] = { ...q[idx], [field]: val }; setQuizForm({ ...quizForm, questions: q });
-  };
-
-  const updateOption = (qIdx: number, oIdx: number, val: string) => {
-    const q = [...quizForm.questions]; const opts = [...q[qIdx].options]; opts[oIdx] = val; q[qIdx] = { ...q[qIdx], options: opts };
+    const q = [...quizForm.questions];
+    q[idx] = { ...q[idx], [field]: val };
     setQuizForm({ ...quizForm, questions: q });
   };
 
-  const removeQuestion = (idx: number) => setQuizForm({ ...quizForm, questions: quizForm.questions.filter((_, i) => i !== idx) });
+  const updateOption = (qIdx: number, oIdx: number, val: string) => {
+    const q = [...quizForm.questions];
+    const opts = [...q[qIdx].options];
+    opts[oIdx] = val;
+    q[qIdx] = { ...q[qIdx], options: opts };
+    setQuizForm({ ...quizForm, questions: q });
+  };
+
+  const removeQuestion = (idx: number) =>
+    setQuizForm({
+      ...quizForm,
+      questions: quizForm.questions.filter((_, i) => i !== idx),
+    });
 
   // Quiz JSON import
   const parseQuizJson = () => {
     try {
       const raw = JSON.parse(quizJsonText);
       const data = raw.quiz || raw;
-      const questions = (data.questions || []).map((q: Record<string, unknown>) => ({
-        id: uid(),
-        type: (q.type as string) || "multiple_choice",
-        question: (q.question as string) || "",
-        options: (q.options as string[]) || ["", "", "", ""],
-        correct_answer: (q.correct_answer as number) ?? 0,
-        explanation: (q.explanation as string) || "",
-        difficulty: (q.difficulty as string) || "easy",
-        category: (q.category as string) || "general",
-      }));
+      const questions = (data.questions || []).map(
+        (q: Record<string, unknown>) => ({
+          id: uid(),
+          type: (q.type as string) || "multiple_choice",
+          question: (q.question as string) || "",
+          options: (q.options as string[]) || ["", "", "", ""],
+          correct_answer: (q.correct_answer as number) ?? 0,
+          explanation: (q.explanation as string) || "",
+          difficulty: (q.difficulty as string) || "easy",
+          category: (q.category as string) || "general",
+        }),
+      );
       setQuizForm({
         ...quizForm,
         title: (data.title as string) || quizForm.title,
@@ -632,7 +844,10 @@ export default function CourseContentPage() {
       });
       setQuizJsonError(null);
       setQuizJsonMode(false);
-      showToast(tc("quizJsonApplied") || `JSON applied — ${questions.length} questions loaded`);
+      showToast(
+        tc("quizJsonApplied") ||
+          `JSON applied — ${questions.length} questions loaded`,
+      );
     } catch (err) {
       setQuizJsonError((err as Error).message);
     }
@@ -642,24 +857,38 @@ export default function CourseContentPage() {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const InputClass = "w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors";
-  const LabelClass = "block text-xs font-medium text-silver dark:text-white/50 mb-1.5";
+  const InputClass =
+    "w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors";
+  const LabelClass =
+    "block text-xs font-medium text-silver dark:text-white/50 mb-1.5";
 
   return (
     <div className="min-h-screen">
-      <AdminHeader titleKey="admin.courseContent.title" subtitleKey="admin.courseContent.subtitle" />
+      <AdminHeader
+        titleKey="admin.courseContent.title"
+        subtitleKey="admin.courseContent.subtitle"
+      />
 
       <div className="p-4 lg:p-6 space-y-6">
         {/* Back + Add Section */}
         <div className="flex items-center justify-between">
-          <Link href="/admin/course-management" className="flex items-center gap-2 text-sm text-silver dark:text-white/50 hover:text-gold transition-colors">
+          <Link
+            href="/admin/course-management"
+            className="flex items-center gap-2 text-sm text-silver dark:text-white/50 hover:text-gold transition-colors"
+          >
             <ArrowLeftIcon className="w-4 h-4" /> {tc("backToCourses")}
           </Link>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowBulkImport(true)} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-white/5 text-oxford dark:text-white border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium hover:border-gold/50 transition-colors">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-white/5 text-oxford dark:text-white border border-gray-200 dark:border-white/10 rounded-lg text-sm font-medium hover:border-gold/50 transition-colors"
+            >
               JSON
             </button>
-            <button onClick={openAddSection} className="flex items-center gap-2 px-5 py-2.5 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 transition-colors shadow-md hover:shadow-lg">
+            <button
+              onClick={openAddSection}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 transition-colors shadow-md hover:shadow-lg"
+            >
               <Plus className="w-4 h-4" /> {tc("addSection")}
             </button>
           </div>
@@ -669,7 +898,9 @@ export default function CourseContentPage() {
         {loading && (
           <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12 flex flex-col items-center gap-3">
             <ArrowPathIcon className="w-8 h-8 text-gold animate-spin" />
-            <p className="text-sm text-silver dark:text-white/50">Loading sections...</p>
+            <p className="text-sm text-silver dark:text-white/50">
+              Loading sections...
+            </p>
           </div>
         )}
 
@@ -685,127 +916,279 @@ export default function CourseContentPage() {
         {!loading && sections.length === 0 && !error && (
           <div className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
             <BookOpenIcon className="w-12 h-12 text-gray-300 dark:text-white/20 mx-auto mb-3" />
-            <p className="text-sm text-silver dark:text-white/50">{tc("noSections")}</p>
+            <p className="text-sm text-silver dark:text-white/50">
+              {tc("noSections")}
+            </p>
           </div>
         )}
 
         {/* Sections */}
-        {!loading && sections.map((section, sIdx) => {
-          const isExpanded = expandedSections.has(section.id);
-          return (
-            <motion.div key={section.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: sIdx * 0.05 }}
-              className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden"
-            >
-              {/* Section Header */}
-              <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors" onClick={() => toggleSection(section.id)}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">{section.sequence}</span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-oxford dark:text-white text-sm truncate">{section.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={cn("inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium", section.type === "TEASER" ? "bg-purple-500/10 text-purple-500" : "bg-blue-500/10 text-blue-500")}>
-                        {section.type}
-                      </span>
-                      <span className="text-xs text-silver dark:text-white/40">{(section.modules_list || []).reduce((acc, m) => acc + (m.lessons_list?.length || 0), 0)} lessons • {section.duration}</span>
-                      {section.quiz && <span className="text-xs text-emerald-500">✓ Quiz</span>}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={(e) => { e.stopPropagation(); openEditSection(section); }} className="p-2 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors">
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); openDeleteSection(section); }} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                    <Trash className="w-4 h-4" />
-                  </button>
-                  {isExpanded ? <ChevronUpIcon className="w-5 h-5 text-gray-400" /> : <ChevronDownIcon className="w-5 h-5 text-gray-400" />}
-                </div>
-              </div>
-
-              {/* Expanded Content */}
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                    <div className="px-5 pb-5 space-y-4 border-t border-gray-200 dark:border-white/10 pt-4">
-                      {/* Modules & Lessons List */}
-                      {(!section.modules_list || section.modules_list.length === 0) ? (
-                        <p className="text-xs text-silver dark:text-white/40 text-center py-3">No modules yet.</p>
-                      ) : (
-                        <div className="space-y-4">
-                          {section.modules_list.map((module) => (
-                            <div key={module.id} className="border border-gray-100 dark:border-white/5 rounded-xl p-4 bg-gray-50/50 dark:bg-white/[0.02]">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-6 h-6 rounded bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">{module.sequence}</span>
-                                  <span className="text-sm font-semibold text-oxford dark:text-white">{module.title}</span>
-                                </div>
-                                <button onClick={() => openAddLesson(module.id)} className="flex items-center gap-1.5 text-xs text-gold hover:text-gold/80 font-medium">
-                                  <PlusCircleIcon className="w-4 h-4" /> {tc("addLesson")}
-                                </button>
-                              </div>
-                              <div className="space-y-2 pl-2">
-                                {(!module.lessons_list || module.lessons_list.length === 0) ? (
-                                  <p className="text-xs text-silver dark:text-white/40 text-center py-2">{tc("noLessons")}</p>
-                                ) : (
-                                  module.lessons_list.map((lesson) => (
-                                    <div key={lesson.id} className="flex items-center justify-between p-3 bg-white dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 rounded-xl group shadow-sm">
-                                      <div className="flex items-center gap-3 min-w-0">
-                                        <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", lesson.type === "audio" ? "bg-blue-500/10" : "bg-amber-500/10")}>
-                                          {lesson.type === "audio" ? <MusicalNoteIcon className="w-4 h-4 text-blue-500" /> : <DocumentTextIcon className="w-4 h-4 text-amber-500" />}
-                                        </div>
-                                        <div className="min-w-0">
-                                          <p className="text-sm font-medium text-oxford dark:text-white truncate">{lesson.title}</p>
-                                          <div className="flex items-center gap-2">
-                                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", lesson.type === "audio" ? "bg-blue-500/10 text-blue-500" : "bg-amber-500/10 text-amber-500")}>{lesson.type}</span>
-                                            <span className="text-xs text-silver dark:text-white/40">{lesson.duration_seconds}s</span>
-                                            {lesson.audioUrl && <span className="text-xs text-emerald-500">♪ Audio</span>}
-                                            {lesson.diapositiveUrl && <span className="text-xs text-purple-500">📊 Diapositive</span>}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => openViewLesson(module.id, lesson)} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"><Eye className="w-3.5 h-3.5" /></button>
-                                        <button onClick={() => openEditLesson(module.id, lesson)} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
-                                        <button onClick={() => openDeleteLesson(module.id, lesson)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-3.5 h-3.5" /></button>
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Quiz Section */}
-                      <div className="border-t border-gray-100 dark:border-white/5 pt-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">{tc("quiz")}</p>
-                          {!section.quiz ? (
-                            <button onClick={() => openQuizEditor(section.id, null)} className="flex items-center gap-1.5 text-xs text-gold hover:text-gold/80 font-medium">
-                              <PlusCircleIcon className="w-4 h-4" /> {tc("addQuiz")}
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-1">
-                              <button onClick={() => openQuizEditor(section.id, section.quiz)} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => handleDeleteQuiz(section.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-3.5 h-3.5" /></button>
-                            </div>
+        {!loading &&
+          sections.map((section, sIdx) => {
+            const isExpanded = expandedSections.has(section.id);
+            return (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: sIdx * 0.05 }}
+                className="bg-white dark:bg-oxford-light rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden"
+              >
+                {/* Section Header */}
+                <div
+                  className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                  onClick={() => toggleSection(section.id)}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">
+                      {section.sequence}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-oxford dark:text-white text-sm truncate">
+                        {section.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span
+                          className={cn(
+                            "inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium",
+                            section.type === "TEASER"
+                              ? "bg-purple-500/10 text-purple-500"
+                              : "bg-blue-500/10 text-blue-500",
                           )}
-                        </div>
+                        >
+                          {section.type}
+                        </span>
+                        <span className="text-xs text-silver dark:text-white/40">
+                          {(section.modules_list || []).reduce(
+                            (acc, m) => acc + (m.lessons_list?.length || 0),
+                            0,
+                          )}{" "}
+                          lessons • {section.duration}
+                        </span>
                         {section.quiz && (
-                          <div className="mt-2 p-3 bg-emerald-500/5 rounded-xl">
-                            <p className="text-sm font-medium text-oxford dark:text-white">{section.quiz.title}</p>
-                            <p className="text-xs text-silver dark:text-white/40 mt-0.5">{section.quiz.questions.length} questions • Pass: {section.quiz.pass_threshold}% • XP: {section.quiz.xp_reward}</p>
-                          </div>
+                          <span className="text-xs text-emerald-500">
+                            ✓ Quiz
+                          </span>
                         )}
                       </div>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditSection(section);
+                      }}
+                      className="p-2 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteSection(section);
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                    {isExpanded ? (
+                      <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded Content */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 pb-5 space-y-4 border-t border-gray-200 dark:border-white/10 pt-4">
+                        {/* Modules & Lessons List */}
+                        {!section.modules_list ||
+                        section.modules_list.length === 0 ? (
+                          <p className="text-xs text-silver dark:text-white/40 text-center py-3">
+                            No modules yet.
+                          </p>
+                        ) : (
+                          <div className="space-y-4">
+                            {section.modules_list.map((module) => (
+                              <div
+                                key={module.id}
+                                className="border border-gray-100 dark:border-white/5 rounded-xl p-4 bg-gray-50/50 dark:bg-white/[0.02]"
+                              >
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">
+                                      {module.sequence}
+                                    </span>
+                                    <span className="text-sm font-semibold text-oxford dark:text-white">
+                                      {module.title}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => openAddLesson(module.id)}
+                                    className="flex items-center gap-1.5 text-xs text-gold hover:text-gold/80 font-medium"
+                                  >
+                                    <PlusCircleIcon className="w-4 h-4" />{" "}
+                                    {tc("addLesson")}
+                                  </button>
+                                </div>
+                                <div className="space-y-2 pl-2">
+                                  {!module.lessons_list ||
+                                  module.lessons_list.length === 0 ? (
+                                    <p className="text-xs text-silver dark:text-white/40 text-center py-2">
+                                      {tc("noLessons")}
+                                    </p>
+                                  ) : (
+                                    module.lessons_list.map((lesson) => (
+                                      <div
+                                        key={lesson.id}
+                                        className="flex items-center justify-between p-3 bg-white dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 rounded-xl group shadow-sm"
+                                      >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <div
+                                            className={cn(
+                                              "w-9 h-9 rounded-lg flex items-center justify-center",
+                                              lesson.type === "audio"
+                                                ? "bg-blue-500/10"
+                                                : "bg-amber-500/10",
+                                            )}
+                                          >
+                                            {lesson.type === "audio" ? (
+                                              <MusicalNoteIcon className="w-4 h-4 text-blue-500" />
+                                            ) : (
+                                              <DocumentTextIcon className="w-4 h-4 text-amber-500" />
+                                            )}
+                                          </div>
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-medium text-oxford dark:text-white truncate">
+                                              {lesson.title}
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                              <span
+                                                className={cn(
+                                                  "text-[10px] px-1.5 py-0.5 rounded font-medium",
+                                                  lesson.type === "audio"
+                                                    ? "bg-blue-500/10 text-blue-500"
+                                                    : "bg-amber-500/10 text-amber-500",
+                                                )}
+                                              >
+                                                {lesson.type}
+                                              </span>
+                                              <span className="text-xs text-silver dark:text-white/40">
+                                                {lesson.duration_seconds}s
+                                              </span>
+                                              {lesson.audioUrl && (
+                                                <span className="text-xs text-emerald-500">
+                                                  ♪ Audio
+                                                </span>
+                                              )}
+                                              {lesson.diapositiveUrl && (
+                                                <span className="text-xs text-purple-500">
+                                                  📊 Diapositive
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button
+                                            onClick={() =>
+                                              openViewLesson(module.id, lesson)
+                                            }
+                                            className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                          >
+                                            <Eye className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              openEditLesson(module.id, lesson)
+                                            }
+                                            className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"
+                                          >
+                                            <Edit className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              openDeleteLesson(
+                                                module.id,
+                                                lesson,
+                                              )
+                                            }
+                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                          >
+                                            <Trash className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Quiz Section */}
+                        <div className="border-t border-gray-100 dark:border-white/5 pt-4">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">
+                              {tc("quiz")}
+                            </p>
+                            {!section.quiz ? (
+                              <button
+                                onClick={() => openQuizEditor(section.id, null)}
+                                className="flex items-center gap-1.5 text-xs text-gold hover:text-gold/80 font-medium"
+                              >
+                                <PlusCircleIcon className="w-4 h-4" />{" "}
+                                {tc("addQuiz")}
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() =>
+                                    openQuizEditor(section.id, section.quiz)
+                                  }
+                                  className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteQuiz(section.id)}
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                >
+                                  <Trash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          {section.quiz && (
+                            <div className="mt-2 p-3 bg-emerald-500/5 rounded-xl">
+                              <p className="text-sm font-medium text-oxford dark:text-white">
+                                {section.quiz.title}
+                              </p>
+                              <p className="text-xs text-silver dark:text-white/40 mt-0.5">
+                                {section.quiz.questions.length} questions •
+                                Pass: {section.quiz.pass_threshold}% • XP:{" "}
+                                {section.quiz.xp_reward}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
 
         {/* ═══════════ FINAL QUIZ PANEL ═══════════ */}
         <motion.div
@@ -819,20 +1202,39 @@ export default function CourseContentPage() {
                 <AcademicCapIcon className="w-4 h-4 text-purple-500" />
               </div>
               <div>
-                <p className="font-semibold text-oxford dark:text-white text-sm">Final Quiz</p>
-                <p className="text-xs text-silver dark:text-white/40">Certificate exam — drawn from section quizzes</p>
+                <p className="font-semibold text-oxford dark:text-white text-sm">
+                  Final Quiz
+                </p>
+                <p className="text-xs text-silver dark:text-white/40">
+                  Certificate exam — drawn from section quizzes
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {finalQuiz ? (
                 <>
-                  <button onClick={() => openFqModal("edit")} className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
-                  <button onClick={() => setFqModal("delete")} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => openFqModal("edit")}
+                    className="p-1.5 text-gray-400 hover:text-gold hover:bg-gold/10 rounded-lg transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setFqModal("delete")}
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
                 </>
-              ) : !finalQuizLoading && (
-                <button onClick={() => openFqModal("edit")} className="flex items-center gap-1.5 text-xs text-purple-500 hover:text-purple-400 font-medium">
-                  <PlusCircleIcon className="w-4 h-4" /> Add Final Quiz
-                </button>
+              ) : (
+                !finalQuizLoading && (
+                  <button
+                    onClick={() => openFqModal("edit")}
+                    className="flex items-center gap-1.5 text-xs text-purple-500 hover:text-purple-400 font-medium"
+                  >
+                    <PlusCircleIcon className="w-4 h-4" /> Add Final Quiz
+                  </button>
+                )
               )}
             </div>
           </div>
@@ -847,34 +1249,61 @@ export default function CourseContentPage() {
                   {[
                     { label: "Title", value: finalQuiz.title },
                     { label: "Questions", value: finalQuiz.num_questions },
-                    { label: "Pass threshold", value: `${finalQuiz.pass_threshold}%` },
+                    {
+                      label: "Pass threshold",
+                      value: `${finalQuiz.pass_threshold}%`,
+                    },
                     { label: "Max attempts", value: finalQuiz.max_attempts },
                     { label: "XP reward", value: finalQuiz.xp_reward },
-                  ].map(item => (
-                    <div key={item.label} className="p-3 bg-purple-500/5 rounded-xl">
-                      <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider mb-0.5">{item.label}</p>
-                      <p className="text-sm font-semibold text-oxford dark:text-white">{item.value}</p>
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="p-3 bg-purple-500/5 rounded-xl"
+                    >
+                      <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider mb-0.5">
+                        {item.label}
+                      </p>
+                      <p className="text-sm font-semibold text-oxford dark:text-white">
+                        {item.value}
+                      </p>
                     </div>
                   ))}
                 </div>
                 {finalQuiz.motivation_audio && (
                   <div className="flex items-center gap-2 p-3 bg-gold/5 rounded-xl border border-gold/20">
                     <span className="text-gold text-sm">🎧</span>
-                    <span className="text-xs text-gold font-medium">Legacy motivation audio</span>
-                    <audio src={finalQuiz.motivation_audio} controls className="h-8 ml-auto" />
+                    <span className="text-xs text-gold font-medium">
+                      Legacy motivation audio
+                    </span>
+                    <audio
+                      src={finalQuiz.motivation_audio}
+                      controls
+                      className="h-8 ml-auto"
+                    />
                   </div>
                 )}
                 {(finalQuiz.audio_entries || []).length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider">Audio by score range</p>
-                    {finalQuiz.audio_entries!.map(entry => (
-                      <div key={entry.id} className="flex items-center gap-2 p-3 bg-purple-500/5 rounded-xl border border-purple-500/20">
+                    <p className="text-[10px] text-silver dark:text-white/40 uppercase tracking-wider">
+                      Audio by score range
+                    </p>
+                    {finalQuiz.audio_entries!.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="flex items-center gap-2 p-3 bg-purple-500/5 rounded-xl border border-purple-500/20"
+                      >
                         <span className="text-purple-500 text-sm">🎧</span>
                         <span className="text-xs text-purple-500 font-medium">
                           {entry.min_percentage}%–{entry.max_percentage}%
-                          {entry.label ? ` • ${entry.label}` : ''}
+                          {entry.label ? ` • ${entry.label}` : ""}
                         </span>
-                        {entry.audio && <audio src={entry.audio} controls className="h-8 ml-auto" />}
+                        {entry.audio && (
+                          <audio
+                            src={entry.audio}
+                            controls
+                            className="h-8 ml-auto"
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -883,8 +1312,13 @@ export default function CourseContentPage() {
             ) : (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
                 <ClipboardDocumentCheckIcon className="w-10 h-10 text-gray-200 dark:text-white/10" />
-                <p className="text-sm text-silver dark:text-white/40">No final quiz configured yet</p>
-                <button onClick={() => openFqModal("edit")} className="mt-1 flex items-center gap-1.5 px-4 py-2 bg-purple-500/10 text-purple-500 rounded-lg text-xs font-semibold hover:bg-purple-500/20 transition-colors">
+                <p className="text-sm text-silver dark:text-white/40">
+                  No final quiz configured yet
+                </p>
+                <button
+                  onClick={() => openFqModal("edit")}
+                  className="mt-1 flex items-center gap-1.5 px-4 py-2 bg-purple-500/10 text-purple-500 rounded-lg text-xs font-semibold hover:bg-purple-500/20 transition-colors"
+                >
                   <PlusCircleIcon className="w-4 h-4" /> Create Final Quiz
                 </button>
               </div>
@@ -896,109 +1330,285 @@ export default function CourseContentPage() {
       {/* ═══════════ FINAL QUIZ MODAL ═══════════ */}
       <AnimatePresence>
         {fqModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setFqModal(null)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className={cn("relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden max-h-[85vh] overflow-y-auto", fqModal === "delete" ? "max-w-md" : "max-w-lg")}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setFqModal(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={cn(
+                "relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden max-h-[85vh] overflow-y-auto",
+                fqModal === "delete" ? "max-w-md" : "max-w-lg",
+              )}
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-semibold text-oxford dark:text-white">
-                  {fqModal === "delete" ? "Remove Final Quiz" : finalQuiz ? "Edit Final Quiz" : "Create Final Quiz"}
+                  {fqModal === "delete"
+                    ? "Remove Final Quiz"
+                    : finalQuiz
+                      ? "Edit Final Quiz"
+                      : "Create Final Quiz"}
                 </h3>
-                <button onClick={() => setFqModal(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                <button
+                  onClick={() => setFqModal(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {fqModal === "delete" ? (
                 <div className="p-6 space-y-4">
                   <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-500/10 rounded-xl">
                     <ExclamationTriangleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300">This will permanently remove the final quiz for this course. Students who haven&apos;t taken it yet won&apos;t be able to get a certificate.</p>
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                      This will permanently remove the final quiz for this
+                      course. Students who haven&apos;t taken it yet won&apos;t
+                      be able to get a certificate.
+                    </p>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button onClick={() => setFqModal(null)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
-                    <button onClick={deleteFinalQuiz} disabled={fqSaving} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">{fqSaving ? "..." : "Remove"}</button>
+                    <button
+                      onClick={() => setFqModal(null)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={deleteFinalQuiz}
+                      disabled={fqSaving}
+                      className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {fqSaving ? "..." : "Remove"}
+                    </button>
                   </div>
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
                   <div>
                     <label className={LabelClass}>Title</label>
-                    <input type="text" value={fqForm.title} onChange={e => setFqForm({ ...fqForm, title: e.target.value })} className={InputClass} placeholder="Final Quiz" />
+                    <input
+                      type="text"
+                      value={fqForm.title}
+                      onChange={(e) =>
+                        setFqForm({ ...fqForm, title: e.target.value })
+                      }
+                      className={InputClass}
+                      placeholder="Final Quiz"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className={LabelClass}>Questions drawn per attempt</label>
-                      <input type="number" min={1} value={fqForm.num_questions} onChange={e => setFqForm({ ...fqForm, num_questions: Number(e.target.value) })} className={InputClass} />
+                      <label className={LabelClass}>
+                        Questions drawn per attempt
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={fqForm.num_questions}
+                        onChange={(e) =>
+                          setFqForm({
+                            ...fqForm,
+                            num_questions: Number(e.target.value),
+                          })
+                        }
+                        className={InputClass}
+                      />
                     </div>
                     <div>
                       <label className={LabelClass}>Pass threshold (%)</label>
-                      <input type="number" min={0} max={100} value={fqForm.pass_threshold} onChange={e => setFqForm({ ...fqForm, pass_threshold: Number(e.target.value) })} className={InputClass} />
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={fqForm.pass_threshold}
+                        onChange={(e) =>
+                          setFqForm({
+                            ...fqForm,
+                            pass_threshold: Number(e.target.value),
+                          })
+                        }
+                        className={InputClass}
+                      />
                     </div>
                     <div>
                       <label className={LabelClass}>Max attempts</label>
-                      <input type="number" min={1} value={fqForm.max_attempts} onChange={e => setFqForm({ ...fqForm, max_attempts: Number(e.target.value) })} className={InputClass} />
+                      <input
+                        type="number"
+                        min={1}
+                        value={fqForm.max_attempts}
+                        onChange={(e) =>
+                          setFqForm({
+                            ...fqForm,
+                            max_attempts: Number(e.target.value),
+                          })
+                        }
+                        className={InputClass}
+                      />
                     </div>
                     <div>
                       <label className={LabelClass}>XP reward</label>
-                      <input type="number" min={0} value={fqForm.xp_reward} onChange={e => setFqForm({ ...fqForm, xp_reward: Number(e.target.value) })} className={InputClass} />
+                      <input
+                        type="number"
+                        min={0}
+                        value={fqForm.xp_reward}
+                        onChange={(e) =>
+                          setFqForm({
+                            ...fqForm,
+                            xp_reward: Number(e.target.value),
+                          })
+                        }
+                        className={InputClass}
+                      />
                     </div>
                   </div>
                   <p className="text-xs text-silver dark:text-white/40">
-                    The questions will be randomly drawn from all section quizzes in this course.
+                    The questions will be randomly drawn from all section
+                    quizzes in this course.
                   </p>
 
                   {/* ── Percentage-based Audio Entries ── */}
                   <div className="border-t border-gray-200 dark:border-white/10 pt-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className={LabelClass}>🎧 Audio by Score Percentage</label>
-                      <button type="button" onClick={addAudioRow} className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-400 font-medium">
+                      <label className={LabelClass}>
+                        🎧 Audio by Score Percentage
+                      </label>
+                      <button
+                        type="button"
+                        onClick={addAudioRow}
+                        className="flex items-center gap-1 text-xs text-purple-500 hover:text-purple-400 font-medium"
+                      >
                         <PlusCircleIcon className="w-4 h-4" /> Add range
                       </button>
                     </div>
-                    <p className="text-[10px] text-silver dark:text-white/40 -mt-1">Add different audio files for different score ranges (e.g. 0–20%, 21–40%…)</p>
+                    <p className="text-[10px] text-silver dark:text-white/40 -mt-1">
+                      Add different audio files for different score ranges (e.g.
+                      0–20%, 21–40%…)
+                    </p>
 
                     {fqAudioRows.length === 0 && (
-                      <p className="text-xs text-center text-silver dark:text-white/30 py-3">No audio ranges configured yet. Click &quot;Add range&quot; above.</p>
+                      <p className="text-xs text-center text-silver dark:text-white/30 py-3">
+                        No audio ranges configured yet. Click &quot;Add
+                        range&quot; above.
+                      </p>
                     )}
 
                     {fqAudioRows.map((row, idx) => (
-                      <div key={idx} className="p-3 bg-purple-500/5 rounded-xl border border-purple-500/10 space-y-2">
+                      <div
+                        key={idx}
+                        className="p-3 bg-purple-500/5 rounded-xl border border-purple-500/10 space-y-2"
+                      >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-purple-500">Range #{idx + 1}</span>
-                          <button type="button" onClick={() => removeAudioRow(idx)} className="p-1 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                          <span className="text-xs font-semibold text-purple-500">
+                            Range #{idx + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeAudioRow(idx)}
+                            className="p-1 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                          >
                             <MinusCircleIcon className="w-4 h-4" />
                           </button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
-                            <label className="text-[10px] text-silver dark:text-white/40">Min %</label>
-                            <input type="number" min={0} max={100} value={row.min_percentage} onChange={e => updateAudioRow(idx, 'min_percentage', Number(e.target.value))} className={InputClass} />
+                            <label className="text-[10px] text-silver dark:text-white/40">
+                              Min %
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={row.min_percentage}
+                              onChange={(e) =>
+                                updateAudioRow(
+                                  idx,
+                                  "min_percentage",
+                                  Number(e.target.value),
+                                )
+                              }
+                              className={InputClass}
+                            />
                           </div>
                           <div>
-                            <label className="text-[10px] text-silver dark:text-white/40">Max %</label>
-                            <input type="number" min={0} max={100} value={row.max_percentage} onChange={e => updateAudioRow(idx, 'max_percentage', Number(e.target.value))} className={InputClass} />
+                            <label className="text-[10px] text-silver dark:text-white/40">
+                              Max %
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={row.max_percentage}
+                              onChange={(e) =>
+                                updateAudioRow(
+                                  idx,
+                                  "max_percentage",
+                                  Number(e.target.value),
+                                )
+                              }
+                              className={InputClass}
+                            />
                           </div>
                           <div>
-                            <label className="text-[10px] text-silver dark:text-white/40">Label</label>
-                            <input type="text" value={row.label} onChange={e => updateAudioRow(idx, 'label', e.target.value)} className={InputClass} placeholder="e.g. Keep trying!" />
+                            <label className="text-[10px] text-silver dark:text-white/40">
+                              Label
+                            </label>
+                            <input
+                              type="text"
+                              value={row.label}
+                              onChange={(e) =>
+                                updateAudioRow(idx, "label", e.target.value)
+                              }
+                              className={InputClass}
+                              placeholder="e.g. Keep trying!"
+                            />
                           </div>
                         </div>
                         {/* Audio file */}
                         <input
-                          ref={el => { fqAudioRowRefs.current[idx] = el; }}
-                          type="file" accept="audio/*" className="hidden"
-                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAudioRowFile(idx, f); }}
+                          ref={(el) => {
+                            fqAudioRowRefs.current[idx] = el;
+                          }}
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleAudioRowFile(idx, f);
+                          }}
                         />
                         {row.audioPreview ? (
                           <div className="flex items-center gap-2">
-                            <audio src={row.audioPreview} controls className="flex-1 h-8" />
-                            <button type="button" onClick={() => { updateAudioRow(idx, 'audioFile', null); updateAudioRow(idx, 'audioPreview', null); }} className="p-1 text-red-400 hover:text-red-500">
+                            <audio
+                              src={row.audioPreview}
+                              controls
+                              className="flex-1 h-8"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateAudioRow(idx, "audioFile", null);
+                                updateAudioRow(idx, "audioPreview", null);
+                              }}
+                              className="p-1 text-red-400 hover:text-red-500"
+                            >
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         ) : (
-                          <button type="button" onClick={() => fqAudioRowRefs.current[idx]?.click()}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-purple-500/30 rounded-lg text-xs text-purple-400 hover:border-purple-500/60 transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => fqAudioRowRefs.current[idx]?.click()}
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-purple-500/30 rounded-lg text-xs text-purple-400 hover:border-purple-500/60 transition-colors"
+                          >
                             📂 Upload audio
                           </button>
                         )}
@@ -1006,8 +1616,17 @@ export default function CourseContentPage() {
                     ))}
                   </div>
                   <div className="flex gap-3 pt-3">
-                    <button onClick={() => setFqModal(null)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
-                    <button onClick={saveFinalQuiz} disabled={fqSaving} className="flex-1 px-4 py-2.5 bg-purple-500 text-white rounded-xl text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 shadow-md">
+                    <button
+                      onClick={() => setFqModal(null)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveFinalQuiz}
+                      disabled={fqSaving}
+                      className="flex-1 px-4 py-2.5 bg-purple-500 text-white rounded-xl text-sm font-semibold hover:bg-purple-600 transition-colors disabled:opacity-50 shadow-md"
+                    >
                       {fqSaving ? "Saving..." : finalQuiz ? "Update" : "Create"}
                     </button>
                   </div>
@@ -1021,10 +1640,24 @@ export default function CourseContentPage() {
       {/* ═══════════ SECTION MODAL ═══════════ */}
       <AnimatePresence>
         {sectionModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeSectionModal} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className={cn("relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden", sectionModal === "delete" ? "max-w-md" : "max-w-lg")}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={closeSectionModal}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={cn(
+                "relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden",
+                sectionModal === "delete" ? "max-w-md" : "max-w-lg",
+              )}
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-semibold text-oxford dark:text-white">
@@ -1032,7 +1665,12 @@ export default function CourseContentPage() {
                   {sectionModal === "edit" && tc("editSection")}
                   {sectionModal === "delete" && tc("deleteSection")}
                 </h3>
-                <button onClick={closeSectionModal} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                <button
+                  onClick={closeSectionModal}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {sectionModal === "delete" && selectedSection ? (
@@ -1040,33 +1678,104 @@ export default function CourseContentPage() {
                   <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-500/10 rounded-xl">
                     <ExclamationTriangleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-red-800 dark:text-red-300">{tc("confirmDeleteSection")}</p>
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">{tc("confirmDeleteSectionDesc")}</p>
+                      <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                        {tc("confirmDeleteSection")}
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        {tc("confirmDeleteSectionDesc")}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button onClick={closeSectionModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={handleDeleteSection} disabled={saving} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">{saving ? "..." : t("admin.common.delete")}</button>
+                    <button
+                      onClick={closeSectionModal}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      {t("admin.common.cancel")}
+                    </button>
+                    <button
+                      onClick={handleDeleteSection}
+                      disabled={saving}
+                      className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {saving ? "..." : t("admin.common.delete")}
+                    </button>
                   </div>
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
-                  <div><label className={LabelClass}>{tc("sectionTitle")} <span className="text-red-500">*</span></label>
-                    <input type="text" value={sectionForm.title} onChange={(e) => setSectionForm({ ...sectionForm, title: e.target.value })} className={InputClass} /></div>
-                  <div><label className={LabelClass}>{tc("sectionType")}</label>
-                    <select value={sectionForm.type} onChange={(e) => setSectionForm({ ...sectionForm, type: e.target.value as "TEASER" | "INTRO" | "INIT" | "APPRO" | "CAS" | "CONCL" })}
-                      className={cn(InputClass, "cursor-pointer")}>
-                      <option value="TEASER" className="text-black">Teaser</option>
-                      <option value="INTRO" className="text-black">Introduction</option>
-                      <option value="INIT" className="text-black">Initialisation</option>
-                      <option value="APPRO" className="text-black">Approfondissement</option>
-                      <option value="CAS" className="text-black">Cas Pratique</option>
-                      <option value="CONCL" className="text-black">Conclusion</option>
-                    </select></div>
+                  <div>
+                    <label className={LabelClass}>
+                      {tc("sectionTitle")}{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={sectionForm.title}
+                      onChange={(e) =>
+                        setSectionForm({
+                          ...sectionForm,
+                          title: e.target.value,
+                        })
+                      }
+                      className={InputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={LabelClass}>{tc("sectionType")}</label>
+                    <select
+                      value={sectionForm.type}
+                      onChange={(e) =>
+                        setSectionForm({
+                          ...sectionForm,
+                          type: e.target.value as
+                            | "TEASER"
+                            | "INTRO"
+                            | "INIT"
+                            | "APPRO"
+                            | "CAS"
+                            | "CONCL",
+                        })
+                      }
+                      className={cn(InputClass, "cursor-pointer")}
+                    >
+                      <option value="TEASER" className="text-black">
+                        Teaser
+                      </option>
+                      <option value="INTRO" className="text-black">
+                        Introduction
+                      </option>
+                      <option value="INIT" className="text-black">
+                        Initialisation
+                      </option>
+                      <option value="APPRO" className="text-black">
+                        Approfondissement
+                      </option>
+                      <option value="CAS" className="text-black">
+                        Cas Pratique
+                      </option>
+                      <option value="CONCL" className="text-black">
+                        Conclusion
+                      </option>
+                    </select>
+                  </div>
                   <div className="flex gap-3 pt-3">
-                    <button onClick={closeSectionModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={saveSection} disabled={!sectionForm.title || saving} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
-                      {saving ? "..." : (sectionModal === "add" ? tc("addSection") : t("admin.common.save"))}
+                    <button
+                      onClick={closeSectionModal}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      {t("admin.common.cancel")}
+                    </button>
+                    <button
+                      onClick={saveSection}
+                      disabled={!sectionForm.title || saving}
+                      className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md"
+                    >
+                      {saving
+                        ? "..."
+                        : sectionModal === "add"
+                          ? tc("addSection")
+                          : t("admin.common.save")}
                     </button>
                   </div>
                 </div>
@@ -1079,10 +1788,24 @@ export default function CourseContentPage() {
       {/* ═══════════ LESSON MODAL ═══════════ */}
       <AnimatePresence>
         {lessonModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeLessonModal} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className={cn("relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden", lessonModal === "delete" ? "max-w-md" : "max-w-2xl")}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={closeLessonModal}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={cn(
+                "relative w-full bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden",
+                lessonModal === "delete" ? "max-w-md" : "max-w-2xl",
+              )}
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
                 <h3 className="text-lg font-semibold text-oxford dark:text-white">
@@ -1091,7 +1814,12 @@ export default function CourseContentPage() {
                   {lessonModal === "view" && tc("viewLesson")}
                   {lessonModal === "delete" && tc("deleteLesson")}
                 </h3>
-                <button onClick={closeLessonModal} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                <button
+                  onClick={closeLessonModal}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Delete Lesson */}
@@ -1099,17 +1827,43 @@ export default function CourseContentPage() {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-500/10 rounded-xl">
                     <ExclamationTriangleIcon className="w-6 h-6 text-red-500 flex-shrink-0" />
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300">{tc("confirmDeleteLesson")}</p>
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                      {tc("confirmDeleteLesson")}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", selectedLesson.type === "audio" ? "bg-blue-500/10" : "bg-amber-500/10")}>
-                      {selectedLesson.type === "audio" ? <MusicalNoteIcon className="w-5 h-5 text-blue-500" /> : <DocumentTextIcon className="w-5 h-5 text-amber-500" />}
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
+                        selectedLesson.type === "audio"
+                          ? "bg-blue-500/10"
+                          : "bg-amber-500/10",
+                      )}
+                    >
+                      {selectedLesson.type === "audio" ? (
+                        <MusicalNoteIcon className="w-5 h-5 text-blue-500" />
+                      ) : (
+                        <DocumentTextIcon className="w-5 h-5 text-amber-500" />
+                      )}
                     </div>
-                    <p className="font-medium text-oxford dark:text-white text-sm">{selectedLesson.title}</p>
+                    <p className="font-medium text-oxford dark:text-white text-sm">
+                      {selectedLesson.title}
+                    </p>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button onClick={closeLessonModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={handleDeleteLesson} disabled={saving} className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">{saving ? "..." : t("admin.common.delete")}</button>
+                    <button
+                      onClick={closeLessonModal}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      {t("admin.common.cancel")}
+                    </button>
+                    <button
+                      onClick={handleDeleteLesson}
+                      disabled={saving}
+                      className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {saving ? "..." : t("admin.common.delete")}
+                    </button>
                   </div>
                 </div>
               )}
@@ -1121,40 +1875,77 @@ export default function CourseContentPage() {
                     {[
                       { label: tc("lessonTitle"), value: selectedLesson.title },
                       { label: tc("lessonType"), value: selectedLesson.type },
-                      { label: tc("duration"), value: `${selectedLesson.duration_seconds}s` },
-                      { label: tc("slideType"), value: selectedLesson.slide_type },
+                      {
+                        label: tc("duration"),
+                        value: `${selectedLesson.duration_seconds}s`,
+                      },
+                      {
+                        label: tc("slideType"),
+                        value: selectedLesson.slide_type,
+                      },
                     ].map((item) => (
-                      <div key={item.label} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-                        <p className="text-xs text-silver dark:text-white/40 mb-1">{item.label}</p>
-                        <p className="text-sm font-medium text-oxford dark:text-white">{item.value}</p>
+                      <div
+                        key={item.label}
+                        className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl"
+                      >
+                        <p className="text-xs text-silver dark:text-white/40 mb-1">
+                          {item.label}
+                        </p>
+                        <p className="text-sm font-medium text-oxford dark:text-white">
+                          {item.value}
+                        </p>
                       </div>
                     ))}
                   </div>
                   {selectedLesson.audioUrl && (
                     <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-                      <p className="text-xs text-silver dark:text-white/40 mb-2">{tc("audioFile")}</p>
-                      <audio controls src={selectedLesson.audioUrl} className="w-full" />
+                      <p className="text-xs text-silver dark:text-white/40 mb-2">
+                        {tc("audioFile")}
+                      </p>
+                      <audio
+                        controls
+                        src={selectedLesson.audioUrl}
+                        className="w-full"
+                      />
                     </div>
                   )}
                   {selectedLesson.diapositiveUrl && (
                     <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-                      <p className="text-xs text-silver dark:text-white/40 mb-2">Diapositive</p>
-                      <a href={selectedLesson.diapositiveUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-gold hover:underline flex items-center gap-1.5">
+                      <p className="text-xs text-silver dark:text-white/40 mb-2">
+                        Diapositive
+                      </p>
+                      <a
+                        href={selectedLesson.diapositiveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-gold hover:underline flex items-center gap-1.5"
+                      >
                         <PhotoIcon className="w-4 h-4" /> Voir la diapositive
                       </a>
                     </div>
                   )}
-                  {selectedLesson.content?.narration_script?.speakers?.length > 0 && (
+                  {selectedLesson.content?.narration_script?.speakers?.length >
+                    0 && (
                     <div className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-                      <p className="text-xs text-silver dark:text-white/40 mb-2">{tc("narrationScript")}</p>
+                      <p className="text-xs text-silver dark:text-white/40 mb-2">
+                        {tc("narrationScript")}
+                      </p>
                       <div className="space-y-2">
-                        {selectedLesson.content.narration_script.speakers.map((sp, i) => (
-                          <div key={i} className="flex gap-2 text-sm">
-                            <span className="font-semibold text-gold whitespace-nowrap">{sp.speaker}:</span>
-                            <span className="text-oxford dark:text-white/80">{sp.text}</span>
-                            <span className="text-xs text-silver dark:text-white/30 italic whitespace-nowrap">({sp.emotion})</span>
-                          </div>
-                        ))}
+                        {selectedLesson.content.narration_script.speakers.map(
+                          (sp, i) => (
+                            <div key={i} className="flex gap-2 text-sm">
+                              <span className="font-semibold text-gold whitespace-nowrap">
+                                {sp.speaker}:
+                              </span>
+                              <span className="text-oxford dark:text-white/80">
+                                {sp.text}
+                              </span>
+                              <span className="text-xs text-silver dark:text-white/30 italic whitespace-nowrap">
+                                ({sp.emotion})
+                              </span>
+                            </div>
+                          ),
+                        )}
                       </div>
                     </div>
                   )}
@@ -1165,18 +1956,84 @@ export default function CourseContentPage() {
               {(lessonModal === "add" || lessonModal === "edit") && (
                 <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className={LabelClass}>{tc("lessonTitle")} <span className="text-red-500">*</span></label>
-                      <input type="text" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className={InputClass} /></div>
-                    <div><label className={LabelClass}>{tc("lessonType")}</label>
-                      <select value={lessonForm.type} onChange={(e) => setLessonForm({ ...lessonForm, type: e.target.value as "slide" | "video" | "text" | "audio" })} className={cn(InputClass, "cursor-pointer")}>
-                        <option value="audio" className="text-black">Audio</option><option value="slide" className="text-black">Slide</option><option value="video" className="text-black">Video</option><option value="text" className="text-black">Text</option>
-                      </select></div>
+                    <div>
+                      <label className={LabelClass}>
+                        {tc("lessonTitle")}{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={lessonForm.title}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            title: e.target.value,
+                          })
+                        }
+                        className={InputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={LabelClass}>{tc("lessonType")}</label>
+                      <select
+                        value={lessonForm.type}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            type: e.target.value as
+                              | "slide"
+                              | "video"
+                              | "text"
+                              | "audio",
+                          })
+                        }
+                        className={cn(InputClass, "cursor-pointer")}
+                      >
+                        <option value="audio" className="text-black">
+                          Audio
+                        </option>
+                        <option value="slide" className="text-black">
+                          Slide
+                        </option>
+                        <option value="video" className="text-black">
+                          Video
+                        </option>
+                        <option value="text" className="text-black">
+                          Text
+                        </option>
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className={LabelClass}>{tc("duration")} (s)</label>
-                      <input type="number" min={0} value={lessonForm.duration_seconds} onChange={(e) => setLessonForm({ ...lessonForm, duration_seconds: Number(e.target.value) })} className={InputClass} /></div>
-                    <div><label className={LabelClass}>{tc("slideType")}</label>
-                      <input type="text" value={lessonForm.slide_type} onChange={(e) => setLessonForm({ ...lessonForm, slide_type: e.target.value })} className={InputClass} /></div>
+                    <div>
+                      <label className={LabelClass}>{tc("duration")} (s)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={lessonForm.duration_seconds}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            duration_seconds: Number(e.target.value),
+                          })
+                        }
+                        className={InputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={LabelClass}>{tc("slideType")}</label>
+                      <input
+                        type="text"
+                        value={lessonForm.slide_type}
+                        onChange={(e) =>
+                          setLessonForm({
+                            ...lessonForm,
+                            slide_type: e.target.value,
+                          })
+                        }
+                        className={InputClass}
+                      />
+                    </div>
                   </div>
 
                   {/* Display Mode */}
@@ -1184,56 +2041,100 @@ export default function CourseContentPage() {
                     <label className={LabelClass}>{tc("displayMode")}</label>
                     <div className="flex items-center gap-2">
                       {[
-                        { value: "narration" as LessonDisplayMode, icon: DocumentTextIcon, label: tc("narrationOnly"), desc: tc("narrationOnlyDesc") },
-                        { value: "slide" as LessonDisplayMode, icon: PhotoIcon, label: tc("slideOnly"), desc: tc("slideOnlyDesc") },
-                        { value: "both" as LessonDisplayMode, icon: Squares2X2Icon, label: tc("both"), desc: tc("bothDesc") },
+                        {
+                          value: "narration" as LessonDisplayMode,
+                          icon: DocumentTextIcon,
+                          label: tc("narrationOnly"),
+                          desc: tc("narrationOnlyDesc"),
+                        },
+                        {
+                          value: "slide" as LessonDisplayMode,
+                          icon: PhotoIcon,
+                          label: tc("slideOnly"),
+                          desc: tc("slideOnlyDesc"),
+                        },
+                        {
+                          value: "both" as LessonDisplayMode,
+                          icon: Squares2X2Icon,
+                          label: tc("both"),
+                          desc: tc("bothDesc"),
+                        },
                       ].map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => setLessonForm({ ...lessonForm, displayMode: opt.value })}
+                          onClick={() =>
+                            setLessonForm({
+                              ...lessonForm,
+                              displayMode: opt.value,
+                            })
+                          }
                           className={cn(
                             "flex-1 p-3 rounded-xl border-2 text-center transition-all text-xs font-medium",
                             lessonForm.displayMode === opt.value
                               ? "border-gold bg-gold/10 text-gold"
-                              : "border-gray-200 dark:border-white/10 text-silver dark:text-white/50 hover:border-gold/30"
+                              : "border-gray-200 dark:border-white/10 text-silver dark:text-white/50 hover:border-gold/30",
                           )}
                         >
                           <opt.icon className="w-5 h-5 mx-auto mb-1" />
                           <div className="text-sm mb-0.5">{opt.label}</div>
-                          <div className="text-[10px] opacity-70">{opt.desc}</div>
+                          <div className="text-[10px] opacity-70">
+                            {opt.desc}
+                          </div>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   {/* Visual Content — File Upload (when slide or both) */}
-                  {(lessonForm.displayMode === "slide" || lessonForm.displayMode === "both") && (
+                  {(lessonForm.displayMode === "slide" ||
+                    lessonForm.displayMode === "both") && (
                     <div>
                       <label className={LabelClass}>{tc("slideContent")}</label>
                       <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 border border-dashed border-gray-300 dark:border-white/20 rounded-xl">
-                        <button type="button" onClick={() => slideInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors">
-                          <ArrowUpTrayIcon className="w-4 h-4" /> {tc("uploadSlide")}
+                        <button
+                          type="button"
+                          onClick={() => slideInputRef.current?.click()}
+                          className="flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors"
+                        >
+                          <ArrowUpTrayIcon className="w-4 h-4" />{" "}
+                          {tc("uploadSlide")}
                         </button>
-                        <span className="text-xs text-silver dark:text-white/40 truncate">{slideFile?.name || slidePreview || tc("noFileSelected")}</span>
-                        <input ref={slideInputRef} type="file" accept="image/*,.pdf,.pptx,.ppt" onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) {
-                            setSlideFile(f);
-                            if (f.type.startsWith("image/")) {
-                              setSlidePreview(URL.createObjectURL(f));
-                            } else {
-                              setSlidePreview(f.name);
+                        <span className="text-xs text-silver dark:text-white/40 truncate">
+                          {slideFile?.name ||
+                            slidePreview ||
+                            tc("noFileSelected")}
+                        </span>
+                        <input
+                          ref={slideInputRef}
+                          type="file"
+                          accept="image/*,.pdf,.pptx,.ppt"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              setSlideFile(f);
+                              if (f.type.startsWith("image/")) {
+                                setSlidePreview(URL.createObjectURL(f));
+                              } else {
+                                setSlidePreview(f.name);
+                              }
                             }
-                          }
-                        }} className="hidden" />
+                          }}
+                          className="hidden"
+                        />
                       </div>
                       {slidePreview && slideFile?.type.startsWith("image/") && (
                         <div className="mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
-                          <img src={slidePreview} alt="Slide preview" className="w-full max-h-48 object-contain bg-gray-100 dark:bg-white/5" />
+                          <img
+                            src={slidePreview}
+                            alt="Slide preview"
+                            className="w-full max-h-48 object-contain bg-gray-100 dark:bg-white/5"
+                          />
                         </div>
                       )}
-                      <p className="text-[10px] text-silver dark:text-white/30 mt-1.5">{tc("slideFileHint")}</p>
+                      <p className="text-[10px] text-silver dark:text-white/30 mt-1.5">
+                        {tc("slideFileHint")}
+                      </p>
                     </div>
                   )}
 
@@ -1241,30 +2142,65 @@ export default function CourseContentPage() {
                   <div>
                     <label className={LabelClass}>{tc("audioFile")}</label>
                     <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 border border-dashed border-gray-300 dark:border-white/20 rounded-xl">
-                      <button type="button" onClick={() => audioInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors">
-                        <ArrowUpTrayIcon className="w-4 h-4" /> {tc("uploadAudio")}
+                      <button
+                        type="button"
+                        onClick={() => audioInputRef.current?.click()}
+                        className="flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors"
+                      >
+                        <ArrowUpTrayIcon className="w-4 h-4" />{" "}
+                        {tc("uploadAudio")}
                       </button>
-                      <span className="text-xs text-silver dark:text-white/40 truncate">{audioFile?.name || audioPreview || tc("noFileSelected")}</span>
-                      <input ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioChange} className="hidden" />
+                      <span className="text-xs text-silver dark:text-white/40 truncate">
+                        {audioFile?.name ||
+                          audioPreview ||
+                          tc("noFileSelected")}
+                      </span>
+                      <input
+                        ref={audioInputRef}
+                        type="file"
+                        accept="audio/*"
+                        onChange={handleAudioChange}
+                        className="hidden"
+                      />
                     </div>
-                    {audioPreview && <audio controls src={audioPreview} className="w-full mt-2" />}
+                    {audioPreview && (
+                      <audio
+                        controls
+                        src={audioPreview}
+                        className="w-full mt-2"
+                      />
+                    )}
                   </div>
 
                   {/* Narration Script */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className={LabelClass}>{tc("narrationScript")}</label>
+                      <label className={LabelClass}>
+                        {tc("narrationScript")}
+                      </label>
                       <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 rounded-lg p-0.5">
-                        <button type="button" onClick={() => switchNarratorMode("manual")}
-                          className={cn("flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                            narratorMode === "manual" ? "bg-white dark:bg-white/10 text-gold shadow-sm" : "text-silver dark:text-white/40 hover:text-oxford dark:hover:text-white/70"
-                          )}>
+                        <button
+                          type="button"
+                          onClick={() => switchNarratorMode("manual")}
+                          className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                            narratorMode === "manual"
+                              ? "bg-white dark:bg-white/10 text-gold shadow-sm"
+                              : "text-silver dark:text-white/40 hover:text-oxford dark:hover:text-white/70",
+                          )}
+                        >
                           <PencilIcon className="w-3.5 h-3.5" /> Manual
                         </button>
-                        <button type="button" onClick={() => switchNarratorMode("json")}
-                          className={cn("flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                            narratorMode === "json" ? "bg-white dark:bg-white/10 text-gold shadow-sm" : "text-silver dark:text-white/40 hover:text-oxford dark:hover:text-white/70"
-                          )}>
+                        <button
+                          type="button"
+                          onClick={() => switchNarratorMode("json")}
+                          className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                            narratorMode === "json"
+                              ? "bg-white dark:bg-white/10 text-gold shadow-sm"
+                              : "text-silver dark:text-white/40 hover:text-oxford dark:hover:text-white/70",
+                          )}
+                        >
                           <CodeBracketIcon className="w-3.5 h-3.5" /> JSON
                         </button>
                       </div>
@@ -1274,21 +2210,61 @@ export default function CourseContentPage() {
                       /* ── Manual mode ── */
                       <>
                         <div className="flex justify-end mb-2">
-                          <button type="button" onClick={addSpeaker} className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"><PlusCircleIcon className="w-4 h-4" /> {tc("addSpeaker")}</button>
+                          <button
+                            type="button"
+                            onClick={addSpeaker}
+                            className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"
+                          >
+                            <PlusCircleIcon className="w-4 h-4" />{" "}
+                            {tc("addSpeaker")}
+                          </button>
                         </div>
                         <div className="space-y-3">
                           {lessonForm.speakers.map((sp, i) => (
-                            <div key={i} className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl space-y-2">
+                            <div
+                              key={i}
+                              className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl space-y-2"
+                            >
                               <div className="flex items-center gap-2">
-                                <input placeholder={tc("speakerName")} value={sp.speaker} onChange={(e) => updateSpeaker(i, "speaker", e.target.value)} className={cn(InputClass, "flex-1")} />
-                                <input placeholder={tc("emotion")} value={sp.emotion} onChange={(e) => updateSpeaker(i, "emotion", e.target.value)} className={cn(InputClass, "w-32")} />
-                                <button onClick={() => removeSpeaker(i)} className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><MinusCircleIcon className="w-4 h-4" /></button>
+                                <input
+                                  placeholder={tc("speakerName")}
+                                  value={sp.speaker}
+                                  onChange={(e) =>
+                                    updateSpeaker(i, "speaker", e.target.value)
+                                  }
+                                  className={cn(InputClass, "flex-1")}
+                                />
+                                <input
+                                  placeholder={tc("emotion")}
+                                  value={sp.emotion}
+                                  onChange={(e) =>
+                                    updateSpeaker(i, "emotion", e.target.value)
+                                  }
+                                  className={cn(InputClass, "w-32")}
+                                />
+                                <button
+                                  onClick={() => removeSpeaker(i)}
+                                  className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                >
+                                  <MinusCircleIcon className="w-4 h-4" />
+                                </button>
                               </div>
-                              <textarea rows={2} placeholder={tc("speakerText")} value={sp.text} onChange={(e) => updateSpeaker(i, "text", e.target.value)} className={cn(InputClass, "resize-none")} />
+                              <textarea
+                                rows={2}
+                                placeholder={tc("speakerText")}
+                                value={sp.text}
+                                onChange={(e) =>
+                                  updateSpeaker(i, "text", e.target.value)
+                                }
+                                className={cn(InputClass, "resize-none")}
+                              />
                             </div>
                           ))}
                           {lessonForm.speakers.length === 0 && (
-                            <p className="text-xs text-silver dark:text-white/30 text-center py-4">No speakers yet. Click &quot;Add Speaker&quot; or switch to JSON mode to paste data.</p>
+                            <p className="text-xs text-silver dark:text-white/30 text-center py-4">
+                              No speakers yet. Click &quot;Add Speaker&quot; or
+                              switch to JSON mode to paste data.
+                            </p>
                           )}
                         </div>
                       </>
@@ -1298,9 +2274,16 @@ export default function CourseContentPage() {
                         <textarea
                           rows={10}
                           value={narratorJson}
-                          onChange={(e) => handleNarratorJsonChange(e.target.value)}
+                          onChange={(e) =>
+                            handleNarratorJsonChange(e.target.value)
+                          }
                           placeholder={`[\n  {\n    "speaker": "أَسْمَاءْ",\n    "text": "مَرْحَبًا بِكُمْ...",\n    "emotion": "enthousiaste"\n  },\n  {\n    "speaker": "نَبِيلْ",\n    "text": "التَّوَاصُلُ الْفَعَّالُ...",\n    "emotion": "pédagogue"\n  }\n]`}
-                          className={cn(InputClass, "resize-none font-mono text-xs !leading-relaxed", narratorJsonError && "!border-red-400 !ring-red-400/50")}
+                          className={cn(
+                            InputClass,
+                            "resize-none font-mono text-xs !leading-relaxed",
+                            narratorJsonError &&
+                              "!border-red-400 !ring-red-400/50",
+                          )}
                         />
                         {narratorJsonError && (
                           <div className="flex items-center gap-1.5 text-xs text-red-500">
@@ -1311,7 +2294,8 @@ export default function CourseContentPage() {
                         {!narratorJsonError && narratorJson.trim() && (
                           <div className="flex items-center gap-1.5 text-xs text-emerald-500">
                             <CheckCircleIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                            {lessonForm.speakers.length} speaker(s) parsed successfully
+                            {lessonForm.speakers.length} speaker(s) parsed
+                            successfully
                           </div>
                         )}
                       </div>
@@ -1319,9 +2303,22 @@ export default function CourseContentPage() {
                   </div>
 
                   <div className="flex gap-3 pt-3">
-                    <button onClick={closeLessonModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                    <button onClick={saveLesson} disabled={!lessonForm.title || saving} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
-                      {saving ? "..." : (lessonModal === "add" ? tc("addLesson") : t("admin.common.save"))}
+                    <button
+                      onClick={closeLessonModal}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      {t("admin.common.cancel")}
+                    </button>
+                    <button
+                      onClick={saveLesson}
+                      disabled={!lessonForm.title || saving}
+                      className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md"
+                    >
+                      {saving
+                        ? "..."
+                        : lessonModal === "add"
+                          ? tc("addLesson")
+                          : t("admin.common.save")}
                     </button>
                   </div>
                 </div>
@@ -1334,19 +2331,47 @@ export default function CourseContentPage() {
       {/* ═══════════ QUIZ MODAL ═══════════ */}
       <AnimatePresence>
         {quizModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeQuizModal} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={closeQuizModal}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className="relative w-full max-w-2xl bg-white dark:bg-oxford-light rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden"
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-white/10">
-                <h3 className="text-lg font-semibold text-oxford dark:text-white">{quizModal === "add" ? tc("addQuiz") : tc("editQuiz")}</h3>
+                <h3 className="text-lg font-semibold text-oxford dark:text-white">
+                  {quizModal === "add" ? tc("addQuiz") : tc("editQuiz")}
+                </h3>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => { setQuizJsonMode(!quizJsonMode); setQuizJsonError(null); }}
-                    className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors", quizJsonMode ? "bg-gold text-oxford" : "bg-gray-100 dark:bg-white/5 text-silver dark:text-white/50 hover:text-oxford dark:hover:text-white")}
-                  >JSON</button>
-                  <button onClick={closeQuizModal} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                    onClick={() => {
+                      setQuizJsonMode(!quizJsonMode);
+                      setQuizJsonError(null);
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                      quizJsonMode
+                        ? "bg-gold text-oxford"
+                        : "bg-gray-100 dark:bg-white/5 text-silver dark:text-white/50 hover:text-oxford dark:hover:text-white",
+                    )}
+                  >
+                    JSON
+                  </button>
+                  <button
+                    onClick={closeQuizModal}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
 
@@ -1354,77 +2379,233 @@ export default function CourseContentPage() {
                 {/* Quiz JSON Paste */}
                 {quizJsonMode && (
                   <div className="space-y-2 pb-3 mb-3 border-b border-gray-200 dark:border-white/10">
-                    <p className="text-xs text-silver dark:text-white/50">{tc("quizJsonHint") || "Paste a quiz JSON. It will fill the title, intro, and all questions."}</p>
+                    <p className="text-xs text-silver dark:text-white/50">
+                      {tc("quizJsonHint") ||
+                        "Paste a quiz JSON. It will fill the title, intro, and all questions."}
+                    </p>
                     <textarea
                       rows={8}
                       value={quizJsonText}
-                      onChange={(e) => { setQuizJsonText(e.target.value); setQuizJsonError(null); }}
+                      onChange={(e) => {
+                        setQuizJsonText(e.target.value);
+                        setQuizJsonError(null);
+                      }}
                       placeholder='{"quiz": { "title": "...", "questions": [...] }}'
                       className={cn(InputClass, "font-mono resize-none")}
                     />
                     {quizJsonError && (
                       <div className="flex items-center gap-1.5 text-xs text-red-500">
-                        <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />{quizJsonError}
+                        <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                        {quizJsonError}
                       </div>
                     )}
                     <div className="flex gap-2">
                       <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 dark:border-white/20 rounded-lg text-sm font-medium text-silver dark:text-white/50 hover:border-gold hover:text-gold cursor-pointer transition-colors">
                         <ArrowUpTrayIcon className="w-4 h-4" />
                         {tc("importFile") || "Import File"}
-                        <input type="file" accept=".json" className="hidden" onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) { const r = new FileReader(); r.onload = () => { setQuizJsonText(r.result as string); setQuizJsonError(null); }; r.readAsText(file); }
-                          e.target.value = "";
-                        }} />
+                        <input
+                          type="file"
+                          accept=".json"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const r = new FileReader();
+                              r.onload = () => {
+                                setQuizJsonText(r.result as string);
+                                setQuizJsonError(null);
+                              };
+                              r.readAsText(file);
+                            }
+                            e.target.value = "";
+                          }}
+                        />
                       </label>
-                      <button onClick={parseQuizJson} disabled={!quizJsonText.trim()} className="flex-1 px-4 py-2 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 disabled:opacity-40 transition-colors">
+                      <button
+                        onClick={parseQuizJson}
+                        disabled={!quizJsonText.trim()}
+                        className="flex-1 px-4 py-2 bg-gold text-oxford rounded-lg text-sm font-semibold hover:bg-gold/90 disabled:opacity-40 transition-colors"
+                      >
                         {tc("applyQuizJson") || "Apply JSON"}
                       </button>
                     </div>
                   </div>
                 )}
-                <div><label className={LabelClass}>{tc("quizTitle")} <span className="text-red-500">*</span></label>
-                  <input type="text" value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} className={InputClass} /></div>
-                <div><label className={LabelClass}>{tc("introText")}</label>
-                  <input type="text" value={quizForm.intro_text} onChange={(e) => setQuizForm({ ...quizForm, intro_text: e.target.value })} className={InputClass} /></div>
+                <div>
+                  <label className={LabelClass}>
+                    {tc("quizTitle")} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={quizForm.title}
+                    onChange={(e) =>
+                      setQuizForm({ ...quizForm, title: e.target.value })
+                    }
+                    className={InputClass}
+                  />
+                </div>
+                <div>
+                  <label className={LabelClass}>{tc("introText")}</label>
+                  <input
+                    type="text"
+                    value={quizForm.intro_text}
+                    onChange={(e) =>
+                      setQuizForm({ ...quizForm, intro_text: e.target.value })
+                    }
+                    className={InputClass}
+                  />
+                </div>
                 <div className="grid grid-cols-3 gap-4">
-                  <div><label className={LabelClass}>{tc("passThreshold")} (%)</label>
-                    <input type="number" min={0} max={100} value={quizForm.pass_threshold} onChange={(e) => setQuizForm({ ...quizForm, pass_threshold: Number(e.target.value) })} className={InputClass} /></div>
-                  <div><label className={LabelClass}>{tc("maxAttempts")}</label>
-                    <input type="number" min={1} value={quizForm.max_attempts} onChange={(e) => setQuizForm({ ...quizForm, max_attempts: Number(e.target.value) })} className={InputClass} /></div>
-                  <div><label className={LabelClass}>{tc("xpReward")}</label>
-                    <input type="number" min={0} value={quizForm.xp_reward} onChange={(e) => setQuizForm({ ...quizForm, xp_reward: Number(e.target.value) })} className={InputClass} /></div>
+                  <div>
+                    <label className={LabelClass}>
+                      {tc("passThreshold")} (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={quizForm.pass_threshold}
+                      onChange={(e) =>
+                        setQuizForm({
+                          ...quizForm,
+                          pass_threshold: Number(e.target.value),
+                        })
+                      }
+                      className={InputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={LabelClass}>{tc("maxAttempts")}</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={quizForm.max_attempts}
+                      onChange={(e) =>
+                        setQuizForm({
+                          ...quizForm,
+                          max_attempts: Number(e.target.value),
+                        })
+                      }
+                      className={InputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={LabelClass}>{tc("xpReward")}</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={quizForm.xp_reward}
+                      onChange={(e) =>
+                        setQuizForm({
+                          ...quizForm,
+                          xp_reward: Number(e.target.value),
+                        })
+                      }
+                      className={InputClass}
+                    />
+                  </div>
                 </div>
 
                 {/* Questions */}
                 <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">{tc("questions")} ({quizForm.questions.length})</p>
-                  <button type="button" onClick={() => addQuestion()} className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"><PlusCircleIcon className="w-4 h-4" /> {tc("addQuestion")}</button>
+                  <p className="text-xs font-semibold text-silver dark:text-white/50 uppercase tracking-wider">
+                    {tc("questions")} ({quizForm.questions.length})
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => addQuestion()}
+                    className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 font-medium"
+                  >
+                    <PlusCircleIcon className="w-4 h-4" /> {tc("addQuestion")}
+                  </button>
                 </div>
                 <div className="space-y-4">
                   {quizForm.questions.map((q, qIdx) => (
-                    <div key={q.id} className="p-4 bg-gray-50 dark:bg-white/[0.03] rounded-xl space-y-3 border border-gray-200 dark:border-white/10">
+                    <div
+                      key={q.id}
+                      className="p-4 bg-gray-50 dark:bg-white/[0.03] rounded-xl space-y-3 border border-gray-200 dark:border-white/10"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-silver dark:text-white/50">Q{qIdx + 1}</span>
+                        <span className="text-xs font-semibold text-silver dark:text-white/50">
+                          Q{qIdx + 1}
+                        </span>
                         <div className="flex items-center gap-2">
-                          <select value={q.type} onChange={(e) => changeQuestionType(qIdx, e.target.value)} className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white">
-                            <option value="multiple_choice" className="text-black">QCM</option>
-                            <option value="true_false" className="text-black">Vrai / Faux</option>
-                            <option value="scenario" className="text-black">Scénario</option>
+                          <select
+                            value={q.type}
+                            onChange={(e) =>
+                              changeQuestionType(qIdx, e.target.value)
+                            }
+                            className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white"
+                          >
+                            <option
+                              value="multiple_choice"
+                              className="text-black"
+                            >
+                              QCM
+                            </option>
+                            <option value="true_false" className="text-black">
+                              Vrai / Faux
+                            </option>
+                            <option value="scenario" className="text-black">
+                              Scénario
+                            </option>
                           </select>
-                          <select value={q.difficulty} onChange={(e) => updateQuestion(qIdx, "difficulty", e.target.value)} className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white">
-                            <option value="easy" className="text-black">Easy</option><option value="medium" className="text-black">Medium</option><option value="hard" className="text-black">Hard</option><option value="expert" className="text-black">Expert</option>
+                          <select
+                            value={q.difficulty}
+                            onChange={(e) =>
+                              updateQuestion(qIdx, "difficulty", e.target.value)
+                            }
+                            className="px-2 py-1 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-xs text-oxford dark:text-white"
+                          >
+                            <option value="easy" className="text-black">
+                              Easy
+                            </option>
+                            <option value="medium" className="text-black">
+                              Medium
+                            </option>
+                            <option value="hard" className="text-black">
+                              Hard
+                            </option>
+                            <option value="expert" className="text-black">
+                              Expert
+                            </option>
                           </select>
-                          <button onClick={() => removeQuestion(qIdx)} className="p-1 text-red-400 hover:text-red-500 transition-colors"><MinusCircleIcon className="w-4 h-4" /></button>
+                          <button
+                            onClick={() => removeQuestion(qIdx)}
+                            className="p-1 text-red-400 hover:text-red-500 transition-colors"
+                          >
+                            <MinusCircleIcon className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
                       {/* Question text */}
-                      <div><label className={LabelClass}>{q.type === "scenario" ? tc("scenarioDescription") || "Scenario Description" : tc("questionText")}</label>
+                      <div>
+                        <label className={LabelClass}>
+                          {q.type === "scenario"
+                            ? tc("scenarioDescription") ||
+                              "Scenario Description"
+                            : tc("questionText")}
+                        </label>
                         {q.type === "scenario" ? (
-                          <textarea rows={3} value={q.question} onChange={(e) => updateQuestion(qIdx, "question", e.target.value)} className={cn(InputClass, "resize-none")} placeholder="Describe the scenario situation..." />
+                          <textarea
+                            rows={3}
+                            value={q.question}
+                            onChange={(e) =>
+                              updateQuestion(qIdx, "question", e.target.value)
+                            }
+                            className={cn(InputClass, "resize-none")}
+                            placeholder="Describe the scenario situation..."
+                          />
                         ) : (
-                          <input type="text" value={q.question} onChange={(e) => updateQuestion(qIdx, "question", e.target.value)} className={InputClass} />
+                          <input
+                            type="text"
+                            value={q.question}
+                            onChange={(e) =>
+                              updateQuestion(qIdx, "question", e.target.value)
+                            }
+                            className={InputClass}
+                          />
                         )}
                       </div>
 
@@ -1432,13 +2613,22 @@ export default function CourseContentPage() {
                       {q.type === "true_false" ? (
                         <div className="grid grid-cols-2 gap-2">
                           {["Vrai", "Faux"].map((label, oIdx) => (
-                            <button key={oIdx} type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx)}
-                              className={cn("px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all",
+                            <button
+                              key={oIdx}
+                              type="button"
+                              onClick={() =>
+                                updateQuestion(qIdx, "correct_answer", oIdx)
+                              }
+                              className={cn(
+                                "px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all",
                                 q.correct_answer === oIdx
                                   ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                  : "border-gray-200 dark:border-white/10 text-oxford dark:text-white hover:border-gray-300 dark:hover:border-white/20"
-                              )}>
-                              {q.correct_answer === oIdx && <CheckCircleIcon className="w-4 h-4 inline mr-1.5" />}
+                                  : "border-gray-200 dark:border-white/10 text-oxford dark:text-white hover:border-gray-300 dark:hover:border-white/20",
+                              )}
+                            >
+                              {q.correct_answer === oIdx && (
+                                <CheckCircleIcon className="w-4 h-4 inline mr-1.5" />
+                              )}
                               {label}
                             </button>
                           ))}
@@ -1447,29 +2637,78 @@ export default function CourseContentPage() {
                         <div className="grid grid-cols-2 gap-2">
                           {q.options.map((opt, oIdx) => (
                             <div key={oIdx} className="relative">
-                              <input type="text" value={opt} onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
-                                className={cn(InputClass, q.correct_answer === oIdx && "ring-2 ring-emerald-500/50 border-emerald-500")} placeholder={q.type === "scenario" ? `Response ${oIdx + 1}` : `Option ${oIdx + 1}`} />
-                              <button type="button" onClick={() => updateQuestion(qIdx, "correct_answer", oIdx)}
-                                className={cn("absolute end-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                                  q.correct_answer === oIdx ? "border-emerald-500 bg-emerald-500" : "border-gray-300 dark:border-white/20 hover:border-emerald-400"
-                                )}>
-                                {q.correct_answer === oIdx && <CheckCircleIcon className="w-3 h-3 text-white" />}
+                              <input
+                                type="text"
+                                value={opt}
+                                onChange={(e) =>
+                                  updateOption(qIdx, oIdx, e.target.value)
+                                }
+                                className={cn(
+                                  InputClass,
+                                  q.correct_answer === oIdx &&
+                                    "ring-2 ring-emerald-500/50 border-emerald-500",
+                                )}
+                                placeholder={
+                                  q.type === "scenario"
+                                    ? `Response ${oIdx + 1}`
+                                    : `Option ${oIdx + 1}`
+                                }
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateQuestion(qIdx, "correct_answer", oIdx)
+                                }
+                                className={cn(
+                                  "absolute end-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                                  q.correct_answer === oIdx
+                                    ? "border-emerald-500 bg-emerald-500"
+                                    : "border-gray-300 dark:border-white/20 hover:border-emerald-400",
+                                )}
+                              >
+                                {q.correct_answer === oIdx && (
+                                  <CheckCircleIcon className="w-3 h-3 text-white" />
+                                )}
                               </button>
                             </div>
                           ))}
                         </div>
                       )}
 
-                      <div><label className={LabelClass}>{tc("explanation")}</label>
-                        <input type="text" value={q.explanation} onChange={(e) => updateQuestion(qIdx, "explanation", e.target.value)} className={InputClass} /></div>
+                      <div>
+                        <label className={LabelClass}>
+                          {tc("explanation")}
+                        </label>
+                        <input
+                          type="text"
+                          value={q.explanation}
+                          onChange={(e) =>
+                            updateQuestion(qIdx, "explanation", e.target.value)
+                          }
+                          className={InputClass}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
 
                 <div className="flex gap-3 pt-3">
-                  <button onClick={closeQuizModal} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{t("admin.common.cancel")}</button>
-                  <button onClick={saveQuiz} disabled={!quizForm.title || saving} className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md">
-                    {saving ? "..." : (quizModal === "add" ? tc("addQuiz") : t("admin.common.save"))}
+                  <button
+                    onClick={closeQuizModal}
+                    className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    {t("admin.common.cancel")}
+                  </button>
+                  <button
+                    onClick={saveQuiz}
+                    disabled={!quizForm.title || saving}
+                    className="flex-1 px-4 py-2.5 bg-gold text-oxford rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-50 shadow-md"
+                  >
+                    {saving
+                      ? "..."
+                      : quizModal === "add"
+                        ? tc("addQuiz")
+                        : t("admin.common.save")}
                   </button>
                 </div>
               </div>
@@ -1487,7 +2726,7 @@ export default function CourseContentPage() {
             onComplete={(msg) => {
               setShowBulkImport(false);
               showToast(msg);
-              if (courseSlug) dispatch(fetchSections(courseSlug));
+              if (courseRef) dispatch(fetchSections(courseRef));
             }}
             onClose={() => setShowBulkImport(false)}
           />
@@ -1497,7 +2736,10 @@ export default function CourseContentPage() {
       {/* Toast */}
       <AnimatePresence>
         {toast && (
-          <motion.div initial={{ opacity: 0, y: 50, x: "-50%" }} animate={{ opacity: 1, y: 0, x: "-50%" }} exit={{ opacity: 0, y: 50, x: "-50%" }}
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, x: "-50%" }}
             className="fixed bottom-6 left-1/2 z-[60] flex items-center gap-2 px-5 py-3 bg-oxford dark:bg-white text-white dark:text-oxford rounded-xl shadow-2xl border border-white/10 dark:border-gray-200"
           >
             <CheckCircleIcon className="w-5 h-5 text-emerald-400 dark:text-emerald-600" />

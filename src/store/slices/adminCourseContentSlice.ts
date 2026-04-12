@@ -21,8 +21,8 @@ interface AdminCourseContentState {
     saving: boolean;
     error: string | null;
     lastFetched: number | null;
-    /** The course slug for which sections are currently loaded */
-    courseSlug: string | null;
+    /** The course reference (slug or id) for which sections are currently loaded */
+    courseRef: string | null;
 }
 
 // =============================================================================
@@ -35,7 +35,7 @@ const initialState: AdminCourseContentState = {
     saving: false,
     error: null,
     lastFetched: null,
-    courseSlug: null,
+    courseRef: null,
 };
 
 // =============================================================================
@@ -44,19 +44,19 @@ const initialState: AdminCourseContentState = {
 
 export const fetchSections = createAsyncThunk(
     "adminCourseContent/fetchSections",
-    async (courseSlug: string, { rejectWithValue }) => {
+    async (courseRef: string, { rejectWithValue }) => {
         try {
-            const sections = await adminSectionsApi.list(courseSlug);
-            return { sections, courseSlug };
+            const sections = await adminSectionsApi.list(courseRef);
+            return { sections, courseRef };
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
     },
     {
-        condition(courseSlug, { getState }) {
+        condition(courseRef, { getState }) {
             const { adminCourseContent } = getState() as RootState;
             // Refetch if different course or cache expired
-            if (adminCourseContent.courseSlug !== courseSlug) return true;
+            if (adminCourseContent.courseRef !== courseRef) return true;
             return shouldFetch(adminCourseContent.lastFetched, adminCourseContent.loading, CACHE_DURATION.MEDIUM);
         },
     }
@@ -272,7 +272,7 @@ const adminCourseContentSlice = createSlice({
         },
         clearSections(state) {
             state.sections = [];
-            state.courseSlug = null;
+            state.courseRef = null;
             state.lastFetched = null;
         },
     },
@@ -286,7 +286,7 @@ const adminCourseContentSlice = createSlice({
             .addCase(fetchSections.fulfilled, (state, action) => {
                 state.loading = false;
                 state.sections = action.payload.sections;
-                state.courseSlug = action.payload.courseSlug;
+                state.courseRef = action.payload.courseRef;
                 state.lastFetched = Date.now();
             })
             .addCase(fetchSections.rejected, (state, action) => {

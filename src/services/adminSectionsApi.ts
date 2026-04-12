@@ -3,7 +3,7 @@
  *
  * Typed API functions for admin section management endpoints.
  * Connects to Django formation SectionViewSet at /api/formation/sections/.
- * Sections are filtered by course slug via ?course=<slug> query param.
+ * Sections are filtered by course reference via ?course=<slug-or-id> query param.
  */
 
 import axiosClient from '@/lib/axios';
@@ -101,11 +101,11 @@ const ENDPOINT = '/formation/sections/';
 
 const adminSectionsApi = {
     /**
-     * List sections for a course (filter by course slug)
+     * List sections for a course (filter by course slug or course id)
      */
-    list: async (courseSlug: string) => {
+    list: async (courseRef: string) => {
         const response = await axiosClient.get<AdminSection[] | PaginatedResponse<AdminSection>>(
-            `${ENDPOINT}?course=${encodeURIComponent(courseSlug)}`
+            `${ENDPOINT}?course=${encodeURIComponent(courseRef)}`
         );
         return extractResults(response.data);
     },
