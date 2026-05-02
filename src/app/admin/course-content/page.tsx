@@ -46,6 +46,7 @@ import {
   createQuiz,
   updateQuiz,
   deleteQuiz as deleteQuizThunk,
+  clearSections,
 } from "@/store/slices/adminCourseContentSlice";
 import { fetchAdminCourses } from "@/store/slices/adminCoursesManagementSlice";
 import type {
@@ -107,6 +108,7 @@ export default function CourseContentPage() {
 
   // Resolve course slug from courses state
   const courseSlug = useSelector((state: RootState) => {
+    if (courseId) return "";
     const course = state.adminCoursesManagement.courses.find(
       (c) => c.id === courseId,
     );
@@ -134,10 +136,16 @@ export default function CourseContentPage() {
   // Translation helper
   const tc = (key: string) => t(`admin.courseContent.${key}`);
 
-  // Fetch courses on mount (needed for slug resolution after page refresh)
+  // Only fetch course list when courseId is missing and we need slug fallback.
   useEffect(() => {
-    dispatch(fetchAdminCourses({}));
-  }, [dispatch]);
+    if (!courseId) {
+      dispatch(fetchAdminCourses({}));
+    }
+  }, [dispatch, courseId]);
+
+  // Sections are cached in Redux and only re-fetched when courseRef changes
+  // or the 5-min cache TTL expires (see fetchSections condition in the slice).
+  // Do NOT clear on unmount — that defeats the cache.
 
   // Fetch sections when course reference resolves (prefer id, fallback slug)
   useEffect(() => {

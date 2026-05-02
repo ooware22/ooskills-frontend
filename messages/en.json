@@ -275,6 +275,7 @@
       "contact": "Contact & Social",
       "settings": "Settings",
       "users": "Users",
+      "deletionRequests": "Deletion Requests",
       "logout": "Logout",
       "collapse": "Collapse",
       "expand": "Expand",
@@ -634,6 +635,12 @@
       "referralCodePlaceholder": "Enter referral code",
       "referralCodeOptional": "(optional)",
       "newsletter": "Subscribe to our newsletter for updates, tips, and exclusive offers",
+      "acceptTerms": {
+        "prefix": "I have read and agree to the",
+        "terms": "Terms of Service",
+        "and": "and the",
+        "privacy": "Privacy Policy"
+      },
       "submit": "Create Account",
       "hasAccount": "Already have an account?",
       "signinLink": "Sign In",
@@ -753,6 +760,13 @@
     "payment_failedDesc": "Something went wrong with your payment. Please try again.",
     "promo_placeholder": "Promo code",
     "promo_apply": "Apply",
+    "listenAudio": "Listen to audio",
+    "viewSlides": "View slides",
+    "freePreview": "Free preview",
+    "lockedSectionHint": "Enroll in the course to unlock this section",
+    "unlockAllTitle": "Unlock all sections",
+    "unlockAllDesc": "Enroll to get full access to all course content.",
+    "use_wallet": "Use referral balance",
     "rating_section": {
       "title": "Ratings & Reviews",
       "reviewsCount": "reviews",
@@ -971,6 +985,108 @@
       "title": "Level Up!",
       "desc": "Congratulations! Keep learning to unlock more rewards.",
       "continue": "Continue"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "subtitle": "We are committed to protecting your privacy and personal data. This policy describes how we collect, use, and protect your information.",
+    "lastUpdated": "Last updated: April 15, 2026",
+    "backToHome": "Back to Home",
+    "tableOfContents": "Table of Contents",
+    "allRightsReserved": "All rights reserved.",
+    "sections": {
+      "s1": {
+        "title": "Data Collection",
+        "content": "We collect the information you provide directly when registering on the OOSkills platform, including:\n\n• First and last name\n• Email address\n• Phone number\n• Wilaya (region) of residence\n• Profile photo (optional)\n\nWe also automatically collect certain technical information such as your IP address, browser type, operating system, and pages visited to improve your experience on our platform."
+      },
+      "s2": {
+        "title": "Data Usage",
+        "content": "Your personal data is used to:\n\n• Create and manage your user account\n• Provide access to purchased courses\n• Track your progress and issue certificates\n• Send you notifications related to your courses\n• Improve our services and platform\n• Contact you for technical support\n• Send our newsletter (if you have subscribed)\n\nWe never sell your personal data to third parties."
+      },
+      "s3": {
+        "title": "Cookies and Tracking Technologies",
+        "content": "OOSkills uses cookies and similar technologies to:\n\n• Maintain your login session\n• Remember your preferences (language, theme)\n• Analyze platform usage\n• Improve site performance\n\nYou can configure your browser to reject cookies, although this may affect some platform features."
+      },
+      "s4": {
+        "title": "Data Sharing",
+        "content": "We may share your information in the following cases:\n\n• With payment service providers (Chargily Pay) for secure transaction processing\n• With hosting and technical infrastructure services\n• In response to a legal obligation or court order\n• To protect the rights, property, or safety of OOSkills and its users\n\nAll our partners are required to respect the confidentiality of your data."
+      },
+      "s5": {
+        "title": "Data Security",
+        "content": "We implement appropriate technical and organizational security measures to protect your personal data, including:\n\n• SSL/TLS encryption for all data transmissions\n• Secure password storage with hashing\n• Restricted access to personal data within our team\n• Regular backups and disaster recovery plans\n• Continuous system monitoring\n\nWhile we do our best to protect your data, no method of transmission over the Internet is completely secure."
+      },
+      "s6": {
+        "title": "Your Rights",
+        "content": "In accordance with applicable legislation, you have the following rights:\n\n• Right of access: view the data we hold about you\n• Right of rectification: correct inaccurate or incomplete data\n• Right of deletion: request the deletion of your account and data\n• Right of portability: receive your data in a structured format\n• Right to object: object to the processing of your data for marketing purposes\n\nTo exercise these rights, contact us at contact@ooskills.com."
+      },
+      "s7": {
+        "title": "Children's Privacy",
+        "content": "OOSkills is not intended for children under the age of 16. We do not knowingly collect personal data from minors. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately.\n\nFor users aged 16 to 18, we recommend that parental consent be obtained before registration."
+      },
+      "s8": {
+        "title": "Changes to This Policy",
+        "content": "We may update this privacy policy from time to time to reflect changes in our practices or for operational, legal, or regulatory reasons.\n\nIn case of significant changes, we will notify you by email or through a visible notification on the platform. The last update date will always be indicated at the top of this page.\n\nYour continued use of the platform after changes constitutes your acceptance of the revised policy."
+      }
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "If you have any questions about this privacy policy or how we handle your data, please don't hesitate to contact us.",
+      "emailButton": "Send an email"
+    }
+  },
+  "termsOfService": {
+    "title": "Terms of Service",
+    "subtitle": "Please read these terms carefully before using the OOSkills platform.",
+    "lastUpdated": "Last updated: April 15, 2026",
+    "backToHome": "Back to Home",
+    "tableOfContents": "Table of Contents",
+    "allRightsReserved": "All rights reserved.",
+    "sections": {
+      "s1": {
+        "title": "Acceptance of Terms",
+        "content": "By accessing the OOSkills platform and using our services, you agree to be bound by these terms of service. If you do not accept these terms, please do not use our platform.\n\nThese terms constitute a legally binding agreement between you and OOSkills. We recommend that you read them carefully before creating an account."
+      },
+      "s2": {
+        "title": "Description of Services",
+        "content": "OOSkills is an online learning platform that offers:\n\n\u2022 Video and interactive courses in various fields\n\u2022 Quizzes and assessments to validate your knowledge\n\u2022 Verifiable certificates upon completion of each course\n\u2022 A progression and gamification system (XP, badges, rankings)\n\u2022 A personal progress tracking dashboard\n\nWe reserve the right to modify, suspend, or discontinue any aspect of the services at any time."
+      },
+      "s3": {
+        "title": "Account Creation",
+        "content": "To access our services, you must create an account by providing accurate and complete information. You are responsible for:\n\n\u2022 Maintaining the confidentiality of your login credentials\n\u2022 All activity performed from your account\n\u2022 Notifying us immediately of any unauthorized use\n\nYou must be at least 16 years old to create an account. Only one account per person is allowed."
+      },
+      "s4": {
+        "title": "Purchases and Payments",
+        "content": "Courses on OOSkills are offered at prices listed in Algerian Dinars (DA). By making a purchase:\n\n\u2022 You agree to pay the price displayed at the time of purchase\n\u2022 Payment is processed securely through our payment partners (Chargily Pay)\n\u2022 Access to the course is granted after payment confirmation\n\u2022 Prices may be changed at any time, without affecting already completed purchases\n\nPromo codes are subject to specific conditions and cannot be combined unless otherwise stated."
+      },
+      "s5": {
+        "title": "Refund Policy",
+        "content": "OOSkills offers refunds under the following conditions:\n\n\u2022 You may request a refund within 14 days of purchase\n\u2022 The request must be made by email to contact@ooskills.com\n\u2022 A refund may be denied if you have completed more than 30% of the course content\n\u2022 Refunds are processed via the same payment method used for the purchase\n\u2022 Processing time is 7 to 14 business days"
+      },
+      "s6": {
+        "title": "Intellectual Property",
+        "content": "All content available on OOSkills is protected by copyright and intellectual property law:\n\n\u2022 Videos, texts, quizzes, images, and all other educational materials remain the property of OOSkills and its instructors\n\u2022 You are granted a personal, non-transferable, and non-exclusive license to access purchased content\n\u2022 It is strictly prohibited to copy, reproduce, distribute, download, or share content without authorization\n\u2022 Certificates issued are personal and cannot be transferred\n\nAny violation of these rights may result in account suspension and legal action."
+      },
+      "s7": {
+        "title": "Code of Conduct",
+        "content": "By using OOSkills, you agree to:\n\n\u2022 Not share your login credentials with third parties\n\u2022 Not attempt to circumvent the platform's security measures\n\u2022 Not use bots, scripts, or automated tools\n\u2022 Respect other users and instructors\n\u2022 Not publish offensive, defamatory, or illegal content\n\u2022 Not use the platform for unauthorized commercial purposes\n\nViolation of these rules may result in the suspension or permanent deletion of your account."
+      },
+      "s8": {
+        "title": "Certificates and Badges",
+        "content": "OOSkills certificates and badges are issued under the following conditions:\n\n\u2022 A certificate is issued after completing 100% of a course's content and passing the final quiz\n\u2022 Each certificate has a unique QR code for verification\n\u2022 Certificates attest to the completion of a course on OOSkills and do not constitute a state-recognized diploma\n\u2022 OOSkills reserves the right to revoke a certificate in case of fraud or violation of the terms of service"
+      },
+      "s9": {
+        "title": "Limitation of Liability",
+        "content": "OOSkills strives to provide quality service, but:\n\n\u2022 We do not guarantee that the service will be uninterrupted or error-free\n\u2022 Course content is provided for informational and educational purposes\n\u2022 We are not responsible for decisions made based on course content\n\u2022 Our liability is limited to the amount you paid for the service in question\n\u2022 We are not responsible for technical issues related to your Internet connection or equipment"
+      },
+      "s10": {
+        "title": "Changes to Terms",
+        "content": "OOSkills reserves the right to modify these terms of service at any time:\n\n\u2022 Changes will be posted on this page with an update date\n\u2022 For significant changes, we will notify you by email\n\u2022 Your continued use of the platform after changes constitutes your acceptance of the new terms\n\u2022 If you do not accept the new terms, you must stop using the platform and delete your account"
+      }
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "If you have any questions about these terms of service, please don't hesitate to contact us.",
+      "emailButton": "Send an email"
     }
   }
 }

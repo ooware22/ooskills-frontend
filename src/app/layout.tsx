@@ -1,18 +1,21 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { I18nProvider } from "@/lib/i18n";
 import { ReduxProvider } from "@/store/provider";
-import AnimatedBackground from "@/components/AnimatedBackground";
-import ServerWakeUp from "@/components/ServerWakeUp";
-import GamificationOverlays from "@/components/GamificationOverlays";
+import dynamic from "next/dynamic";
 import "./globals.css";
+
+// Lazy load non-critical layout components
+const AnimatedBackground = dynamic(() => import("@/components/AnimatedBackground"));
+const ServerWakeUp = dynamic(() => import("@/components/ServerWakeUp"));
+const GamificationOverlays = dynamic(() => import("@/components/GamificationOverlays"));
 
 export const metadata = {
   title: "Skills - Plateforme E-Learning",
   description:
     "Développez vos compétences avec OOSkills, la plateforme e-learning de référence en Algérie.",
   icons: {
-    icon: "/images/logo/logo_icon2.png",
-    apple: "/images/logo/logo_icon2.png",
+    icon: "/images/logo/favicon.png",
+    apple: "/images/logo/favicon.png",
   },
 };
 

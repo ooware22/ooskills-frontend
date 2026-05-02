@@ -53,6 +53,7 @@ export interface AdminCourseCreatePayload {
     category: string;
     level: string;
     duration: number;
+    price: number;
     originalPrice: number;
     discount: number;
     description: string;
@@ -70,6 +71,7 @@ export interface AdminCourseUpdatePayload {
     category?: string;
     level?: string;
     duration?: number;
+    price?: number;
     originalPrice?: number;
     discount?: number;
     description?: string;
@@ -197,9 +199,13 @@ const adminCoursesManagementApi = {
 
     /**
      * Delete a course (by slug)
+     * Uses a longer timeout because cascade deletes on large courses
+     * (clearing FileFields + DB cascade) can take 60s+ on free-tier DB.
      */
     delete: async (slug: string) => {
-        await axiosClient.delete(`${ENDPOINT}${slug}/`);
+        await axiosClient.delete(`${ENDPOINT}${slug}/`, {
+            timeout: 120_000, // 2 min — cascade deletes are slow
+        });
     },
 
     /**

@@ -3,7 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
-import { StarIcon as StarOutline, UserCircleIcon } from "@heroicons/react/24/outline";
+import {
+  StarIcon as StarOutline,
+  UserCircleIcon,
+} from "@heroicons/react/24/outline";
 import { ratingApi, type CourseRatingItem } from "@/services/publicCoursesApi";
 import { useI18n } from "@/lib/i18n";
 
@@ -46,7 +49,9 @@ function Stars({
             {filled ? (
               <StarSolid className={`${size} text-gold`} />
             ) : (
-              <StarOutline className={`${size} text-gray-300 dark:text-white/20`} />
+              <StarOutline
+                className={`${size} text-gray-300 dark:text-white/20`}
+              />
             )}
           </button>
         );
@@ -73,13 +78,16 @@ export default function CourseRatingSection({
   const [myReview, setMyReview] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const fetchRatings = useCallback(async () => {
+    setFetchError(null);
     try {
       const data = await ratingApi.getCourseRatings(slug);
       setRatings(data);
     } catch {
-      // ignore
+      setFetchError("Failed to load reviews.");
     } finally {
       setLoading(false);
     }
@@ -100,6 +108,7 @@ export default function CourseRatingSection({
   const handleSubmit = async () => {
     if (myRating === 0) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       await ratingApi.submitCourseRating(slug, myRating, myReview);
       setSubmitted(true);
@@ -107,7 +116,7 @@ export default function CourseRatingSection({
       // Reset form
       setTimeout(() => setSubmitted(false), 3000);
     } catch {
-      // ignore
+      setSubmitError(tr("submitError") || "Failed to submit rating.");
     } finally {
       setSubmitting(false);
     }
@@ -117,9 +126,13 @@ export default function CourseRatingSection({
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: ratings.filter((r) => r.rating === star).length,
-    pct: ratings.length > 0
-      ? Math.round((ratings.filter((r) => r.rating === star).length / ratings.length) * 100)
-      : 0,
+    pct:
+      ratings.length > 0
+        ? Math.round(
+            (ratings.filter((r) => r.rating === star).length / ratings.length) *
+              100,
+          )
+        : 0,
   }));
 
   const avgRating = parseFloat(courseRating) || 0;
@@ -193,7 +206,9 @@ export default function CourseRatingSection({
           <textarea
             value={myReview}
             onChange={(e) => setMyReview(e.target.value)}
-            placeholder={tr("reviewPlaceholder") || "Share your experience (optional)..."}
+            placeholder={
+              tr("reviewPlaceholder") || "Share your experience (optional)..."
+            }
             className="w-full px-4 py-3 bg-white dark:bg-oxford-light border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-gold/50 resize-none transition-all"
             rows={3}
           />
@@ -201,6 +216,11 @@ export default function CourseRatingSection({
             {submitted && (
               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                 ✓ {tr("submitted") || "Rating submitted!"}
+              </span>
+            )}
+            {submitError && (
+              <span className="text-xs text-red-500 dark:text-red-400 font-medium">
+                {submitError}
               </span>
             )}
             <button
@@ -228,6 +248,10 @@ export default function CourseRatingSection({
               </div>
             </div>
           ))}
+        </div>
+      ) : fetchError ? (
+        <div className="text-center py-8">
+          <p className="text-sm text-red-500 dark:text-red-400">{fetchError}</p>
         </div>
       ) : ratings.length === 0 ? (
         <div className="text-center py-8">

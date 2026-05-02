@@ -96,16 +96,30 @@ export default function Footer() {
               {t("links.resources")}
             </h4>
             <ul className="space-y-3">
-              {["help", "terms", "privacy"].map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
-                    className="text-sm text-white/50 hover:text-gold transition-colors"
-                  >
-                    {t(`links.${link}`)}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <a
+                  href="#"
+                  className="text-sm text-white/50 hover:text-gold transition-colors"
+                >
+                  {t("links.help")}
+                </a>
+              </li>
+              <li>
+                <Link
+                  href="/terms-of-service"
+                  className="text-sm text-white/50 hover:text-gold transition-colors"
+                >
+                  {t("links.terms")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy-policy"
+                  className="text-sm text-white/50 hover:text-gold transition-colors"
+                >
+                  {t("links.privacy")}
+                </Link>
+              </li>
             </ul>
           </div>
 

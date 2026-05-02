@@ -21,7 +21,9 @@ export default function VerifyEmail() {
   const [mounted, setMounted] = useState(false);
   const hasVerified = useRef(false);
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
   const [message, setMessage] = useState("");
 
   const isDark = resolvedTheme === "dark";
@@ -45,21 +47,27 @@ export default function VerifyEmail() {
 
     const verifyEmail = async () => {
       try {
-        const response = await axiosClient.post("/auth/verify-email/", { token });
+        const response = await axiosClient.post("/auth/verify-email/", {
+          token,
+        });
         setStatus("success");
         setMessage(
           response.data?.message ||
-          (locale === "ar"
-            ? "تم التحقق من بريدك الإلكتروني بنجاح!"
-            : locale === "fr"
-              ? "Votre email a été vérifié avec succès !"
-              : "Your email has been verified successfully!")
+            (locale === "ar"
+              ? "تم التحقق من بريدك الإلكتروني بنجاح!"
+              : locale === "fr"
+                ? "Votre email a été vérifié avec succès !"
+                : "Your email has been verified successfully!"),
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         setStatus("error");
+        const axiosErr = err as {
+          response?: { data?: { error?: string } };
+          message?: string;
+        };
         const errorMsg =
-          err?.response?.data?.error ||
-          err?.message ||
+          axiosErr?.response?.data?.error ||
+          axiosErr?.message ||
           (locale === "ar"
             ? "فشل التحقق من البريد الإلكتروني."
             : locale === "fr"
@@ -91,8 +99,12 @@ export default function VerifyEmail() {
       />
 
       {/* Decorative Blobs */}
-      <div className={`absolute top-1/4 -left-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/10" : "bg-gold/20"}`} />
-      <div className={`absolute bottom-1/4 -right-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/5" : "bg-oxford/5"}`} />
+      <div
+        className={`absolute top-1/4 -left-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/10" : "bg-gold/20"}`}
+      />
+      <div
+        className={`absolute bottom-1/4 -right-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/5" : "bg-oxford/5"}`}
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -105,7 +117,11 @@ export default function VerifyEmail() {
           <Link href="/" className="inline-block mb-3 sm:mb-4">
             {mounted && (
               <Image
-                src={isDark ? "/images/logo/logo_DarkMood2.png" : "/images/logo/logo_LightMood2.png"}
+                src={
+                  isDark
+                    ? "/images/logo/logo_DarkMood2.png"
+                    : "/images/logo/logo_LightMood2.png"
+                }
                 alt="OOSkills"
                 width={180}
                 height={60}
@@ -125,17 +141,22 @@ export default function VerifyEmail() {
         >
           {/* Loading State */}
           {status === "loading" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="mx-auto mb-5 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gold/10 flex items-center justify-center">
                 <div className="w-8 h-8 border-3 border-gold/30 border-t-gold rounded-full animate-spin" />
               </div>
-              <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}>
-                {locale === "ar" ? "جارٍ التحقق..." : locale === "fr" ? "Vérification en cours..." : "Verifying..."}
+              <h2
+                className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}
+              >
+                {locale === "ar"
+                  ? "جارٍ التحقق..."
+                  : locale === "fr"
+                    ? "Vérification en cours..."
+                    : "Verifying..."}
               </h2>
-              <p className={`text-sm ${isDark ? "text-white/50" : "text-oxford/50"}`}>
+              <p
+                className={`text-sm ${isDark ? "text-white/50" : "text-oxford/50"}`}
+              >
                 {locale === "ar"
                   ? "يرجى الانتظار بينما نتحقق من بريدك الإلكتروني."
                   : locale === "fr"
@@ -154,18 +175,32 @@ export default function VerifyEmail() {
               <div className="mx-auto mb-5 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-500/10 flex items-center justify-center">
                 <CheckCircleIcon className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-500" />
               </div>
-              <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}>
-                {locale === "ar" ? "تم تفعيل حسابك!" : locale === "fr" ? "Compte activé !" : "Account Activated!"}
+              <h2
+                className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}
+              >
+                {locale === "ar"
+                  ? "تم تفعيل حسابك!"
+                  : locale === "fr"
+                    ? "Compte activé !"
+                    : "Account Activated!"}
               </h2>
-              <p className={`text-sm sm:text-base mb-6 ${isDark ? "text-white/60" : "text-oxford/60"}`}>
+              <p
+                className={`text-sm sm:text-base mb-6 ${isDark ? "text-white/60" : "text-oxford/60"}`}
+              >
                 {message}
               </p>
               <Link
                 href="/auth/signin"
                 className="inline-flex items-center gap-2 px-6 py-2.5 text-sm bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg transition-all shadow-md shadow-gold/20"
               >
-                {locale === "ar" ? "تسجيل الدخول" : locale === "fr" ? "Se connecter" : "Sign In"}
-                <ArrowRight className={`w-3.5 h-3.5 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                {locale === "ar"
+                  ? "تسجيل الدخول"
+                  : locale === "fr"
+                    ? "Se connecter"
+                    : "Sign In"}
+                <ArrowRight
+                  className={`w-3.5 h-3.5 ${dir === "rtl" ? "rotate-180" : ""}`}
+                />
               </Link>
             </motion.div>
           )}
@@ -179,10 +214,18 @@ export default function VerifyEmail() {
               <div className="mx-auto mb-5 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/10 flex items-center justify-center">
                 <ExclamationCircleIcon className="w-10 h-10 sm:w-12 sm:h-12 text-red-500" />
               </div>
-              <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}>
-                {locale === "ar" ? "فشل التحقق" : locale === "fr" ? "Échec de la vérification" : "Verification Failed"}
+              <h2
+                className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}
+              >
+                {locale === "ar"
+                  ? "فشل التحقق"
+                  : locale === "fr"
+                    ? "Échec de la vérification"
+                    : "Verification Failed"}
               </h2>
-              <p className={`text-sm sm:text-base mb-6 ${isDark ? "text-white/60" : "text-oxford/60"}`}>
+              <p
+                className={`text-sm sm:text-base mb-6 ${isDark ? "text-white/60" : "text-oxford/60"}`}
+              >
                 {message}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -194,14 +237,24 @@ export default function VerifyEmail() {
                       : "border-gray-300 text-oxford hover:bg-gray-50"
                   }`}
                 >
-                  {locale === "ar" ? "إنشاء حساب جديد" : locale === "fr" ? "Créer un compte" : "Create Account"}
+                  {locale === "ar"
+                    ? "إنشاء حساب جديد"
+                    : locale === "fr"
+                      ? "Créer un compte"
+                      : "Create Account"}
                 </Link>
                 <Link
                   href="/auth/signin"
                   className="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg transition-all shadow-md shadow-gold/20"
                 >
-                  {locale === "ar" ? "تسجيل الدخول" : locale === "fr" ? "Se connecter" : "Sign In"}
-                  <ArrowRight className={`w-3.5 h-3.5 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                  {locale === "ar"
+                    ? "تسجيل الدخول"
+                    : locale === "fr"
+                      ? "Se connecter"
+                      : "Sign In"}
+                  <ArrowRight
+                    className={`w-3.5 h-3.5 ${dir === "rtl" ? "rotate-180" : ""}`}
+                  />
                 </Link>
               </div>
             </motion.div>
@@ -209,9 +262,15 @@ export default function VerifyEmail() {
         </div>
 
         {/* Footer */}
-        <p className={`text-center text-[10px] sm:text-xs mt-4 sm:mt-6 ${isDark ? "text-white/30" : "text-oxford/40"}`}>
+        <p
+          className={`text-center text-[10px] sm:text-xs mt-4 sm:mt-6 ${isDark ? "text-white/30" : "text-oxford/40"}`}
+        >
           © {new Date().getFullYear()} OOSkills.{" "}
-          {locale === "ar" ? "جميع الحقوق محفوظة." : locale === "fr" ? "Tous droits réservés." : "All rights reserved."}
+          {locale === "ar"
+            ? "جميع الحقوق محفوظة."
+            : locale === "fr"
+              ? "Tous droits réservés."
+              : "All rights reserved."}
         </p>
       </motion.div>
     </div>

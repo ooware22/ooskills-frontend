@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -30,12 +30,19 @@ import {
   HeartIcon,
   ShieldCheckIcon,
   GiftIcon,
+  LockClosedIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  SpeakerWaveIcon,
+  PresentationChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 
 /** Format large student counts as e.g. "2.4k" */
 function formatStudents(n: number) {
-  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
+  return n >= 1000
+    ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k"
+    : String(n);
 }
 
 export default function CourseDetailPage({
@@ -50,14 +57,19 @@ export default function CourseDetailPage({
   const { locale } = useI18n();
   const dispatch = useAppDispatch();
 
-  const { courseDetail: course, courseDetailLoading, courseDetailError } =
-    useAppSelector((s) => s.publicCourses);
+  const {
+    courseDetail: course,
+    courseDetailLoading,
+    courseDetailError,
+  } = useAppSelector((s) => s.publicCourses);
 
   const { enrollments } = useAppSelector((s) => s.enrollment);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+  const [guestAuthPromptOpen, setGuestAuthPromptOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<number>(0);
 
   // Check if user is enrolled in this course (compare by slug)
   const enrolled = enrollments.some((e) => e.course_slug === slug);
@@ -66,6 +78,7 @@ export default function CourseDetailPage({
     dispatch(fetchCourseDetail(slug));
     if (isAuthenticated) {
       dispatch(fetchMyEnrollments());
+      setGuestAuthPromptOpen(false);
     }
     return () => {
       dispatch(clearCourseDetail());
@@ -74,11 +87,11 @@ export default function CourseDetailPage({
 
   const handleEnroll = useCallback(() => {
     if (!isAuthenticated) {
-      router.push("/signin");
+      setGuestAuthPromptOpen(true);
       return;
     }
     setDialogOpen(true);
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   const handleStart = useCallback(() => {
     router.push(`/courses/${slug}/learn`);
@@ -183,12 +196,19 @@ export default function CourseDetailPage({
 
   // ── Course data ready ─────────────────────────────────────────────────
   const discount = Math.round(
-    ((course.originalPrice - course.price) / course.originalPrice) * 100
+    ((course.originalPrice - course.price) / course.originalPrice) * 100,
   );
 
-  const totalLessons = course.sections?.reduce((total: number, section: any) => {
-    return total + (section.modules_list || []).reduce((s: number, m: any) => s + (m.lessons || 0), 0);
-  }, 0) || 0;
+  const totalLessons =
+    course.sections?.reduce((total: number, section: any) => {
+      return (
+        total +
+        (section.modules_list || []).reduce(
+          (s: number, m: any) => s + (m.lessons || 0),
+          0,
+        )
+      );
+    }, 0) || 0;
 
   return (
     <>
@@ -235,7 +255,9 @@ export default function CourseDetailPage({
                   <div className="flex flex-wrap items-center gap-4 text-sm text-white/60 mb-6">
                     <div className="flex items-center gap-1.5">
                       <StarIcon className="w-4 h-4 text-gold" />
-                      <span className="text-white font-semibold">{course.rating}</span>
+                      <span className="text-white font-semibold">
+                        {course.rating}
+                      </span>
                       <span>
                         ({course.reviews} {t("reviews")})
                       </span>
@@ -307,7 +329,9 @@ export default function CourseDetailPage({
                   {course.whatYouLearn.map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <span className="w-1.5 h-1.5 bg-gold rounded-full flex-shrink-0 mt-2" />
-                      <span className="text-sm text-silver dark:text-gray-300">{item}</span>
+                      <span className="text-sm text-silver dark:text-gray-300">
+                        {item}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -328,7 +352,9 @@ export default function CourseDetailPage({
                   {course.prerequisites.map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <span className="w-1.5 h-1.5 bg-gold rounded-full flex-shrink-0 mt-2" />
-                      <span className="text-sm text-silver dark:text-gray-300">{item}</span>
+                      <span className="text-sm text-silver dark:text-gray-300">
+                        {item}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -347,39 +373,232 @@ export default function CourseDetailPage({
                     {t("curriculum")}
                   </h2>
                   <span className="text-xs text-silver dark:text-gray-400">
-                    {course.sections?.length || 0} sections • {totalLessons} {t("lessons")} •{" "}
-                    {course.duration} {t("hours")}
+                    {course.sections?.length || 0} sections • {totalLessons}{" "}
+                    {t("lessons")} • {course.duration} {t("hours")}
                   </span>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {course.sections?.map((sec: any, i: number) => {
-                    const sectionLessons = (sec.modules_list || []).reduce((s: number, m: any) => s + (m.lessons || 0), 0);
+                    const sectionLessons = (sec.modules_list || []).reduce(
+                      (s: number, m: any) => s + (m.lessons || 0),
+                      0,
+                    );
+                    const isIntro = sec.type === "INTRO";
+                    const isUnlocked = enrolled || isIntro;
+                    const isExpanded = expandedSection === i;
+
                     return (
                       <div
                         key={i}
-                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
+                        className="rounded-xl overflow-hidden border border-gray-100 dark:border-white/5"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gold/10 rounded-lg flex items-center justify-center">
-                            <span className="text-xs font-bold text-gold">
-                              {String(sec.sequence || i + 1).padStart(2, "0")}
-                            </span>
+                        {/* Section Header */}
+                        <button
+                          onClick={() => {
+                            if (isUnlocked) {
+                              setExpandedSection(isExpanded ? -1 : i);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between p-4 transition-colors ${
+                            isUnlocked
+                              ? "bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/8 cursor-pointer"
+                              : "bg-gray-50/60 dark:bg-white/[0.02] cursor-default"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                isUnlocked
+                                  ? "bg-gold/10"
+                                  : "bg-gray-200/60 dark:bg-white/5"
+                              }`}
+                            >
+                              {isUnlocked ? (
+                                <span className="text-xs font-bold text-gold">
+                                  {String(sec.sequence || i + 1).padStart(
+                                    2,
+                                    "0",
+                                  )}
+                                </span>
+                              ) : (
+                                <LockClosedIcon className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                              )}
+                            </div>
+                            <div className="text-left min-w-0">
+                              <p
+                                className={`text-sm font-medium truncate ${
+                                  isUnlocked
+                                    ? "text-oxford dark:text-white"
+                                    : "text-gray-400 dark:text-gray-500"
+                                }`}
+                              >
+                                {sec.title}
+                              </p>
+                              <p className="text-xs text-silver dark:text-gray-400">
+                                {sec.modules_count || 0} modules •{" "}
+                                {sectionLessons} {t("lessons")} • {sec.duration}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-oxford dark:text-white">
-                              {sec.title}
-                            </p>
-                            <p className="text-xs text-silver dark:text-gray-400">
-                              {sec.modules_count || 0} modules • {sectionLessons} {t("lessons")} • {sec.duration}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isIntro && !enrolled && (
+                              <span className="hidden sm:inline-flex px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase tracking-wider">
+                                {t("freePreview")}
+                              </span>
+                            )}
+                            {isUnlocked ? (
+                              isExpanded ? (
+                                <ChevronUpIcon className="w-4 h-4 text-silver dark:text-gray-400" />
+                              ) : (
+                                <ChevronDownIcon className="w-4 h-4 text-silver dark:text-gray-400" />
+                              )
+                            ) : (
+                              <LockClosedIcon className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Expanded Modules List */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded &&
+                            isUnlocked &&
+                            (sec.modules_list || []).length > 0 && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{
+                                  duration: 0.25,
+                                  ease: "easeInOut",
+                                }}
+                                className="overflow-hidden"
+                              >
+                                <div className="px-4 pb-4 pt-1 space-y-1.5 bg-white dark:bg-oxford-light">
+                                  {(sec.modules_list || []).map(
+                                    (mod: any, mi: number) => {
+                                      const lessonRows: any[] = isIntro
+                                        ? mod.lessons_list || []
+                                        : [];
+                                      return (
+                                        <div
+                                          key={mi}
+                                          className="rounded-lg overflow-hidden"
+                                        >
+                                          <div className="flex items-center justify-between py-2.5 px-3 bg-gray-50/80 dark:bg-white/[0.03] hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                                            <div className="flex items-center gap-2.5">
+                                              <PlayCircleIcon className="w-4 h-4 text-gold/70 flex-shrink-0" />
+                                              <span className="text-sm text-oxford dark:text-gray-200">
+                                                {mod.title}
+                                              </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-silver dark:text-gray-500">
+                                              {mod.lessons > 0 && (
+                                                <span>
+                                                  {mod.lessons} {t("lessons")}
+                                                </span>
+                                              )}
+                                              {mod.duration && (
+                                                <span className="flex items-center gap-1">
+                                                  <ClockIcon className="w-3 h-3" />
+                                                  {mod.duration}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          {/* Free-preview lesson resources */}
+                                          {lessonRows.length > 0 && (
+                                            <div className="px-3 pb-2.5 pt-1.5 space-y-1.5 bg-emerald-50/50 dark:bg-emerald-500/[0.04] border-t border-emerald-100/60 dark:border-emerald-500/10">
+                                              {lessonRows.map(
+                                                (lesson: any, li: number) => (
+                                                  <div
+                                                    key={li}
+                                                    className="flex flex-wrap items-center justify-between gap-2 py-1"
+                                                  >
+                                                    <span className="text-xs text-silver dark:text-gray-400 truncate max-w-[55%]">
+                                                      {lesson.title}
+                                                    </span>
+                                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                      {lesson.audioUrl && (
+                                                        <a
+                                                          href={lesson.audioUrl}
+                                                          target="_blank"
+                                                          rel="noopener noreferrer"
+                                                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-gold/10 hover:bg-gold/20 text-gold text-[11px] font-medium rounded-md transition-colors"
+                                                        >
+                                                          <SpeakerWaveIcon className="w-3 h-3" />
+                                                          {t("listenAudio")}
+                                                        </a>
+                                                      )}
+                                                      {lesson.diapositiveUrl && (
+                                                        <a
+                                                          href={
+                                                            lesson.diapositiveUrl
+                                                          }
+                                                          target="_blank"
+                                                          rel="noopener noreferrer"
+                                                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[11px] font-medium rounded-md transition-colors"
+                                                        >
+                                                          <PresentationChartBarIcon className="w-3 h-3" />
+                                                          {t("viewSlides")}
+                                                        </a>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                ),
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    },
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Locked overlay hint for non-first sections */}
+                        {!isUnlocked && (
+                          <div className="px-4 py-3 bg-gradient-to-r from-gray-50/80 to-gray-100/60 dark:from-white/[0.02] dark:to-white/[0.01] border-t border-gray-100/80 dark:border-white/5">
+                            <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+                              <LockClosedIcon className="w-3 h-3" />
+                              {t("lockedSectionHint")}
                             </p>
                           </div>
-                        </div>
-                        <ClockIcon className="w-4 h-4 text-silver dark:text-gray-500" />
+                        )}
                       </div>
                     );
                   })}
                 </div>
+
+                {/* Unlock all prompt for non-enrolled users */}
+                {!enrolled && (course.sections?.length || 0) > 1 && (
+                  <div className="mt-5 p-4 bg-gradient-to-r from-gold/5 via-gold/10 to-gold/5 dark:from-gold/[0.03] dark:via-gold/[0.06] dark:to-gold/[0.03] rounded-xl border border-gold/20 dark:border-gold/10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 bg-gold/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <LockClosedIcon className="w-4.5 h-4.5 text-gold" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-oxford dark:text-white">
+                            {t("unlockAllTitle")}
+                          </p>
+                          <p className="text-xs text-silver dark:text-gray-400 mt-0.5">
+                            {t("unlockAllDesc")}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleEnroll}
+                        className="px-5 py-2.5 bg-gold hover:bg-gold/90 text-oxford font-semibold text-sm rounded-lg transition-colors whitespace-nowrap"
+                      >
+                        {t("enrollNow")}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </motion.div>
 
               {/* Ratings & Reviews */}
@@ -410,7 +629,8 @@ export default function CourseDetailPage({
                     </span>
                     {course.price > 0 && (
                       <span className="text-lg text-silver line-through whitespace-nowrap">
-                        {course.originalPrice.toLocaleString()}&nbsp;{t("currency")}
+                        {course.originalPrice.toLocaleString()}&nbsp;
+                        {t("currency")}
                       </span>
                     )}
                     {course.price > 0 && discount > 0 && (
@@ -452,7 +672,12 @@ export default function CourseDetailPage({
                   {enrolled && course.price > 0 && (
                     <button
                       onClick={() => {
-                        if (!isAuthenticated) { router.push('/signin'); return; }
+                        if (!isAuthenticated) {
+                          router.push(
+                            `/auth/signin?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`,
+                          );
+                          return;
+                        }
                         setGiftDialogOpen(true);
                       }}
                       className="py-3.5 px-4 bg-gold/10 hover:bg-gold/20 text-gold font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
@@ -485,7 +710,11 @@ export default function CourseDetailPage({
                       label: t("curriculum"),
                       value: `${totalLessons} ${t("lessons")}`,
                     },
-                    { icon: GlobeAltIcon, label: t("language"), value: course.language },
+                    {
+                      icon: GlobeAltIcon,
+                      label: t("language"),
+                      value: course.language,
+                    },
                     {
                       icon: AcademicCapIcon,
                       label: t("certificate"),
@@ -519,6 +748,62 @@ export default function CourseDetailPage({
         </div>
       </main>
       <Footer />
+
+      {/* Guest Auth Prompt */}
+      {guestAuthPromptOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setGuestAuthPromptOpen(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-oxford-light shadow-2xl p-6">
+            <button
+              onClick={() => setGuestAuthPromptOpen(false)}
+              className="absolute top-4 end-4 p-1.5 rounded-lg text-silver hover:text-oxford dark:text-white/40 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Close"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-5">
+              <h3 className="text-xl font-bold text-oxford dark:text-white mb-2">
+                Inscrivez-vous pour rejoindre ce cours
+              </h3>
+              <p className="text-sm text-silver dark:text-gray-400 leading-relaxed">
+                Vous n&apos;êtes pas encore connecté. Créez un compte pour vous
+                inscrire, ou connectez-vous si vous avez déjà un compte.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Link
+                href={`/auth/signup?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`}
+                className="flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-oxford transition-colors hover:bg-gold/90"
+              >
+                Créer un compte
+              </Link>
+              <Link
+                href={`/auth/signin?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`}
+                className="flex w-full items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-3 text-sm font-medium text-oxford dark:text-white transition-colors hover:bg-gray-50 dark:hover:bg-white/10"
+              >
+                J&apos;ai déjà un compte
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Enrollment Dialog */}
       {course && (

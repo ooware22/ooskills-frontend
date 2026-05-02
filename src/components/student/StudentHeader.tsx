@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import {
-  BellIcon as Bell,
   MagnifyingGlassIcon as Search,
   Bars3Icon as Menu,
   SunIcon as Sun,
@@ -15,9 +14,13 @@ import { useSidebar } from "./StudentSidebar";
 import { useI18n, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/hooks";
-import { selectLevel, selectLevelProgress } from "@/store/slices/gamificationSlice";
+import {
+  selectLevel,
+  selectLevelProgress,
+} from "@/store/slices/gamificationSlice";
 import LevelAvatar from "@/components/student/LevelAvatar";
 import StreakCounter from "@/components/student/StreakCounter";
+import NotificationBell from "@/components/student/NotificationBell";
 import Image from "next/image";
 
 interface StudentHeaderProps {
@@ -173,15 +176,7 @@ export default function StudentHeader({
           )}
 
           {/* Notifications */}
-          <button className="relative p-2 text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors">
-            <Bell className="w-5 h-5" />
-            <span
-              className={cn(
-                "absolute top-1.5 w-2 h-2 bg-gold rounded-full",
-                isRtl ? "left-1.5" : "right-1.5",
-              )}
-            />
-          </button>
+          <NotificationBell />
 
           {/* Streak Counter */}
           <StreakCounter />

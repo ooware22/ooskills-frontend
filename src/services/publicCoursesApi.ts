@@ -13,12 +13,25 @@ import axiosClient from '@/lib/axios';
 // TYPES
 // =============================================================================
 
+export interface PublicCourseLesson {
+    id: string;
+    title: string;
+    type: string;
+    sequence: number;
+    duration_seconds: number;
+    audioUrl: string;
+    diapositiveUrl: string;
+    slide_type: string;
+    display_mode: string;
+}
+
 export interface PublicCourseModule {
     id: string;
     title: string;
     sequence: number;
     lessons: number;
     duration: string;
+    lessons_list?: PublicCourseLesson[];
 }
 
 export interface PublicCourseSection {
@@ -101,6 +114,8 @@ function extractResults<T>(data: T[] | PaginatedResponse<T>): { results: T[]; co
 
 const COURSES_ENDPOINT = '/formation/courses/';
 const CATEGORIES_ENDPOINT = '/formation/categories/';
+const inFlightCourseRequests = new Map<string, Promise<PublicCourse>>();
+const inFlightRatingRequests = new Map<string, Promise<CourseRatingItem[]>>();
 
 const publicCoursesApi = {
     /**
@@ -127,8 +142,20 @@ const publicCoursesApi = {
      * Get a single course by slug
      */
     getCourse: async (slug: string) => {
-        const response = await axiosClient.get<PublicCourse>(`${COURSES_ENDPOINT}${slug}/`);
-        return response.data;
+        const existingRequest = inFlightCourseRequests.get(slug);
+        if (existingRequest) {
+            return existingRequest;
+        }
+
+        const request = axiosClient
+            .get<PublicCourse>(`${COURSES_ENDPOINT}${slug}/`)
+            .then((response) => response.data)
+            .finally(() => {
+                inFlightCourseRequests.delete(slug);
+            });
+
+        inFlightCourseRequests.set(slug, request);
+        return request;
     },
 
     /**
@@ -153,10 +180,20 @@ export interface CourseRatingItem {
 const ratingApi = {
     /** Get all ratings for a course */
     getCourseRatings: async (slug: string): Promise<CourseRatingItem[]> => {
-        const response = await axiosClient.get<CourseRatingItem[]>(
-            `${COURSES_ENDPOINT}${slug}/ratings/`
-        );
-        return response.data;
+        const existingRequest = inFlightRatingRequests.get(slug);
+        if (existingRequest) {
+            return existingRequest;
+        }
+
+        const request = axiosClient
+            .get<CourseRatingItem[]>(`${COURSES_ENDPOINT}${slug}/ratings/`)
+            .then((response) => response.data)
+            .finally(() => {
+                inFlightRatingRequests.delete(slug);
+            });
+
+        inFlightRatingRequests.set(slug, request);
+        return request;
     },
 
     /** Submit or update a rating for a course (must be enrolled) */
@@ -169,6 +206,7 @@ const ratingApi = {
             `${COURSES_ENDPOINT}${slug}/rate/`,
             { rating, review_text }
         );
+        inFlightRatingRequests.delete(slug);
         return response.data;
     },
 };

@@ -6,6 +6,7 @@
  */
 
 import axiosClient from '@/lib/axios';
+import { getAccessToken, setAccessToken, markSessionActive, clearAllTokens, hasSession } from '@/lib/tokenStore';
 import type {
     LoginRequest,
     LoginResponse,
@@ -17,7 +18,6 @@ import type {
     ProfileUpdateRequest,
     ChangePasswordRequest,
     MessageResponse,
-    TOKEN_KEYS,
 } from '@/types/auth';
 
 // =============================================================================
@@ -39,37 +39,28 @@ const ENDPOINTS = {
 
 // =============================================================================
 // TOKEN MANAGEMENT
+// Security: access token is in memory only; refresh token is in an HttpOnly
+// cookie managed exclusively by the backend. JS can never read the refresh
+// token, making persistent token theft via XSS impossible.
 // =============================================================================
 
-/** Get stored access token */
-export const getAccessToken = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('auth_token');
+/** Returns the current in-memory access token. */
+export { getAccessToken };
+
+/** Store only the access token (in memory). The refresh token is a cookie. */
+export const setTokens = (access: string): void => {
+    setAccessToken(access);
+    markSessionActive();
 };
 
-/** Get stored refresh token */
-export const getRefreshToken = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('auth_refresh_token');
-};
-
-/** Store tokens in localStorage */
-export const setTokens = (access: string, refresh: string): void => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('auth_token', access);
-    localStorage.setItem('auth_refresh_token', refresh);
-};
-
-/** Clear all tokens from localStorage */
+/** Clear the in-memory token and the session marker. */
 export const clearTokens = (): void => {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_refresh_token');
+    clearAllTokens();
 };
 
-/** Check if user has tokens stored */
+/** True when the user likely has a valid session (marker or live access token). */
 export const hasStoredTokens = (): boolean => {
-    return !!getAccessToken() && !!getRefreshToken();
+    return !!getAccessToken() || hasSession();
 };
 
 // =============================================================================
@@ -82,10 +73,10 @@ export const hasStoredTokens = (): boolean => {
  */
 export const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosClient.post<LoginResponse>(ENDPOINTS.login, credentials);
-    const { access, refresh, user } = response.data;
+    const { access } = response.data;
 
-    // Store tokens
-    setTokens(access, refresh);
+    // Store access token in memory; refresh token arrives as an HttpOnly cookie.
+    setTokens(access);
 
     return response.data;
 };
@@ -113,8 +104,8 @@ export const register = async (data: RegisterRequest): Promise<RegisterResponse>
 
     const { tokens } = response.data;
 
-    // Store tokens
-    setTokens(tokens.access, tokens.refresh);
+    // Store access token in memory; refresh token arrives as an HttpOnly cookie.
+    setTokens(tokens.access);
 
     return response.data;
 };
@@ -127,33 +118,22 @@ export const socialLogin = async (data: SocialLoginRequest): Promise<RegisterRes
     const response = await axiosClient.post<RegisterResponse>(ENDPOINTS.socialLogin, data);
     const { tokens } = response.data;
 
-    // Store tokens
-    setTokens(tokens.access, tokens.refresh);
+    // Store access token in memory; refresh token arrives as an HttpOnly cookie.
+    setTokens(tokens.access);
 
     return response.data;
 };
 
 /**
- * Refresh the access token using refresh token
- * Called automatically by axios interceptor on 401
+ * Refresh the access token.
+ * No body is sent — the browser automatically includes the HttpOnly
+ * refresh-token cookie. The backend rotates it and returns a new one
+ * via Set-Cookie, plus the new access token in the JSON body.
  */
-export const refreshAccessToken = async (refreshToken: string): Promise<TokenRefreshResponse> => {
-    const response = await axiosClient.post<TokenRefreshResponse>(
-        ENDPOINTS.refresh,
-        { refresh: refreshToken }
-    );
-
-    const { access, refresh } = response.data;
-
-    // Update stored access token
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', access);
-        // If backend returns new refresh token, update it
-        if (refresh) {
-            localStorage.setItem('auth_refresh_token', refresh);
-        }
-    }
-
+export const refreshAccessToken = async (): Promise<TokenRefreshResponse> => {
+    const response = await axiosClient.post<TokenRefreshResponse>(ENDPOINTS.refresh);
+    const { access } = response.data;
+    setTokens(access);
     return response.data;
 };
 
@@ -209,15 +189,14 @@ export const changePassword = async (data: ChangePasswordRequest): Promise<Messa
 };
 
 /**
- * Logout (clear tokens client-side)
- * The backend doesn't invalidate JWT tokens (stateless)
+ * Logout: clears in-memory token + session marker, tells backend to
+ * blacklist the refresh-token cookie and clear it via Set-Cookie.
  */
 export const logout = async (): Promise<void> => {
     try {
-        // Notify backend (optional, stateless JWT)
         await axiosClient.post(ENDPOINTS.logout);
     } catch {
-        // Ignore errors, still clear tokens
+        // Ignore errors, still clear local state
     } finally {
         clearTokens();
     }
@@ -239,7 +218,6 @@ export const authApi = {
     logout,
     // Token helpers
     getAccessToken,
-    getRefreshToken,
     setTokens,
     clearTokens,
     hasStoredTokens,

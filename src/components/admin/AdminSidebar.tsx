@@ -25,11 +25,12 @@ import {
   TagIcon as Tag,
   FireIcon as Fire,
   StarIcon as Star,
+  TrashIcon as Trash,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
-import { clearCredentials } from "@/store/slices/authSlice";
+import { logout } from "@/store/slices/authSlice";
 
 // Types for nav items
 type NavLink = {
@@ -50,7 +51,12 @@ type NavItem = NavLink | NavGroup;
 
 // Navigation structure with groups
 const navItems: NavItem[] = [
-  { type: "link", href: "/admin", labelKey: "dashboard", icon: LayoutDashboard },
+  {
+    type: "link",
+    href: "/admin",
+    labelKey: "dashboard",
+    icon: LayoutDashboard,
+  },
   {
     type: "group",
     labelKey: "landingPage",
@@ -66,12 +72,26 @@ const navItems: NavItem[] = [
   },
   { type: "link", href: "/admin/users", labelKey: "users", icon: Users },
   {
+    type: "link",
+    href: "/admin/deletion-requests",
+    labelKey: "deletionRequests",
+    icon: Trash,
+  },
+  {
     type: "group",
     labelKey: "courseManagement",
     icon: AcademicCap,
     children: [
-      { href: "/admin/course-management", labelKey: "coursesList", icon: BookOpen },
-      { href: "/admin/course-categories", labelKey: "categoriesList", icon: Tag },
+      {
+        href: "/admin/course-management",
+        labelKey: "coursesList",
+        icon: BookOpen,
+      },
+      {
+        href: "/admin/course-categories",
+        labelKey: "categoriesList",
+        icon: Tag,
+      },
       { href: "/admin/promo-codes", labelKey: "promoCodes", icon: Tag },
     ],
   },
@@ -127,15 +147,21 @@ export function MobileMenuButton() {
 // Tooltip component for collapsed sidebar
 function SidebarTooltip({ label, isRtl }: { label: string; isRtl: boolean }) {
   return (
-    <div className={cn(
-      "absolute px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none",
-      isRtl ? "right-full mr-3" : "left-full ml-3"
-    )}>
+    <div
+      className={cn(
+        "absolute px-3 py-2 bg-oxford/95 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-[100] pointer-events-none",
+        isRtl ? "right-full mr-3" : "left-full ml-3",
+      )}
+    >
       {label}
-      <div className={cn(
-        "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-oxford border-white/20 rotate-45",
-        isRtl ? "left-full -ml-[5px] border-t border-r" : "right-full -mr-[5px] border-t border-l"
-      )} />
+      <div
+        className={cn(
+          "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-oxford border-white/20 rotate-45",
+          isRtl
+            ? "left-full -ml-[5px] border-t border-r"
+            : "right-full -mr-[5px] border-t border-l",
+        )}
+      />
     </div>
   );
 }
@@ -148,9 +174,9 @@ export default function AdminSidebar() {
   const { t, locale } = useI18n();
   const isRtl = locale === "ar";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     closeMobile();
-    dispatch(clearCredentials());
+    await dispatch(logout());
     router.push("/");
   };
 
@@ -160,7 +186,9 @@ export default function AdminSidebar() {
     const initial: Record<string, boolean> = {};
     navItems.forEach((item) => {
       if (item.type === "group") {
-        const hasActiveChild = item.children.some((child) => pathname === child.href);
+        const hasActiveChild = item.children.some(
+          (child) => pathname === child.href,
+        );
         if (hasActiveChild) {
           initial[item.labelKey] = true;
         }
@@ -182,7 +210,7 @@ export default function AdminSidebar() {
     href: string,
     labelKey: string,
     Icon: React.ElementType,
-    indented = false
+    indented = false,
   ) => {
     const isActive = pathname === href;
     const label = getLabel(labelKey);
@@ -198,7 +226,7 @@ export default function AdminSidebar() {
             ? "bg-gold text-oxford shadow-md"
             : "text-white/70 hover:text-white hover:bg-white/5",
           !isExpanded && "justify-center px-2",
-          indented && isExpanded && "ms-4 py-2.5"
+          indented && isExpanded && "ms-4 py-2.5",
         )}
       >
         <Icon className={cn("w-5 h-5 flex-shrink-0", indented && "w-4 h-4")} />
@@ -214,7 +242,9 @@ export default function AdminSidebar() {
 
   const renderGroup = (item: NavGroup) => {
     const isOpen = openGroups[item.labelKey] ?? false;
-    const hasActiveChild = item.children.some((child) => pathname === child.href);
+    const hasActiveChild = item.children.some(
+      (child) => pathname === child.href,
+    );
     const label = getLabel(item.labelKey);
 
     // In collapsed mode, just show icon with tooltip
@@ -232,7 +262,7 @@ export default function AdminSidebar() {
               "flex items-center justify-center w-full px-2 py-3 rounded-xl text-sm font-medium transition-all duration-200",
               hasActiveChild
                 ? "bg-gold/20 text-gold"
-                : "text-white/70 hover:text-white hover:bg-white/5"
+                : "text-white/70 hover:text-white hover:bg-white/5",
             )}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -250,7 +280,7 @@ export default function AdminSidebar() {
             "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200",
             hasActiveChild
               ? "bg-gold/15 text-gold"
-              : "text-white/70 hover:text-white hover:bg-white/5"
+              : "text-white/70 hover:text-white hover:bg-white/5",
           )}
         >
           <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -260,7 +290,7 @@ export default function AdminSidebar() {
           <ChevronDown
             className={cn(
               "w-4 h-4 flex-shrink-0 transition-transform duration-200",
-              isOpen && "rotate-180"
+              isOpen && "rotate-180",
             )}
           />
         </button>
@@ -269,12 +299,12 @@ export default function AdminSidebar() {
         <div
           className={cn(
             "overflow-hidden transition-all duration-300 ease-in-out",
-            isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
+            isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0",
           )}
         >
           <div className="space-y-0.5">
             {item.children.map((child) =>
-              renderLink(child.href, child.labelKey, child.icon, true)
+              renderLink(child.href, child.labelKey, child.icon, true),
             )}
           </div>
         </div>
@@ -307,7 +337,7 @@ export default function AdminSidebar() {
           onClick={closeMobile}
           className={cn(
             "lg:hidden absolute top-4 p-1 text-white/60 hover:text-white",
-            isRtl ? "left-4" : "right-4"
+            isRtl ? "left-4" : "right-4",
           )}
         >
           <X className="w-5 h-5" />
@@ -382,7 +412,9 @@ export default function AdminSidebar() {
           >
             <LogOut className={cn("w-5 h-5", isRtl && "rotate-180")} />
             {isExpanded && <span>{getLabel("logout")}</span>}
-            {!isExpanded && <SidebarTooltip label={getLabel("logout")} isRtl={isRtl} />}
+            {!isExpanded && (
+              <SidebarTooltip label={getLabel("logout")} isRtl={isRtl} />
+            )}
           </button>
         </div>
       </aside>

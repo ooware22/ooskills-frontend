@@ -216,10 +216,12 @@ const adminCoursesManagementSlice = createSlice({
                 state.saving = true;
                 state.error = null;
             })
-            .addCase(importAdminCourseFromZip.fulfilled, (state, action) => {
+            .addCase(importAdminCourseFromZip.fulfilled, (state) => {
                 state.saving = false;
-                state.courses.unshift(action.payload);
-                state.totalCount += 1;
+                // The backend runs the import in a background thread and returns
+                // a 202 message, NOT a course object.  Invalidate cache so the
+                // next fetch picks up the new course once processing completes.
+                state.lastFetched = null;
             })
             .addCase(importAdminCourseFromZip.rejected, (state, action) => {
                 state.saving = false;

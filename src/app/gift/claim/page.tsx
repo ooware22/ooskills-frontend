@@ -38,8 +38,13 @@ function ClaimContent() {
       const res = await giftApi.claim(finalCode);
       setSuccess(true);
       setCourseSlug(res.course_slug);
-    } catch (err: any) {
-      setError(err?.message || err?.data?.detail || "Code invalide ou expiré.");
+    } catch (err: unknown) {
+      const axiosErr = err as { message?: string; data?: { detail?: string } };
+      setError(
+        axiosErr?.message ||
+          axiosErr?.data?.detail ||
+          "Code invalide ou expiré.",
+      );
     } finally {
       setLoading(false);
     }

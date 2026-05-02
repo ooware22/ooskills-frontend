@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -20,8 +20,10 @@ import {
   CameraIcon,
   CheckIcon,
   ChevronDownIcon,
+  CheckCircleIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   register,
@@ -33,6 +35,7 @@ import {
 import { WILAYAS } from "@/constants/wilayas";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/ui/Toast";
+import axiosClient from "@/lib/axios";
 
 const STEPS = ["personal", "contact", "security"] as const;
 type Step = typeof STEPS[number];
@@ -60,6 +63,8 @@ export default function SignUp() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [referralStatus, setReferralStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const [referralReferrer, setReferralReferrer] = useState<string>('');
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -70,10 +75,17 @@ export default function SignUp() {
     wilaya: "",
     referral_code: "",
     newsletter_subscribed: false,
+    acceptTerms: false,
   });
 
   useEffect(() => {
     setMounted(true);
+    // Auto-fill referral code from URL (?ref=CODE)
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referral_code: refCode.toUpperCase() }));
+    }
   }, []);
 
   // Filter wilayas based on search
@@ -115,6 +127,35 @@ export default function SignUp() {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  // Debounced referral code validation
+  useEffect(() => {
+    const code = formData.referral_code.trim();
+    if (!code) {
+      setReferralStatus('idle');
+      setReferralReferrer('');
+      return;
+    }
+
+    setReferralStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        const res = await axiosClient.post('/auth/verify-referral-code/', { code });
+        if (res.data.valid) {
+          setReferralStatus('valid');
+          setReferralReferrer(res.data.referrer_name || '');
+        } else {
+          setReferralStatus('invalid');
+          setReferralReferrer('');
+        }
+      } catch {
+        setReferralStatus('invalid');
+        setReferralReferrer('');
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [formData.referral_code]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,7 +229,7 @@ export default function SignUp() {
       case "contact":
         return formData.email.trim() && formData.email.includes("@");
       case "security":
-        return formData.password.length >= 8 && formData.password === formData.password_confirm;
+        return formData.password.length >= 8 && formData.password === formData.password_confirm && formData.acceptTerms;
       default:
         return false;
     }
@@ -277,6 +318,25 @@ export default function SignUp() {
                   ? "Veuillez vérifier votre e-mail et cliquer sur le lien d'activation pour activer votre compte."
                   : "Please check your email and click the activation link to activate your account."}
             </p>
+
+            {/* Referral welcome bonus */}
+            {referralStatus === 'valid' && (
+              <div className={`rounded-xl p-4 mb-6 border ${isDark ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <GiftIcon className="w-4 h-4 text-emerald-500" />
+                  <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                    {locale === "ar" ? "🎉 مكافأة ترحيبية!" : locale === "fr" ? "🎉 Bonus de bienvenue !" : "🎉 Welcome Bonus!"}
+                  </p>
+                </div>
+                <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80">
+                  {locale === "ar"
+                    ? "لقد حصلت على 100 دج كمكافأة ترحيبية في رصيد الإحالة الخاص بك!"
+                    : locale === "fr"
+                      ? "Vous avez reçu 100 DA de bonus de bienvenue sur votre solde parrainage !"
+                      : "You've received a 100 DA welcome bonus on your referral balance!"}
+                </p>
+              </div>
+            )}
 
             <Link
               href="/"
@@ -496,22 +556,59 @@ export default function SignUp() {
                     {t("referralCode")} <span className={isDark ? "text-white/30" : "text-oxford/40"}>{t("referralCodeOptional")}</span>
                   </label>
                   <div className="relative">
-                    <GiftIcon className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
+                    <GiftIcon className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                      referralStatus === 'valid' ? 'text-emerald-400' : referralStatus === 'invalid' ? 'text-red-400' : isDark ? "text-white/30" : "text-oxford/30"
+                    }`} />
                     <input
                       type="text"
                       value={formData.referral_code}
                       onChange={(e) =>
-                        setFormData({ ...formData, referral_code: e.target.value })
+                        setFormData({ ...formData, referral_code: e.target.value.toUpperCase() })
                       }
                       placeholder={t("referralCodePlaceholder")}
-                      className={`w-full ps-8 sm:ps-9 pe-3 py-2.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all ${
-                        isDark 
-                          ? "bg-white/5 border border-white/10 text-white placeholder:text-white/30" 
-                          : "bg-white border border-gray-200 text-oxford placeholder:text-oxford/40"
+                      className={`w-full ps-8 sm:ps-9 pe-9 py-2.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all ${
+                        referralStatus === 'valid'
+                          ? isDark
+                            ? 'bg-white/5 border border-emerald-500/40 text-white placeholder:text-white/30'
+                            : 'bg-white border border-emerald-500/40 text-oxford placeholder:text-oxford/40'
+                          : referralStatus === 'invalid'
+                            ? isDark
+                              ? 'bg-white/5 border border-red-500/40 text-white placeholder:text-white/30'
+                              : 'bg-white border border-red-500/40 text-oxford placeholder:text-oxford/40'
+                            : isDark 
+                              ? "bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:border-gold" 
+                              : "bg-white border border-gray-200 text-oxford placeholder:text-oxford/40 focus:border-gold"
                       }`}
                       disabled={loading}
                     />
+                    {/* Status indicator */}
+                    {formData.referral_code.trim() && (
+                      <div className="absolute end-2.5 top-1/2 -translate-y-1/2">
+                        {referralStatus === 'checking' && (
+                          <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${isDark ? 'border-white/30' : 'border-oxford/30'}`} />
+                        )}
+                        {referralStatus === 'valid' && (
+                          <CheckCircleIcon className="w-4.5 h-4.5 text-emerald-400" />
+                        )}
+                        {referralStatus === 'invalid' && (
+                          <XCircleIcon className="w-4.5 h-4.5 text-red-400" />
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {/* Referral feedback message */}
+                  {referralStatus === 'valid' && referralReferrer && (
+                    <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                      <CheckCircleIcon className="w-3 h-3" />
+                      {locale === "ar" ? `تمت دعوتك من طرف ${referralReferrer}` : locale === "fr" ? `Invité par ${referralReferrer}` : `Invited by ${referralReferrer}`}
+                    </p>
+                  )}
+                  {referralStatus === 'invalid' && (
+                    <p className="text-[10px] sm:text-xs text-red-400 mt-1 flex items-center gap-1">
+                      <XCircleIcon className="w-3 h-3" />
+                      {locale === "ar" ? "رمز الإحالة غير صالح" : locale === "fr" ? "Code de parrainage invalide" : "Invalid referral code"}
+                    </p>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -767,7 +864,7 @@ export default function SignUp() {
                 </div>
 
                 {/* Newsletter Checkbox */}
-                <div className="mb-4">
+                <div className="mb-3">
                   <label className="flex items-start gap-2.5 cursor-pointer group">
                     <div className="relative mt-0.5">
                       <input
@@ -796,6 +893,58 @@ export default function SignUp() {
                         : "text-oxford/60 group-hover:text-oxford/80"
                     }`}>
                       {t("newsletter")}
+                    </span>
+                  </label>
+                </div>
+
+                {/* Terms & Privacy Acceptance Checkbox */}
+                <div className="mb-4">
+                  <label className="flex items-start gap-2.5 cursor-pointer group">
+                    <div className="relative mt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={formData.acceptTerms}
+                        onChange={(e) =>
+                          setFormData({ ...formData, acceptTerms: e.target.checked })
+                        }
+                        className="sr-only"
+                      />
+                      <div className={`w-4 h-4 rounded border-2 transition-all flex items-center justify-center ${
+                        formData.acceptTerms 
+                          ? 'bg-gold border-gold' 
+                          : isDark 
+                            ? 'border-white/20 group-hover:border-white/40' 
+                            : 'border-gray-300 group-hover:border-gray-400'
+                      }`}>
+                        {formData.acceptTerms && (
+                          <CheckIcon className="w-2.5 h-2.5 text-oxford" strokeWidth={3} />
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-xs sm:text-sm transition-colors leading-tight ${
+                      isDark 
+                        ? "text-white/60 group-hover:text-white/80" 
+                        : "text-oxford/60 group-hover:text-oxford/80"
+                    }`}>
+                      {t("acceptTerms.prefix")}{" "}
+                      <Link
+                        href="/terms-of-service"
+                        target="_blank"
+                        className="text-gold hover:underline font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {t("acceptTerms.terms")}
+                      </Link>
+                      {" "}{t("acceptTerms.and")}{" "}
+                      <Link
+                        href="/privacy-policy"
+                        target="_blank"
+                        className="text-gold hover:underline font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {t("acceptTerms.privacy")}
+                      </Link>
+                      {" "}<span className="text-red-400">*</span>
                     </span>
                   </label>
                 </div>

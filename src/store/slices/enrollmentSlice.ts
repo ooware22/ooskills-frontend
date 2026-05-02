@@ -99,6 +99,7 @@ interface StudentState {
 
   quizAttempts: QuizAttempt[];
   quizAttemptsLoading: boolean;
+  lastFetchedQuizAttempts: number | null;
 
   certificates: Certificate[];
   certificatesLoading: boolean;
@@ -122,6 +123,7 @@ const initialState: StudentState = {
 
   quizAttempts: [],
   quizAttemptsLoading: false,
+  lastFetchedQuizAttempts: null,
 
   certificates: [],
   certificatesLoading: false,
@@ -133,11 +135,8 @@ const initialState: StudentState = {
 
 // ─── Cache helper ───────────────────────────────────────────────────────────
 
-const CACHE_TTL = 60_000; // 60 seconds
-
 function isCacheValid(lastFetched: number | null): boolean {
-  if (!lastFetched) return false;
-  return Date.now() - lastFetched < CACHE_TTL;
+  return lastFetched !== null; // fetch once per session (reset on page refresh)
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -158,6 +157,14 @@ export const fetchMyEnrollments = createAsyncThunk(
     const { data } = await api.get("/formation/enrollments/");
     return extractResults<Enrollment>(data);
   },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).enrollment;
+      if (state.enrollmentsLoading) return false;
+      if (isCacheValid(state.lastFetchedEnrollments)) return false;
+      return true;
+    },
+  },
 );
 
 export const enrollInCourse = createAsyncThunk(
@@ -177,13 +184,15 @@ export const enrollInCourse = createAsyncThunk(
 export const createOrder = createAsyncThunk(
   "student/createOrder",
   async (
-    payload: { courseIds: string[]; paymentMethod: string },
+    payload: { courseIds: string[]; paymentMethod: string; promoCode?: string; useWallet?: boolean },
     { rejectWithValue },
   ) => {
     try {
       const { data } = await api.post("/formation/orders/", {
         course_ids: payload.courseIds,
         paymentMethod: payload.paymentMethod,
+        promo_code: payload.promoCode ?? '',
+        use_wallet: payload.useWallet ?? false,
       });
 
       // If Chargily checkout_url is returned, redirect to payment page
@@ -208,6 +217,14 @@ export const fetchMyOrders = createAsyncThunk(
     if (isCacheValid(state.lastFetchedOrders)) return state.orders;
     const { data } = await api.get("/formation/orders/");
     return extractResults<Order>(data);
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).enrollment;
+      if (state.ordersLoading) return false;
+      if (isCacheValid(state.lastFetchedOrders)) return false;
+      return true;
+    },
   },
 );
 
@@ -235,9 +252,25 @@ export const saveProgress = createAsyncThunk(
   },
 );
 
+interface RawFinalQuizAttempt {
+  id: string;
+  enrollment: string;
+  final_quiz?: string;
+  score: number;
+  answers?: Record<string, number>;
+  passed: boolean;
+  xp_earned?: number;
+  feedback?: unknown[];
+  attempt_number: number;
+  submitted_at: string;
+  remaining_attempts?: number;
+}
+
 export const fetchMyQuizAttempts = createAsyncThunk(
   "student/fetchMyQuizAttempts",
-  async () => {
+  async (_, { getState }) => {
+    const state = (getState() as RootState).enrollment;
+    if (isCacheValid(state.lastFetchedQuizAttempts)) return null;
     // Fetch both section quiz attempts and final quiz attempts in parallel
     const [sectionRes, finalRes] = await Promise.all([
       api.get("/formation/quiz-attempts/"),
@@ -247,7 +280,7 @@ export const fetchMyQuizAttempts = createAsyncThunk(
     // Map final quiz attempts to the same shape for XP summing
     const finalAttempts: QuizAttempt[] = (
       Array.isArray(finalRes.data) ? finalRes.data : finalRes.data.results || []
-    ).map((a: any) => ({
+    ).map((a: RawFinalQuizAttempt) => ({
       id: a.id,
       enrollment: a.enrollment,
       quiz: a.final_quiz || '',
@@ -262,6 +295,14 @@ export const fetchMyQuizAttempts = createAsyncThunk(
     }));
     return [...sectionAttempts, ...finalAttempts];
   },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).enrollment;
+      if (state.quizAttemptsLoading) return false;
+      if (isCacheValid(state.lastFetchedQuizAttempts)) return false;
+      return true;
+    },
+  },
 );
 
 export const fetchMyCertificates = createAsyncThunk(
@@ -271,6 +312,14 @@ export const fetchMyCertificates = createAsyncThunk(
     if (isCacheValid(state.lastFetchedCertificates)) return state.certificates;
     const { data } = await api.get("/formation/certificates/");
     return extractResults<Certificate>(data);
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).enrollment;
+      if (state.certificatesLoading) return false;
+      if (isCacheValid(state.lastFetchedCertificates)) return false;
+      return true;
+    },
   },
 );
 
@@ -380,8 +429,11 @@ const enrollmentSlice = createSlice({
         state.quizAttemptsLoading = true;
       })
       .addCase(fetchMyQuizAttempts.fulfilled, (state, action) => {
-        state.quizAttempts = action.payload;
         state.quizAttemptsLoading = false;
+        if (action.payload) {
+          state.quizAttempts = action.payload;
+          state.lastFetchedQuizAttempts = Date.now();
+        }
       })
       .addCase(fetchMyQuizAttempts.rejected, (state) => {
         state.quizAttemptsLoading = false;

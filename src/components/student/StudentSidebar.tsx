@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useAppDispatch } from "@/store/hooks";
-import { clearCredentials } from "@/store/slices/authSlice";
+import { logout } from "@/store/slices/authSlice";
 
 // Navigation items for student dashboard
 const navItems = [
@@ -32,8 +32,16 @@ const navItems = [
     labelKey: "certificates",
     icon: TrophyIcon,
   },
-  { href: "/dashboard/achievements", labelKey: "achievements", icon: SparklesIcon },
-  { href: "/dashboard/leaderboard", labelKey: "leaderboard", icon: ChartBarIcon },
+  {
+    href: "/dashboard/achievements",
+    labelKey: "achievements",
+    icon: SparklesIcon,
+  },
+  {
+    href: "/dashboard/leaderboard",
+    labelKey: "leaderboard",
+    icon: ChartBarIcon,
+  },
   { href: "/dashboard/catalogue", labelKey: "catalogue", icon: Search },
   { href: "/dashboard/settings", labelKey: "settings", icon: Settings },
 ];
@@ -100,9 +108,9 @@ export default function StudentSidebar() {
   const { t, locale } = useI18n();
   const isRtl = locale === "ar";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     closeMobile();
-    dispatch(clearCredentials());
+    await dispatch(logout());
     router.push("/");
   };
 

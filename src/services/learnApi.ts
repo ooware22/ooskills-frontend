@@ -84,6 +84,70 @@ const ENDPOINTS = {
 } as const;
 
 // =============================================================================
+// RAW API TYPES
+// =============================================================================
+
+type RawLocalizedString = string | Record<string, string>;
+
+interface RawLesson {
+  id?: string;
+  title?: RawLocalizedString;
+  slide_type?: string;
+  duration_seconds?: number;
+  content?: {
+    slide_type?: string;
+    visual_content?: unknown;
+    narration_script?: unknown;
+  };
+  audioUrl?: string;
+  display_mode?: string;
+  diapositiveUrl?: string;
+  sequence?: number;
+}
+
+interface RawQuestion {
+  id?: string;
+  type?: string;
+  question?: RawLocalizedString;
+  options?: Array<RawLocalizedString>;
+  correct_answer?: number;
+  explanation?: RawLocalizedString;
+  difficulty?: string;
+  category?: string;
+}
+
+interface RawQuiz {
+  id?: string;
+  title?: RawLocalizedString;
+  intro_text?: RawLocalizedString;
+  pass_threshold?: number;
+  questions?: RawQuestion[];
+}
+
+interface RawModule {
+  lessons_list?: RawLesson[];
+}
+
+interface RawSection {
+  sequence?: number;
+  type?: string;
+  title?: RawLocalizedString;
+  modules_list?: RawModule[];
+  quiz?: RawQuiz;
+  audioFileIndex?: number;
+}
+
+interface RawMaterial {
+  id: string;
+  name: string;
+  type?: string;
+  size?: string;
+  download_url?: string;
+  url?: string;
+  file?: string;
+}
+
+// =============================================================================
 // CONTENT TRANSFORMATION
 // =============================================================================
 
@@ -91,22 +155,22 @@ const ENDPOINTS = {
  * Transform raw API section data into CourseContent format
  */
 function transformSectionsToContent(
-  sections: any[],
+  sections: RawSection[],
   slug: string,
-  materials: any[] = [],
+  materials: RawMaterial[] = [],
 ): CourseContent {
   const modules: CourseContentModule[] = sections
-    .sort((a: any, b: any) => a.sequence - b.sequence)
-    .map((section: any) => {
+    .sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+    .map((section) => {
       // Flatten all lessons from all modules in this section
-      const allLessons = (section.modules_list || []).reduce((acc: any[], m: any) => {
+      const allLessons = (section.modules_list || []).reduce<RawLesson[]>((acc, m) => {
         return acc.concat(m.lessons_list || []);
       }, []);
 
       const lessons = allLessons.sort(
-        (a: any, b: any) => a.sequence - b.sequence,
+        (a, b) => (a.sequence ?? 0) - (b.sequence ?? 0),
       );
-      const slides: Slide[] = lessons.map((lesson: any, idx: number) => {
+      const slides: Slide[] = lessons.map((lesson, idx) => {
         const c = lesson.content || {};
         return {
           id: idx + 1,
@@ -116,10 +180,10 @@ function transformSectionsToContent(
           slide_type: lesson.slide_type || c.slide_type || 'bullet_points',
           duration_seconds: lesson.duration_seconds || 30,
           visual_content: c.visual_content || c || {},
-          narration_script: c.narration_script || { mode: 'dialogue', speakers: [] },
+          narration_script: (c.narration_script || { mode: 'dialogue', speakers: [] }) as Slide['narration_script'],
           apiAudioUrl: lesson.audioUrl || undefined,
           apiLessonId: lesson.id || undefined,
-          displayMode: lesson.display_mode || 'both',
+          displayMode: (lesson.display_mode || 'both') as Slide['displayMode'],
           diapositiveUrl: lesson.diapositiveUrl || undefined,
         };
       });
@@ -137,7 +201,7 @@ function transformSectionsToContent(
             : q.intro_text || '',
           pass_threshold: q.pass_threshold || 70,
           apiQuizId: q.id,
-          questions: (q.questions || []).map((qn: any, qi: number): QuizQuestion => ({
+          questions: (q.questions || []).map((qn, qi): QuizQuestion => ({
             id: qi + 1,
             apiQuestionId: qn.id,
             type: qn.type || 'multiple_choice',
@@ -145,7 +209,7 @@ function transformSectionsToContent(
               ? qn.question.fr || qn.question.en || ''
               : qn.question || '',
             options: Array.isArray(qn.options)
-              ? qn.options.map((opt: any) =>
+              ? qn.options.map((opt) =>
                   typeof opt === 'object' ? opt.fr || opt.en || '' : opt
                 )
               : [],
@@ -182,10 +246,10 @@ function transformSectionsToContent(
     totalQuizQuestions: totalQuiz,
     audioBasePath: '',
     modules,
-    materials: materials.map((m: any): CourseMaterial => ({
+    materials: materials.map((m): CourseMaterial => ({
       id: m.id,
       name: m.name,
-      type: m.type || 'other',
+      type: (m.type || 'other') as CourseMaterial['type'],
       size: m.size || '',
       url: m.download_url || m.url || m.file || '#',
     })),
@@ -206,13 +270,13 @@ export const learnApi = {
     const sections = extractResults(res.data);
 
     // Also fetch course detail to get materials
-    let materials: any[] = [];
+    let materials: RawMaterial[] = [];
     try {
       const courseRes = await axiosClient.get(`${ENDPOINTS.courseDetail}${slug}/`);
       materials = courseRes.data?.materials || [];
     } catch { /* materials are optional */ }
 
-    return transformSectionsToContent(sections, slug, materials);
+    return transformSectionsToContent(sections as RawSection[], slug, materials);
   },
 
   /**

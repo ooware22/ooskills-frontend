@@ -5,21 +5,37 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import axiosClient from "@/lib/axios";
+import { useAppDispatch } from "@/store/hooks";
+import { initializeAuth } from "@/store/slices/authSlice";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const orderId = searchParams.get("order");
   const courseSlug = searchParams.get("course");
   const [verifying, setVerifying] = useState(Boolean(orderId));
+  const [authReady, setAuthReady] = useState(false);
   const [verificationMsg, setVerificationMsg] = useState(
     "Verifying your enrollment...",
   );
 
   useEffect(() => {
+    let mounted = true;
+    dispatch(initializeAuth()).finally(() => {
+      if (mounted) setAuthReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const verifyPaymentAndEnrollment = async () => {
+      if (!authReady) return;
+
       if (!orderId) {
         if (!cancelled) setVerifying(false);
         return;
@@ -32,6 +48,8 @@ export default function PaymentSuccessPage() {
         try {
           const response = await axiosClient.post(
             `/formation/orders/${orderId}/confirm-payment/`,
+            {},
+            { skipAuthRedirect: true } as any,
           );
           if (response.status === 200) {
             if (!cancelled) {
@@ -40,7 +58,17 @@ export default function PaymentSuccessPage() {
             }
             return;
           }
-        } catch {
+        } catch (error: any) {
+          const status = error?.status ?? error?.response?.status;
+          if (status === 401 || status === 403) {
+            if (!cancelled) {
+              setVerificationMsg(
+                "Payment received. Enrollment is being finalized.",
+              );
+              setVerifying(false);
+            }
+            return;
+          }
           // Keep retrying a few times; webhook might still be processing.
         }
 
@@ -60,7 +88,7 @@ export default function PaymentSuccessPage() {
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
+  }, [authReady, orderId]);
 
   // Auto-redirect after verification attempts complete.
   useEffect(() => {

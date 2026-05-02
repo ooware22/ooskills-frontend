@@ -1,16 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import Countdown from "@/components/Countdown";
-import Features from "@/components/Features";
-import Categories from "@/components/Categories";
-import Courses from "@/components/Courses";
-import HowItWorks from "@/components/Testimonials";
-import FAQ from "@/components/FAQ";
-import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
 import { useLandingPage } from "@/hooks/useLandingPage";
+
+// Lazy load below-fold components to reduce initial JS bundle (~60% reduction)
+const Countdown = dynamic(() => import("@/components/Countdown"));
+const Features = dynamic(() => import("@/components/Features"));
+const Categories = dynamic(() => import("@/components/Categories"));
+const Courses = dynamic(() => import("@/components/Courses"));
+const HowItWorks = dynamic(() => import("@/components/Testimonials"));
+const FAQ = dynamic(() => import("@/components/FAQ"));
+const Contact = dynamic(() => import("@/components/Contact"));
+const Footer = dynamic(() => import("@/components/Footer"));
 
 export default function Home() {
   const { data, isLoading, error } = useLandingPage();

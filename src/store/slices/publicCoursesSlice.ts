@@ -16,11 +16,14 @@ interface PublicCoursesState {
     categories: PublicCategory[];
     loading: boolean;
     categoriesLoading: boolean;
+    lastFetchedCategories: number | null;
+    lastFetchedCourses: number | null;
     error: string | null;
     filters: CourseFilterParams;
 
     // Detail page
     courseDetail: PublicCourse | null;
+    courseDetailSlug: string | null;
     courseDetailLoading: boolean;
     courseDetailError: string | null;
 }
@@ -31,10 +34,13 @@ const initialState: PublicCoursesState = {
     categories: [],
     loading: false,
     categoriesLoading: false,
+    lastFetchedCategories: null,
+    lastFetchedCourses: null,
     error: null,
     filters: {},
 
     courseDetail: null,
+    courseDetailSlug: null,
     courseDetailLoading: false,
     courseDetailError: null,
 };
@@ -45,7 +51,9 @@ const initialState: PublicCoursesState = {
 
 export const fetchPublicCourses = createAsyncThunk(
     'publicCourses/fetchCourses',
-    async (params: CourseFilterParams | undefined, { rejectWithValue }) => {
+    async (params: CourseFilterParams | undefined, { getState, rejectWithValue }) => {
+        const { lastFetchedCourses } = (getState() as { publicCourses: PublicCoursesState }).publicCourses;
+        if (!params && lastFetchedCourses !== null) return null; // Use cached data
         try {
             const { results, count } = await publicCoursesApi.listCourses(params);
             return { courses: results, count };
@@ -58,7 +66,11 @@ export const fetchPublicCourses = createAsyncThunk(
 
 export const fetchPublicCategories = createAsyncThunk(
     'publicCourses/fetchCategories',
-    async (_, { rejectWithValue }) => {
+    async (_, { getState, rejectWithValue }) => {
+        const { lastFetchedCategories } = (getState() as { publicCourses: PublicCoursesState }).publicCourses;
+        if (lastFetchedCategories !== null) {
+            return null; // Use cached data
+        }
         try {
             const { results } = await publicCoursesApi.listCategories();
             return results;
@@ -79,6 +91,14 @@ export const fetchCourseDetail = createAsyncThunk(
             return rejectWithValue(message);
         }
     },
+    {
+        condition: (slug, { getState }) => {
+            const { courseDetailLoading, courseDetailSlug } =
+                (getState() as { publicCourses: PublicCoursesState }).publicCourses;
+
+            return !(courseDetailLoading && courseDetailSlug === slug);
+        },
+    },
 );
 
 // =============================================================================
@@ -94,6 +114,7 @@ const publicCoursesSlice = createSlice({
         },
         clearCourseDetail(state) {
             state.courseDetail = null;
+            state.courseDetailSlug = null;
             state.courseDetailError = null;
         },
     },
@@ -106,8 +127,11 @@ const publicCoursesSlice = createSlice({
             })
             .addCase(fetchPublicCourses.fulfilled, (state, action) => {
                 state.loading = false;
-                state.courses = action.payload.courses;
-                state.totalCourses = action.payload.count;
+                if (action.payload) {
+                    state.courses = action.payload.courses;
+                    state.totalCourses = action.payload.count;
+                    state.lastFetchedCourses = Date.now();
+                }
             })
             .addCase(fetchPublicCourses.rejected, (state, action) => {
                 state.loading = false;
@@ -120,20 +144,25 @@ const publicCoursesSlice = createSlice({
             })
             .addCase(fetchPublicCategories.fulfilled, (state, action) => {
                 state.categoriesLoading = false;
-                state.categories = action.payload;
+                if (action.payload) {
+                    state.categories = action.payload;
+                    state.lastFetchedCategories = Date.now();
+                }
             })
             .addCase(fetchPublicCategories.rejected, (state) => {
                 state.categoriesLoading = false;
             })
 
             // ── Course detail ────────────────────────────────────────
-            .addCase(fetchCourseDetail.pending, (state) => {
+            .addCase(fetchCourseDetail.pending, (state, action) => {
                 state.courseDetailLoading = true;
+                state.courseDetailSlug = action.meta.arg;
                 state.courseDetailError = null;
             })
             .addCase(fetchCourseDetail.fulfilled, (state, action) => {
                 state.courseDetailLoading = false;
                 state.courseDetail = action.payload;
+                state.courseDetailSlug = action.payload.slug;
             })
             .addCase(fetchCourseDetail.rejected, (state, action) => {
                 state.courseDetailLoading = false;

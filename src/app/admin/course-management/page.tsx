@@ -74,6 +74,10 @@ interface CourseForm {
   price: number;
   originalPrice: number;
   discount: number;
+  /** 'direct' = enter price directly, 'reduction' = originalPrice + discount */
+  pricingMode: "direct" | "reduction";
+  /** 'percent' = discount is %, 'fixed' = discount is DA amount */
+  discountType: "percent" | "fixed";
   description: string;
   prerequisites: string[];
   whatYouLearn: string[];
@@ -93,6 +97,8 @@ const emptyForm: CourseForm = {
   price: 0,
   originalPrice: 0,
   discount: 0,
+  pricingMode: "direct",
+  discountType: "percent",
   description: "",
   prerequisites: [],
   whatYouLearn: [],
@@ -311,6 +317,8 @@ export default function CourseManagementPage() {
         price: computedPrice,
         originalPrice: origPrice,
         discount: disc,
+        pricingMode: origPrice > 0 && disc > 0 ? "reduction" : "direct",
+        discountType: disc <= 100 ? "percent" : "fixed",
         description: parsed.description || parsed.subtitle || "",
         prerequisites: Array.isArray(parsed.prerequisites)
           ? typeof parsed.prerequisites[0] === "string"
@@ -346,9 +354,14 @@ export default function CourseManagementPage() {
       category: course.category,
       level: course.level,
       duration: course.duration,
-      price: course.price,
-      originalPrice: course.originalPrice,
+      price: course.price ?? 0,
+      originalPrice: course.originalPrice ?? 0,
       discount: course.discount || 0,
+      pricingMode:
+        course.originalPrice > 0 && course.discount > 0
+          ? "reduction"
+          : "direct",
+      discountType: (course.discount || 0) <= 100 ? "percent" : "fixed",
       description: course.description,
       prerequisites: [...course.prerequisites],
       whatYouLearn: [...course.whatYouLearn],
@@ -424,11 +437,16 @@ export default function CourseManagementPage() {
     );
 
     if (importAdminCourseFromZip.fulfilled.match(result)) {
-      showToast(tc("courseAdded") || "Course imported successfully from ZIP");
+      showToast("Import lancé ! Le cours apparaîtra après traitement.");
       closeModal();
       setZipFile(null);
       setZipPreviewPlan(null);
-      // Backend automatically adds the course to the list via Redux fulfilled matcher
+      // The import runs in a background thread on the backend.
+      // Re-fetch the course list after a short delay so the new course appears.
+      setTimeout(() => {
+        dispatch(invalidateCache());
+        dispatch(fetchAdminCourses());
+      }, 5000);
     } else {
       setSaveError(extractError(result.payload));
     }
@@ -507,12 +525,24 @@ export default function CourseManagementPage() {
 
   const handleSave = async () => {
     setSaveError(null);
+
+    // Basic validation
+    if (!formData.title.trim()) {
+      setSaveError("Le titre est obligatoire.");
+      return;
+    }
+    if (formData.originalPrice <= 0 && formData.price <= 0) {
+      setSaveError("Le prix doit être supérieur à 0.");
+      return;
+    }
+
     const payload: AdminCourseCreatePayload = {
       title: formData.title,
       slug: formData.slug,
       category: formData.category,
       level: formData.level,
       duration: formData.duration,
+      price: formData.price,
       originalPrice: formData.originalPrice,
       discount: formData.discount,
       description: formData.description,
@@ -580,6 +610,11 @@ export default function CourseManagementPage() {
         showToast(tc("courseDeleted"));
         closeModal();
       } else {
+        // Invalidate cache so next fetch gets fresh data from server.
+        // The delete may have succeeded on the backend even if the
+        // frontend timed out.
+        dispatch(invalidateCache());
+
         const errMsg =
           typeof result.payload === "string"
             ? result.payload
@@ -794,7 +829,7 @@ export default function CourseManagementPage() {
                   <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                     {filteredCourses.map((course, idx) => (
                       <motion.tr
-                        key={course.id}
+                        key={course.id || `course-${idx}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: idx * 0.03 }}
@@ -826,17 +861,18 @@ export default function CourseManagementPage() {
                         <td className="px-5 py-4">
                           <div>
                             <span className="text-sm font-semibold text-oxford dark:text-white">
-                              {course.price.toLocaleString()} DA
+                              {(course.price ?? 0).toLocaleString()} DA
                             </span>
-                            {course.originalPrice > course.price && (
+                            {(course.originalPrice ?? 0) >
+                              (course.price ?? 0) && (
                               <span className="ml-1.5 text-xs line-through text-silver dark:text-white/30">
-                                {course.originalPrice.toLocaleString()}
+                                {(course.originalPrice ?? 0).toLocaleString()}
                               </span>
                             )}
                           </div>
                         </td>
                         <td className="px-5 py-4 text-sm text-gray-600 dark:text-white/60">
-                          {course.students.toLocaleString()}
+                          {(course.students ?? 0).toLocaleString()}
                         </td>
                         <td className="px-5 py-4 text-sm text-gray-600 dark:text-white/60">
                           {course.totalSlides ?? 0}
@@ -891,8 +927,11 @@ export default function CourseManagementPage() {
 
               {/* Mobile Card View */}
               <div className="lg:hidden divide-y divide-gray-100 dark:divide-white/5">
-                {filteredCourses.map((course) => (
-                  <div key={course.id} className="p-4 space-y-3">
+                {filteredCourses.map((course, idx) => (
+                  <div
+                    key={course.id || `course-mobile-${idx}`}
+                    className="p-4 space-y-3"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div
@@ -960,10 +999,10 @@ export default function CourseManagementPage() {
                       </span>
                     </div>
                     <p className="text-sm font-semibold text-oxford dark:text-white">
-                      {course.price.toLocaleString()} DA
-                      {course.originalPrice > course.price && (
+                      {(course.price ?? 0).toLocaleString()} DA
+                      {(course.originalPrice ?? 0) > (course.price ?? 0) && (
                         <span className="ml-1.5 text-xs line-through text-silver dark:text-white/30 font-normal">
-                          {course.originalPrice.toLocaleString()}
+                          {(course.originalPrice ?? 0).toLocaleString()}
                         </span>
                       )}
                     </p>
@@ -1630,64 +1669,174 @@ export default function CourseManagementPage() {
                     </div>
                   </div>
 
-                  {/* Price & Discount */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">
-                        {tc("originalPrice")}
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={formData.originalPrice}
-                        onChange={(e) => {
-                          const orig = Number(e.target.value);
-                          const computed = Math.round(
-                            orig * (1 - formData.discount / 100),
-                          );
-                          setFormData({
-                            ...formData,
-                            originalPrice: orig,
-                            price: computed,
-                          });
-                        }}
-                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">
-                        {tc("discount")} (%)
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={formData.discount}
-                        onChange={(e) => {
-                          const disc = Math.min(
-                            100,
-                            Math.max(0, Number(e.target.value)),
-                          );
-                          const computed = Math.round(
-                            formData.originalPrice * (1 - disc / 100),
-                          );
-                          setFormData({
-                            ...formData,
-                            discount: disc,
-                            price: computed,
-                          });
-                        }}
-                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">
-                        {tc("price")}
-                      </label>
-                      <div className="w-full px-3 py-2.5 bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-semibold text-oxford dark:text-white">
-                        {formData.price.toLocaleString()} DA
+                  {/* Prix & Réduction */}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* Prix original */}
+                      <div>
+                        <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">
+                          {tc("originalPrice")} (DA)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={formData.originalPrice}
+                          onChange={(e) => {
+                            const orig = Number(e.target.value);
+                            const computed =
+                              formData.discountType === "percent"
+                                ? Math.round(
+                                    orig * (1 - formData.discount / 100),
+                                  )
+                                : Math.max(0, orig - formData.discount);
+                            setFormData({
+                              ...formData,
+                              originalPrice: orig,
+                              price: computed,
+                            });
+                          }}
+                          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                        />
+                      </div>
+
+                      {/* Réduction with % / DA toggle */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-xs font-medium text-silver dark:text-white/50">
+                            Réduction
+                          </label>
+                          <div className="inline-flex rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const disc = Math.min(100, formData.discount);
+                                const computed = Math.round(
+                                  formData.originalPrice * (1 - disc / 100),
+                                );
+                                setFormData({
+                                  ...formData,
+                                  discountType: "percent",
+                                  discount: disc,
+                                  price: computed,
+                                });
+                              }}
+                              className={cn(
+                                "px-2.5 py-1 text-xs font-semibold transition-colors",
+                                formData.discountType === "percent"
+                                  ? "bg-gold text-white"
+                                  : "bg-gray-50 dark:bg-white/5 text-silver dark:text-white/50 hover:bg-gray-100 dark:hover:bg-white/10",
+                              )}
+                            >
+                              %
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const computed = Math.max(
+                                  0,
+                                  formData.originalPrice - formData.discount,
+                                );
+                                setFormData({
+                                  ...formData,
+                                  discountType: "fixed",
+                                  price: computed,
+                                });
+                              }}
+                              className={cn(
+                                "px-2.5 py-1 text-xs font-semibold transition-colors",
+                                formData.discountType === "fixed"
+                                  ? "bg-gold text-white"
+                                  : "bg-gray-50 dark:bg-white/5 text-silver dark:text-white/50 hover:bg-gray-100 dark:hover:bg-white/10",
+                              )}
+                            >
+                              DA
+                            </button>
+                          </div>
+                        </div>
+                        <input
+                          type="number"
+                          min={0}
+                          max={
+                            formData.discountType === "percent"
+                              ? 100
+                              : formData.originalPrice
+                          }
+                          value={formData.discount}
+                          onChange={(e) => {
+                            const raw = Number(e.target.value);
+                            let disc: number;
+                            let computed: number;
+                            if (formData.discountType === "percent") {
+                              disc = Math.min(100, Math.max(0, raw));
+                              computed = Math.round(
+                                formData.originalPrice * (1 - disc / 100),
+                              );
+                            } else {
+                              disc = Math.max(
+                                0,
+                                Math.min(raw, formData.originalPrice),
+                              );
+                              computed = Math.max(
+                                0,
+                                formData.originalPrice - disc,
+                              );
+                            }
+                            setFormData({
+                              ...formData,
+                              discount: disc,
+                              price: computed,
+                            });
+                          }}
+                          placeholder={
+                            formData.discountType === "percent" ? "0 %" : "0 DA"
+                          }
+                          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-colors"
+                        />
+                      </div>
+
+                      {/* Prix final (auto-computed) */}
+                      <div>
+                        <label className="block text-xs font-medium text-silver dark:text-white/50 mb-1.5">
+                          {tc("price")} (DA)
+                        </label>
+                        <div className="w-full px-3 py-2.5 bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-semibold text-green-600 dark:text-green-400">
+                          {(formData.price ?? 0).toLocaleString()} DA
+                          {formData.discount > 0 && (
+                            <span className="ml-1.5 text-xs text-red-500 line-through font-normal">
+                              {(formData.originalPrice ?? 0).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Savings summary */}
+                    {formData.discount > 0 && formData.originalPrice > 0 && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-500/10 rounded-lg">
+                        <span className="text-xs text-green-700 dark:text-green-400">
+                          💰 Économie :{" "}
+                          {(
+                            formData.originalPrice - formData.price
+                          ).toLocaleString()}{" "}
+                          DA
+                          {formData.discountType === "percent" && (
+                            <span className="ml-1 opacity-75">
+                              ({formData.discount}%)
+                            </span>
+                          )}
+                          {formData.discountType === "fixed" && (
+                            <span className="ml-1 opacity-75">
+                              (
+                              {Math.round(
+                                (formData.discount / formData.originalPrice) *
+                                  100,
+                              )}
+                              %)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}

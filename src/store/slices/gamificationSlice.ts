@@ -126,11 +126,8 @@ interface GamificationState {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const CACHE_TTL = 60_000; // 60 seconds
-
 function isCacheValid(lastFetched: number | null): boolean {
-  if (!lastFetched) return false;
-  return Date.now() - lastFetched < CACHE_TTL;
+  return lastFetched !== null; // fetch once per session (reset on page refresh)
 }
 
 function getLevelForXP(xp: number): LevelInfo {
@@ -202,6 +199,14 @@ export const fetchGamificationProfile = createAsyncThunk(
     const { data } = await api.get<XPProfile>("/gamification/profile/");
     return data;
   },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).gamification;
+      if (state.profileLoading) return false;
+      if (isCacheValid(state.lastFetchedProfile)) return false;
+      return true;
+    },
+  },
 );
 
 /** Fetch all achievements with unlock status */
@@ -214,6 +219,14 @@ export const fetchAchievements = createAsyncThunk(
     }
     const { data } = await api.get("/gamification/achievements/");
     return extractResults<Achievement>(data);
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).gamification;
+      if (state.achievementsLoading) return false;
+      if (isCacheValid(state.lastFetchedAchievements)) return false;
+      return true;
+    },
   },
 );
 
@@ -228,18 +241,30 @@ export const fetchXPHistory = createAsyncThunk(
     const { data } = await api.get("/gamification/xp-history/");
     return extractResults<XPTransaction>(data);
   },
+  {
+    condition: (_, { getState }) => {
+      const state = (getState() as RootState).gamification;
+      if (state.xpHistoryLoading) return false;
+      if (isCacheValid(state.lastFetchedHistory)) return false;
+      return true;
+    },
+  },
 );
 
 /** Fetch leaderboard for a given period */
 export const fetchLeaderboard = createAsyncThunk(
   "gamification/fetchLeaderboard",
   async (period: "weekly" | "alltime", { getState }) => {
+    const rootState = getState() as RootState;
+    const gamState = rootState.gamification;
+    if (isCacheValid(gamState.lastFetchedLeaderboard) && gamState.leaderboardPeriod === period) {
+      return null; // Use cached data
+    }
     const { data } = await api.get(`/gamification/leaderboard/?period=${period}`);
     const entries = extractResults<LeaderboardEntry>(data);
 
     // Mark the current user in the results
-    const state = getState() as RootState;
-    const currentUserId = state.auth?.user?.id;
+    const currentUserId = rootState.auth?.user?.id;
     if (currentUserId) {
       entries.forEach((entry) => {
         entry.isCurrentUser = String(entry.user?.id) === String(currentUserId);
@@ -247,6 +272,16 @@ export const fetchLeaderboard = createAsyncThunk(
     }
 
     return { period, entries };
+  },
+  {
+    condition: (period, { getState }) => {
+      const state = (getState() as RootState).gamification;
+      if (state.leaderboardLoading) return false;
+      if (isCacheValid(state.lastFetchedLeaderboard) && state.leaderboardPeriod === period) {
+        return false;
+      }
+      return true;
+    },
   },
 );
 
@@ -469,9 +504,11 @@ const gamificationSlice = createSlice({
       })
       .addCase(fetchLeaderboard.fulfilled, (state, action) => {
         state.leaderboardLoading = false;
-        state.leaderboard = action.payload.entries;
-        state.leaderboardPeriod = action.payload.period;
-        state.lastFetchedLeaderboard = Date.now();
+        if (action.payload) {
+          state.leaderboard = action.payload.entries;
+          state.leaderboardPeriod = action.payload.period;
+          state.lastFetchedLeaderboard = Date.now();
+        }
       })
       .addCase(fetchLeaderboard.rejected, (state) => {
         state.leaderboardLoading = false;

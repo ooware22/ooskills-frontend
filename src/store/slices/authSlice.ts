@@ -47,21 +47,23 @@ export const initializeAuth = createAsyncThunk(
     "auth/initialize",
     async (_, { rejectWithValue }) => {
         try {
-            // Check if tokens exist in storage
-            if (!authApi.hasStoredTokens()) {
-                return { user: null, tokens: null };
+            // Access token is memory-only and disappears on full refresh.
+            // Always try a silent refresh first when no access token is present,
+            // because the HttpOnly refresh cookie may still be valid (including
+            // after payment-provider redirects or opening a new tab).
+            if (!authApi.getAccessToken()) {
+                await authApi.refreshAccessToken();
             }
 
-            // Validate token by fetching profile
+            // Validate session by fetching profile with a valid access token.
             const user = await authApi.getProfile();
             const tokens: AuthTokens = {
                 access: authApi.getAccessToken() || "",
-                refresh: authApi.getRefreshToken() || "",
             };
 
             return { user, tokens };
         } catch (error) {
-            // Token invalid or expired - clear and return null
+            // Session missing/expired - clear local state.
             authApi.clearTokens();
             return { user: null, tokens: null };
         }
@@ -84,7 +86,7 @@ export const login = createAsyncThunk(
                 user: fullUser,
                 tokens: {
                     access: response.access,
-                    refresh: response.refresh,
+                    // refresh is now an HttpOnly cookie — not in the JSON response
                 },
             };
         } catch (error) {
@@ -105,6 +107,7 @@ export const register = createAsyncThunk(
             return {
                 user: response.user,
                 tokens: response.tokens,
+                // Note: response.tokens.refresh is undefined (HttpOnly cookie)
             };
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));

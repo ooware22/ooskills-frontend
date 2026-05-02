@@ -44,6 +44,11 @@ export default function EnrollDialog({
   const t = useTranslations("courseDetail");
   const dispatch = useAppDispatch();
   const { enrollError, orderError } = useAppSelector((s) => s.enrollment);
+  const { user } = useAppSelector((s) => s.auth);
+
+  const walletBalance = user?.referral_balance
+    ? parseFloat(String(user.referral_balance))
+    : 0;
 
   const [step, setStep] = useState<DialogStep>("choose");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("edahabia");
@@ -54,7 +59,13 @@ export default function EnrollDialog({
   const [promoResult, setPromoResult] = useState<PromoValidateResponse | null>(null);
   const [promoError, setPromoError] = useState("");
 
-  const effectivePrice = promoResult?.valid ? promoResult.final_price : coursePrice;
+  // ── Wallet state ──
+  const [useWallet, setUseWallet] = useState(false);
+
+  // Price calculations
+  const afterPromo = promoResult?.valid ? promoResult.final_price : coursePrice;
+  const walletApplied = useWallet ? Math.min(walletBalance, afterPromo) : 0;
+  const effectivePrice = Math.max(0, afterPromo - walletApplied);
   const isFree = effectivePrice === 0;
   const discount =
     courseOriginalPrice > effectivePrice
@@ -70,6 +81,7 @@ export default function EnrollDialog({
       setPromoCode("");
       setPromoResult(null);
       setPromoError("");
+      setUseWallet(false);
     }
   }, [open]);
 
@@ -108,7 +120,12 @@ export default function EnrollDialog({
       } else {
         // Paid course → create order → redirect to Chargily
         await dispatch(
-          createOrder({ courseIds: [courseId], paymentMethod }),
+          createOrder({
+            courseIds: [courseId],
+            paymentMethod,
+            promoCode: promoResult?.valid ? promoResult.code : undefined,
+            useWallet,
+          }),
         ).unwrap();
         // If createOrder succeeds, the browser will redirect to Chargily checkout_url
         // The processing spinner stays visible until the redirect happens
@@ -215,6 +232,31 @@ export default function EnrollDialog({
                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                           -{promoResult.discount_amount.toLocaleString()} {t("currency")}
                         </span>
+                      </div>
+                    )}
+
+                    {/* Wallet (referral balance) line */}
+                    {walletBalance > 0 && coursePrice > 0 && (
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-white/10">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={useWallet}
+                            onChange={(e) => setUseWallet(e.target.checked)}
+                            className="w-4 h-4 accent-gold rounded"
+                          />
+                          <span className="text-xs text-oxford dark:text-white">
+                            {t("use_wallet") || "Utiliser mon solde parrainage"}
+                          </span>
+                          <span className="text-xs font-semibold text-gold">
+                            ({walletBalance.toLocaleString()} {t("currency")})
+                          </span>
+                        </label>
+                        {useWallet && walletApplied > 0 && (
+                          <span className="text-xs font-semibold text-gold">
+                            -{walletApplied.toLocaleString()} {t("currency")}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

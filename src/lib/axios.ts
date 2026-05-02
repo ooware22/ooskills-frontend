@@ -9,6 +9,7 @@
  */
 
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { getAccessToken, setAccessToken, markSessionActive, clearAllTokens, hasSession } from '@/lib/tokenStore';
 
 // Base URL from environment variable
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -17,6 +18,10 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
 const axiosClient = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000,
+    // withCredentials is REQUIRED for the browser to send the HttpOnly refresh
+    // cookie cross-origin (Vercel → Render). The backend must have
+    // CORS_ALLOW_CREDENTIALS=True and the correct CORS_ALLOWED_ORIGINS.
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -79,12 +84,11 @@ const addAuthHeader = (config: InternalAxiosRequestConfig): InternalAxiosRequest
     const isPublic = PUBLIC_ENDPOINTS.some((ep) => url.includes(ep));
     if (isPublic) return config;
 
-    // Get auth token from localStorage (only on client side)
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('auth_token');
-        if (token && config.headers) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+    // Attach the in-memory access token to the Authorization header.
+    // Never read from localStorage — the token only lives in memory.
+    const token = getAccessToken();
+    if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 };
@@ -116,7 +120,10 @@ const handleResponseSuccess = (response: AxiosResponse): AxiosResponse => {
 };
 
 const handleResponseError = async (error: AxiosError<ApiErrorResponse>): Promise<AxiosResponse | never> => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+        _retry?: boolean;
+        skipAuthRedirect?: boolean;
+    };
 
     // Network error (no response)
     if (!error.response) {
@@ -151,29 +158,20 @@ const handleResponseError = async (error: AxiosError<ApiErrorResponse>): Promise
         originalRequest._retry = true;
 
         try {
-            const refreshToken = typeof window !== 'undefined'
-                ? localStorage.getItem('auth_refresh_token')
-                : null;
-
-            if (!refreshToken) {
-                throw new Error('No refresh token available');
-            }
-
-            // Call refresh endpoint directly (avoid circular import)
-            const refreshResponse = await axios.post<{ access: string; refresh?: string }>(
+            // No body — the browser automatically sends the HttpOnly refresh
+            // cookie. The backend reads it, rotates it, and returns a new one
+            // as a Set-Cookie header along with the new access token in JSON.
+            const refreshResponse = await axios.post<{ access: string }>(
                 `${API_BASE_URL}/auth/token/refresh/`,
-                { refresh: refreshToken }
+                {},
+                { withCredentials: true },
             );
 
-            const { access, refresh } = refreshResponse.data;
+            const { access } = refreshResponse.data;
 
-            // Update stored tokens
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('auth_token', access);
-                if (refresh) {
-                    localStorage.setItem('auth_refresh_token', refresh);
-                }
-            }
+            // Store only the access token — in memory, never in localStorage.
+            setAccessToken(access);
+            markSessionActive();
 
             // Notify all waiting requests
             onTokenRefreshed(access);
@@ -184,17 +182,29 @@ const handleResponseError = async (error: AxiosError<ApiErrorResponse>): Promise
             return axiosClient(originalRequest);
 
         } catch (refreshError) {
-            // Refresh failed - clear tokens and redirect to login
+            // Refresh failed (cookie expired / invalid) - clear state and redirect
             isRefreshing = false;
             onRefreshFailed();
+            clearAllTokens();
 
             if (typeof window !== 'undefined') {
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('auth_refresh_token');
+                const skipAuthRedirect = Boolean(originalRequest?.skipAuthRedirect);
+                if (skipAuthRedirect) {
+                    return Promise.reject(createEnhancedError(401, data, 'Session expired. Please log in again.'));
+                }
 
-                // Redirect to login only if not already there
-                if (!window.location.pathname.includes('/admin/login')) {
-                    window.location.href = '/admin/login';
+                const path = window.location.pathname || '/';
+                const query = window.location.search || '';
+                const returnUrl = encodeURIComponent(`${path}${query}`);
+
+                const inAdminArea = path.startsWith('/admin');
+                const loginPath = inAdminArea ? '/admin/login' : '/auth/signin';
+                const alreadyOnLogin =
+                    path === '/admin/login' ||
+                    path.startsWith('/auth/signin');
+
+                if (!alreadyOnLogin) {
+                    window.location.href = `${loginPath}?returnUrl=${returnUrl}`;
                 }
             }
 
@@ -327,9 +337,13 @@ export const getErrorMessage = (error: unknown): string => {
 /**
  * Check if user is authenticated (has valid token)
  */
+/**
+ * Returns true when the user likely has an active session.
+ * Uses the non-secret sessionStorage marker set on login/register.
+ * The actual authentication check happens server-side via the HttpOnly cookie.
+ */
 export const isAuthenticated = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('auth_token');
+    return !!getAccessToken() || hasSession();
 };
 
 export default axiosClient;

@@ -37,6 +37,7 @@ export interface User {
     date_joined?: string;
     last_login?: string;
     referral_code?: string | null;
+    referral_balance?: number | string;
 }
 
 /** Compact user data returned in login response */
@@ -53,10 +54,11 @@ export interface LoginUser {
 // TOKEN TYPES
 // =============================================================================
 
-/** JWT token pair */
+/** JWT token pair. The refresh token is now an HttpOnly cookie managed by the
+ * backend; only the access token is returned in JSON responses. */
 export interface AuthTokens {
     access: string;
-    refresh: string;
+    refresh?: string; // no longer in JSON responses — kept for backward compat
 }
 
 // =============================================================================
@@ -115,7 +117,7 @@ export interface ProfileUpdateRequest {
 /** Login response from /api/auth/login/ */
 export interface LoginResponse {
     access: string;
-    refresh: string;
+    refresh?: string;
     user: LoginUser;
 }
 

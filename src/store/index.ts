@@ -18,6 +18,8 @@ import enrollmentReducer from "./slices/enrollmentSlice";
 import publicCoursesReducer from "./slices/publicCoursesSlice";
 import gamificationReducer from "./slices/gamificationSlice";
 import learnReducer from "./slices/learnSlice";
+import userDataReducer from "./slices/userDataSlice";
+import notificationsReducer from "./slices/notificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -57,10 +59,17 @@ export const store = configureStore({
 
     // Learn page (course player)
     learn: learnReducer,
+
+    // User session data (gifts, referral code)
+    userData: userDataReducer,
+
+    // In-app notifications
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
+      immutableCheck: false,
     }),
 });
 
