@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import QRCode from "react-qr-code";
 import { useTheme } from "next-themes";
 import s from "./Certificate.module.css";
 
@@ -313,8 +314,6 @@ export default function CertificateTemplate({
       ? `${window.location.origin}/verify/${data.code}`
       : `/verify/${data.code}`;
 
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&margin=1&color=1a1a2e&bgcolor=FFFFFF&format=svg`;
-
   const logoSrc = isDark
     ? "/images/logo/logo_DarkMood2.png"
     : "/images/logo/logo_LightMood2.png";
@@ -344,250 +343,28 @@ export default function CertificateTemplate({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  //  Download PDF
+  /* ── Download PDF (via Playwright backend) ── */
   const handleDownload = async () => {
-    if (!cardRef.current) return;
     setDownloading(true);
     try {
-      const html2pdf = (await import("html2pdf.js")).default;
-
-      // Grab elements we need to temporarily restyle for PDF capture
-      const root = cardRef.current.closest(
-        `.${s.certificateRoot}`,
-      ) as HTMLElement | null;
-      const card = cardRef.current;
-      const border = card.querySelector(
-        `.${s.certificateBorder}`,
-      ) as HTMLElement | null;
-      const inner = card.querySelector(
-        `.${s.certificateInner}`,
-      ) as HTMLElement | null;
-      const content = card.querySelector(
-        `.${s.certificateContent}`,
-      ) as HTMLElement | null;
-      const watermark = card.querySelector(
-        `.${s.watermark}`,
-      ) as HTMLElement | null;
-
-      // Save original inline styles
-      const saved = {
-        root: root?.style.cssText ?? "",
-        card: card.style.cssText,
-        border: border?.style.cssText ?? "",
-        inner: inner?.style.cssText ?? "",
-        content: content?.style.cssText ?? "",
-        watermark: watermark?.style.cssText ?? "",
-      };
-
-      // 1) Resolve CSS custom properties for html2canvas
-      if (root) {
-        root.style.setProperty("--bg-card", isDark ? "#141428" : "#fffdf7");
-        root.style.setProperty(
-          "--text-primary",
-          isDark ? "#e8e8f0" : "#1a1a2e",
-        );
-        root.style.setProperty(
-          "--text-secondary",
-          isDark ? "#b0b0c0" : "#4a4a5e",
-        );
-        root.style.setProperty("--text-muted", isDark ? "#707088" : "#8a8a9e");
-        root.style.setProperty("--gold", "#cfb53b");
-        root.style.setProperty("--watermark-opacity", "0.035");
-        root.style.setProperty(
-          "--divider",
-          "linear-gradient(90deg, transparent, #cfb53b 20%, #e8d583 50%, #cfb53b 80%, transparent)",
-        );
-        root.style.setProperty("--border-inner", "rgba(207, 181, 59, 0.25)");
-      }
-
-      // 2) Size card to A4 landscape ratio (297×210mm) edge-to-edge
-      // At 96dpi: 297mm = 1123px, 210mm = 794px
-      card.style.cssText = `
-        display: block;
-        max-width: none;
-        max-height: none;
-        width: 1123px;
-        height: 794px;
-        margin: 0;
-        padding: 0;
-        background: transparent;
-        overflow: hidden;
-      `;
-
-      // Make border and inner fill the full A4 area
-      if (border) {
-        border.style.boxShadow = "none";
-        border.style.borderRadius = "0";
-        border.style.height = "100%";
-        border.style.boxSizing = "border-box";
-      }
-      if (inner) {
-        inner.style.background = isDark ? "#141428" : "#fffdf7";
-        inner.style.borderRadius = "0";
-        inner.style.height = "100%";
-        inner.style.boxSizing = "border-box";
-      }
-      // Push content to fill and move corner ornaments to the edges
-      if (content) {
-        content.style.height = "100%";
-        content.style.boxSizing = "border-box";
-        content.style.display = "flex";
-        content.style.flexDirection = "column";
-        content.style.justifyContent = "space-between";
-        content.style.padding = "42px 52px";
-      }
-
-      // 3) Fix watermark opacity
-      if (watermark) {
-        watermark.style.opacity = "0.035";
-        watermark.style.width = "320px";
-      }
-
-      // 3a) Force desktop layout on footer (media queries still fire on narrow viewports)
-      const footer = card.querySelector<HTMLElement>(`.${s.certFooter}`);
-      const savedFooter = footer?.style.cssText ?? "";
-      if (footer) {
-        footer.style.flexDirection = "row";
-        footer.style.alignItems = "flex-end";
-        footer.style.justifyContent = "space-between";
-        footer.style.gap = "20px";
-      }
-
-      const signature = card.querySelector<HTMLElement>(`.${s.certSignature}`);
-      const savedSignature = signature?.style.cssText ?? "";
-      if (signature) {
-        signature.style.alignItems = "flex-start";
-        signature.style.textAlign = "start";
-      }
-
-      // 3a-ii) Force desktop font sizes on mobile
-      const certTitle = card.querySelector<HTMLElement>(`.${s.certTitle}`);
-      const savedCertTitle = certTitle?.style.cssText ?? "";
-      if (certTitle) {
-        certTitle.style.fontSize = "36px";
-        certTitle.style.letterSpacing = "6px";
-      }
-
-      const studentName = card.querySelector<HTMLElement>(
-        `.${s.certStudentName}`,
+      const { API_BASE_URL } = await import("@/lib/axios");
+      const res = await fetch(
+        `${API_BASE_URL}/formation/certificates/export/${data.code}/pdf/`,
       );
-      const savedStudentName = studentName?.style.cssText ?? "";
-      if (studentName) {
-        studentName.style.fontSize = "32px";
-      }
+      if (!res.ok) throw new Error("PDF generation failed");
 
-      const courseName = card.querySelector<HTMLElement>(
-        `.${s.certCourseName}`,
-      );
-      const savedCourseName = courseName?.style.cssText ?? "";
-      if (courseName) {
-        courseName.style.fontSize = "22px";
-        courseName.style.marginBottom = "24px";
-      }
-
-      const certDetails = card.querySelector<HTMLElement>(`.${s.certDetails}`);
-      const savedCertDetails = certDetails?.style.cssText ?? "";
-      if (certDetails) {
-        certDetails.style.gap = "36px";
-        certDetails.style.marginBottom = "24px";
-      }
-
-      // Force desktop corner ornament sizes
-      const corners = Array.from(
-        card.querySelectorAll<HTMLElement>(
-          `.${s.certificateContent}::before, .${s.certificateContent}::after, .${s.cornerBl}::before, .${s.cornerBr}::before`,
-        ),
-      );
-
-      // 3b) Force explicit gold gradient on dividers (html2canvas drops CSS var gradients)
-      const dividers = Array.from(
-        card.querySelectorAll<HTMLElement>(`.${s.goldDivider}`),
-      );
-      const savedDividers = dividers.map((d) => d.style.cssText);
-      dividers.forEach((d) => {
-        d.style.background =
-          "linear-gradient(90deg, transparent, #cfb53b 20%, #e8d583 50%, #cfb53b 80%, transparent)";
-        d.style.height = "1.5px";
-        d.style.opacity = "1";
-      });
-
-      // 3c) Force gold border on QR frame (html2canvas drops var() border colors)
-      const qrFrame = card.querySelector<HTMLElement>(`.${s.qrFrame}`);
-      const savedQrFrame = qrFrame?.style.cssText ?? "";
-      if (qrFrame) {
-        qrFrame.style.border = "2px solid #cfb53b";
-        qrFrame.style.borderRadius = "10px";
-        qrFrame.style.padding = "3px";
-        qrFrame.style.boxShadow =
-          "0 0 0 1px rgba(207,181,59,0.3), 0 2px 12px rgba(207,181,59,0.25)";
-      }
-
-      // 4) Fix Arabic font rendering — html2canvas can't handle web font ligatures,
-      //    so we temporarily switch to system Arabic fonts it renders correctly
-      let arStyleTag: HTMLStyleElement | null = null;
-      if (isRtl && card) {
-        arStyleTag = document.createElement("style");
-        arStyleTag.textContent = `
-          [dir="rtl"] * {
-            font-family: "Tahoma", "Segoe UI", "Arial", sans-serif !important;
-            letter-spacing: 0 !important;
-            word-spacing: normal !important;
-          }
-        `;
-        document.head.appendChild(arStyleTag);
-      }
-
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename: `OOSkills_Certificate_${data.studentName.replace(/\s+/g, "_")}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            windowWidth: 1123,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: isDark ? "#0d0d1a" : "#f0ece3",
-            logging: false,
-            onclone: (clonedDoc: Document) => {
-              if (isRtl) {
-                const style = clonedDoc.createElement("style");
-                style.textContent = `
-                  * {
-                    font-family: "Tahoma", "Segoe UI", "Arial", sans-serif !important;
-                    letter-spacing: 0 !important;
-                    word-spacing: normal !important;
-                  }
-                `;
-                clonedDoc.head.appendChild(style);
-              }
-            },
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
-        })
-        .from(card)
-        .save();
-
-      // Restore all original styles
-      if (arStyleTag) document.head.removeChild(arStyleTag);
-      if (root) root.style.cssText = saved.root;
-      card.style.cssText = saved.card;
-      if (border) border.style.cssText = saved.border;
-      if (inner) inner.style.cssText = saved.inner;
-      if (content) content.style.cssText = saved.content;
-      if (watermark) watermark.style.cssText = saved.watermark;
-      if (qrFrame) qrFrame.style.cssText = savedQrFrame;
-      if (footer) footer.style.cssText = savedFooter;
-      if (signature) signature.style.cssText = savedSignature;
-      if (certTitle) certTitle.style.cssText = savedCertTitle;
-      if (studentName) studentName.style.cssText = savedStudentName;
-      if (courseName) courseName.style.cssText = savedCourseName;
-      if (certDetails) certDetails.style.cssText = savedCertDetails;
-      dividers.forEach((d, i) => {
-        d.style.cssText = savedDividers[i];
-      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `OOSkills_Certificate_${data.studentName.replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("PDF generation error:", err);
+      console.error("PDF download error:", err);
+      showToast("❌ PDF download failed. Please try again.");
     } finally {
       setDownloading(false);
     }
@@ -718,12 +495,11 @@ export default function CertificateTemplate({
                   >
                     <div className={s.qrFrame}>
                       <div className={s.qrWrapper}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={qrSrc}
-                          alt="Verification QR Code"
-                          width={90}
-                          height={90}
+                        <QRCode 
+                          value={verifyUrl} 
+                          size={90} 
+                          fgColor="#1a1a2e" 
+                          level="M" 
                         />
                       </div>
                     </div>

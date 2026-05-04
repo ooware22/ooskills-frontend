@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import CertificateTemplate, {
-  type CertificateData,
-} from "@/components/certificate/CertificateTemplate";
+import { useSearchParams } from "next/navigation";
+import MergedCertificateTemplate, {
+  type MergedCertificateData,
+} from "@/components/certificate/MergedCertificateTemplate";
 import { API_BASE_URL } from "@/lib/axios";
 
 // Declare global printReady so Playwright can await it
@@ -14,10 +14,10 @@ declare global {
   }
 }
 
-export default function ExportCertificatePage() {
-  const { code } = useParams<{ code: string }>();
+export default function ExportMergedCertificatePage() {
   const searchParams = useSearchParams();
-  const [data, setData] = useState<CertificateData | null>(null);
+  const uid = searchParams.get("uid");
+  const [data, setData] = useState<MergedCertificateData | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Force light theme for consistent PDF rendering in headless Chromium
@@ -27,7 +27,11 @@ export default function ExportCertificatePage() {
   }, []);
 
   useEffect(() => {
-    if (!code) return;
+    if (!uid) {
+      window.printReady = true;
+      setLoading(false);
+      return;
+    }
 
     (async () => {
       try {
@@ -46,25 +50,26 @@ export default function ExportCertificatePage() {
         } else {
           // Normal browser navigation — fetch from API
           const res = await fetch(
-            `${API_BASE_URL}/formation/certificates/verify/${code}/`
+            `${API_BASE_URL}/formation/certificates/merged-export/?uid=${uid}`
           );
-          if (!res.ok) throw new Error("Not found");
+          if (!res.ok)
+            throw new Error("Failed to fetch merged certificate data");
           json = await res.json();
         }
 
         setData({
-          code: (json.code as string) ?? code,
-          studentName: (json.user_name as string) ?? "—",
-          courseName: (json.course_title as string) ?? "—",
-          duration: json.duration as number | undefined,
-          modules: json.modules as number | undefined,
-          level: json.level as string | undefined,
+          code:
+            (json.code as string) ??
+            `MERGED-${uid.slice(0, 8).toUpperCase()}`,
+          studentName: (json.student_name as string) ?? "—",
+          courses: (
+            (json.courses as { course_name: string; score: number }[]) ?? []
+          ).map((c) => ({
+            courseName: c.course_name,
+            score: c.score,
+          })),
           issuedAt:
-            (json.issued_at as string) ??
-            (json.issuedAt as string) ??
-            new Date().toISOString(),
-          score:
-            json.score != null ? Math.round(Number(json.score)) : undefined,
+            (json.issued_at as string) ?? new Date().toISOString(),
         });
 
         // Wait for all fonts to be loaded before signaling ready
@@ -72,13 +77,13 @@ export default function ExportCertificatePage() {
         window.printReady = true;
       } catch (err) {
         console.error(err);
-        // Signal Playwright even on error so it doesn't hang for 15s
+        // Signal Playwright even on error so it doesn't hang
         window.printReady = true;
       } finally {
         setLoading(false);
       }
     })();
-  }, [code, searchParams]);
+  }, [uid, searchParams]);
 
   if (loading || !data) {
     return <div>Loading...</div>;
@@ -130,7 +135,7 @@ export default function ExportCertificatePage() {
           padding: 42px 52px !important;
         }
       `}</style>
-      <CertificateTemplate data={data} />
+      <MergedCertificateTemplate data={data} />
     </>
   );
 }
