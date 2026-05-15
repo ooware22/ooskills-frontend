@@ -291,12 +291,16 @@ function formatDate(iso: string, locale: string) {
 export default function CertificateTemplate({
   data,
   onClose,
+  initialLang = "en",
+  initialTheme,
 }: {
   data: CertificateData;
   onClose?: () => void;
+  initialLang?: Lang;
+  initialTheme?: "light" | "dark";
 }) {
   const { theme, setTheme } = useTheme();
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(initialLang);
   const [toast, setToast] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -307,7 +311,9 @@ export default function CertificateTemplate({
 
   const t = translations[lang];
   const isRtl = lang === "ar";
-  const isDark = mounted && theme === "dark";
+  const isDark = initialTheme
+    ? initialTheme === "dark"
+    : mounted && theme === "dark";
 
   const verifyUrl =
     typeof window !== "undefined"
@@ -348,8 +354,9 @@ export default function CertificateTemplate({
     setDownloading(true);
     try {
       const { API_BASE_URL } = await import("@/lib/axios");
+      const currentTheme = isDark ? "dark" : "light";
       const res = await fetch(
-        `${API_BASE_URL}/formation/certificates/export/${data.code}/pdf/`,
+        `${API_BASE_URL}/formation/certificates/export/${data.code}/pdf/?lang=${lang}&theme=${currentTheme}`,
       );
       if (!res.ok) throw new Error("PDF generation failed");
 

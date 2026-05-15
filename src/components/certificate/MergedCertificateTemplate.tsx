@@ -218,12 +218,16 @@ function scoreColor(score: number) {
 export default function MergedCertificateTemplate({
   data,
   onClose,
+  initialLang = "en",
+  initialTheme,
 }: {
   data: MergedCertificateData;
   onClose?: () => void;
+  initialLang?: Lang;
+  initialTheme?: "light" | "dark";
 }) {
   const { theme, setTheme } = useTheme();
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(initialLang);
   const [toast, setToast] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -234,7 +238,9 @@ export default function MergedCertificateTemplate({
 
   const t = translations[lang];
   const isRtl = lang === "ar";
-  const isDark = mounted && theme === "dark";
+  const isDark = initialTheme
+    ? initialTheme === "dark"
+    : mounted && theme === "dark";
 
   const verifyUrl =
     typeof window !== "undefined"
@@ -277,9 +283,10 @@ export default function MergedCertificateTemplate({
       const { API_BASE_URL } = await import("@/lib/axios");
       const { getAccessToken } = await import("@/lib/tokenStore");
 
+      const currentTheme = isDark ? "dark" : "light";
       const token = getAccessToken();
       const res = await fetch(
-        `${API_BASE_URL}/formation/certificates/export/merged/pdf/`,
+        `${API_BASE_URL}/formation/certificates/export/merged/pdf/?lang=${lang}&theme=${currentTheme}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         },

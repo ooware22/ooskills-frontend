@@ -20,11 +20,20 @@ export default function ExportMergedCertificatePage() {
   const [data, setData] = useState<MergedCertificateData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Force light theme for consistent PDF rendering in headless Chromium
+  // Read lang and theme from query params (passed by Playwright via backend)
+  const exportLang = (searchParams.get("lang") || "en") as "en" | "fr" | "ar";
+  const exportTheme = searchParams.get("theme") || "light";
+
+  // Apply the requested theme for consistent PDF rendering in headless Chromium
   useEffect(() => {
-    document.documentElement.classList.remove("dark");
-    document.documentElement.setAttribute("data-theme", "light");
-  }, []);
+    if (exportTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  }, [exportTheme]);
 
   useEffect(() => {
     if (!uid) {
@@ -92,33 +101,67 @@ export default function ExportMergedCertificatePage() {
   return (
     <>
       <style>{`
-        /* Hide the interactive toolbar and toast in export mode */
-        div[class*="toolbar"], 
-        div[class*="toast"] {
+        /* ── Full page reset for Playwright edge-to-edge PDF ── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          overflow: hidden !important;
+          background: transparent !important;
+        }
+
+        /* Kill the AnimatedBackground and any fixed overlays from root layout */
+        body > div > div.fixed,
+        body > div > div[class*="fixed"] {
           display: none !important;
         }
 
-        /* Force the certificate card to fill the entire A4 PDF area */
+        /* Hide toolbar, toast, nav, header, footer, aside */
+        div[class*="toolbar"], 
+        div[class*="toast"],
+        header, nav, footer, aside {
+          display: none !important;
+        }
+
+        /* Certificate root fills entire viewport */
+        div[class*="certificateRoot"] {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          min-height: 100vh !important;
+          overflow: hidden !important;
+        }
+
+        /* Page wrapper: no padding, no gap, fill viewport */
         div[class*="pageWrapper"] {
           padding: 0 !important;
+          margin: 0 !important;
+          gap: 0 !important;
           height: 100vh !important;
           width: 100vw !important;
           align-items: stretch !important;
           justify-content: stretch !important;
         }
         
+        /* Certificate card fills 100% of viewport */
         div[class*="certificateCard"] {
           max-width: none !important;
           max-height: none !important;
-          width: 1123px !important;
-          height: 794px !important;
+          width: 100vw !important;
+          height: 100vh !important;
           border-radius: 0 !important;
           margin: 0 !important;
+          flex: none !important;
         }
         
         div[class*="certificateBorder"] {
           border-radius: 0 !important;
-          padding: 8px !important; /* Nice thick gold border for print */
+          padding: 8px !important;
+          height: 100% !important;
         }
         
         div[class*="certificateInner"] {
@@ -135,7 +178,7 @@ export default function ExportMergedCertificatePage() {
           padding: 42px 52px !important;
         }
       `}</style>
-      <MergedCertificateTemplate data={data} />
+      <MergedCertificateTemplate data={data} initialLang={exportLang} initialTheme={exportTheme as "light" | "dark"} />
     </>
   );
 }
