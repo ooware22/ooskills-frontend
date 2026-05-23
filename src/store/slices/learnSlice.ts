@@ -113,7 +113,7 @@ export const fetchFinalQuizConfig = createAsyncThunk(
       return await learnApi.fetchFinalQuizConfig(courseSlug);
     } catch (err: any) {
       return rejectWithValue(
-        err?.response?.data?.detail || "Failed to load final quiz config"
+        err?.data?.detail || err?.response?.data?.detail || err?.message || "Failed to load final quiz config"
       );
     }
   }
@@ -127,7 +127,7 @@ export const generateFinalQuizQuestions = createAsyncThunk(
       return await learnApi.generateFinalQuizQuestions(courseId);
     } catch (err: any) {
       return rejectWithValue(
-        err?.response?.data?.detail || "Failed to generate questions"
+        err?.data?.detail || err?.response?.data?.detail || err?.message || "Failed to generate questions"
       );
     }
   }
@@ -152,7 +152,7 @@ export const submitFinalQuiz = createAsyncThunk(
       );
     } catch (err: any) {
       return rejectWithValue(
-        err?.response?.data?.detail || "Failed to submit quiz"
+        err?.data?.detail || err?.response?.data?.detail || err?.message || "Failed to submit quiz"
       );
     }
   }

@@ -65,8 +65,8 @@ export default function ExportCertificatePage() {
           code: (json.code as string) ?? code,
           studentName: (json.user_name as string) ?? "—",
           courseName: (json.course_title as string) ?? "—",
-          duration: json.duration as number | undefined,
-          modules: json.modules as number | undefined,
+          duration: json.duration != null ? String(json.duration) : undefined,
+          modules: json.modules != null ? String(json.modules) : undefined,
           level: json.level as string | undefined,
           issuedAt:
             (json.issued_at as string) ??
