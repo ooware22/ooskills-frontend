@@ -105,6 +105,16 @@ const nextConfig = {
       },
     ];
   },
+  // Increase chunk loading timeout for dev (prevents ChunkLoadError on slow compiles)
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.output = {
+        ...config.output,
+        chunkLoadTimeout: 300000, // 5 minutes
+      };
+    }
+    return config;
+  },
   // Production performance optimizations
   reactStrictMode: true,
   poweredByHeader: false,
