@@ -6,7 +6,9 @@
  * Backend uses slug as lookup field for retrieve/update/delete.
  */
 
+import axios from 'axios';
 import axiosClient from '@/lib/axios';
+import { getAccessToken } from '@/lib/tokenStore';
 
 // =============================================================================
 // TYPES
@@ -146,6 +148,31 @@ function buildFormData(data: Record<string, unknown>): FormData | Record<string,
 }
 
 // =============================================================================
+// UPLOAD via upload.ooskills.com (bypasses Cloudflare proxy — no size limit)
+// =============================================================================
+
+/**
+ * upload.ooskills.com is a DNS-only (grey-cloud) subdomain pointing directly
+ * to the server. It bypasses Cloudflare's 100 MB proxy limit, so ZIP uploads
+ * go through as a single request — just like localhost.
+ */
+const UPLOAD_BASE_URL = process.env.NEXT_PUBLIC_UPLOAD_URL || 'https://upload.ooskills.com/api';
+
+/**
+ * Send a FormData POST to upload.ooskills.com with the auth token.
+ * Uses plain axios (not axiosClient) so the request goes to the upload subdomain.
+ * Does NOT set Content-Type — the browser auto-adds multipart/form-data with boundary.
+ */
+function uploadRequest<T>(path: string, fd: FormData, timeoutMs: number) {
+    const token = getAccessToken();
+    return axios.post<T>(`${UPLOAD_BASE_URL}${path}`, fd, {
+        timeout: timeoutMs,
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+}
+
+// =============================================================================
 // API
 // =============================================================================
 
@@ -182,8 +209,7 @@ const adminCoursesManagementApi = {
      */
     create: async (data: AdminCourseCreatePayload) => {
         const body = buildFormData(data as unknown as Record<string, unknown>);
-        const headers = body instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined;
-        const response = await axiosClient.post<AdminCourse>(ENDPOINT, body, { headers });
+        const response = await axiosClient.post<AdminCourse>(ENDPOINT, body);
         return response.data;
     },
 
@@ -192,8 +218,7 @@ const adminCoursesManagementApi = {
      */
     update: async (slug: string, data: AdminCourseUpdatePayload) => {
         const body = buildFormData(data as unknown as Record<string, unknown>);
-        const headers = body instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined;
-        const response = await axiosClient.patch<AdminCourse>(`${ENDPOINT}${slug}/`, body, { headers });
+        const response = await axiosClient.patch<AdminCourse>(`${ENDPOINT}${slug}/`, body);
         return response.data;
     },
 
@@ -209,31 +234,39 @@ const adminCoursesManagementApi = {
     },
 
     /**
-     * Preview a ZIP course import
+     * Preview a ZIP course import.
+     * Sends the file via upload.ooskills.com (bypasses Cloudflare — no size limit).
      */
     previewCourseZip: async (file: File) => {
         const fd = new FormData();
         fd.append('zip_file', file);
-        const response = await axiosClient.post<CourseZipPreviewPlan>(`${ENDPOINT}import-zip-preview/`, fd, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 120_000, // 2 min — large ZIP upload
-        });
+        const response = await uploadRequest<CourseZipPreviewPlan>(
+            `${ENDPOINT}import-zip-preview/`,
+            fd,
+            900_000, // 15 min
+        );
         return response.data;
     },
 
     /**
-     * Confirm a ZIP course import
+     * Confirm a ZIP course import.
+     * Sends the file via upload.ooskills.com (bypasses Cloudflare — no size limit).
      */
-    importCourseZip: async (file: File, categoryId?: string, instructorId?: string) => {
+    importCourseZip: async (
+        file: File,
+        categoryId?: string,
+        instructorId?: string,
+    ) => {
         const fd = new FormData();
         fd.append('zip_file', file);
         if (categoryId) fd.append('category_id', categoryId);
         if (instructorId) fd.append('instructor_id', instructorId);
-        
-        const response = await axiosClient.post<AdminCourse>(`${ENDPOINT}import-zip/`, fd, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 300_000, // 5 min — large ZIPs with 100+ lessons take time
-        });
+
+        const response = await uploadRequest<AdminCourse>(
+            `${ENDPOINT}import-zip/`,
+            fd,
+            900_000, // 15 min
+        );
         return response.data;
     },
 };

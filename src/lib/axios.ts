@@ -96,6 +96,11 @@ const addAuthHeader = (config: InternalAxiosRequestConfig): InternalAxiosRequest
 axiosClient.interceptors.request.use(
     (config) => {
         _activeRequests++;
+        // When sending FormData (file uploads), delete the default Content-Type
+        // so the browser auto-sets it to multipart/form-data WITH the boundary.
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
         return addAuthHeader(config);
     },
     (error) => {

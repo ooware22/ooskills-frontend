@@ -40,8 +40,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://ooskills-backend.onrender.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com",
-      "connect-src 'self' https://ooskills-backend.onrender.com http://localhost:8000 https://pbwxwhkkjkshcsugaubp.supabase.co",
+      "img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com",
+      "connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -70,9 +70,8 @@ const nextConfig = {
         hostname: "ooskills-backend.onrender.com",
       },
       {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
+        protocol: "https",
+        hostname: "api.ooskills.com",
       },
       {
         protocol: "https",
