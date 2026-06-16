@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
+
+// In development, allow localhost API connections in CSP
+const isDev = process.env.NODE_ENV !== "production";
+const devOrigins = isDev ? " http://localhost:8000 http://127.0.0.1:8000" : "";
+
 // Security headers (equivalent to helmet)
 const securityHeaders = [
   // Enforce HTTPS for 2 years + include subdomains + allow preload list
@@ -40,8 +45,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com",
-      "connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co",
+      `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,
+      `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co${devOrigins}`,
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
