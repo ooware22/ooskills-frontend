@@ -9,6 +9,7 @@
 import axios from 'axios';
 import axiosClient from '@/lib/axios';
 import { getAccessToken } from '@/lib/tokenStore';
+import { uploadFileDirectToR2 } from './r2Uploader';
 
 // =============================================================================
 // TYPES
@@ -235,37 +236,44 @@ const adminCoursesManagementApi = {
 
     /**
      * Preview a ZIP course import.
-     * Sends the file via upload.ooskills.com (bypasses Cloudflare — no size limit).
+     * Uploads the ZIP directly to Cloudflare R2, then passes the R2 key to Django.
+     * Returns the plan preview along with temp_key so import doesn't re-upload.
      */
     previewCourseZip: async (file: File) => {
-        const fd = new FormData();
-        fd.append('zip_file', file);
-        const response = await uploadRequest<CourseZipPreviewPlan>(
+        const { objectKey } = await uploadFileDirectToR2(file, 'materials', 'temp-zip');
+        const response = await axiosClient.post<CourseZipPreviewPlan>(
             `${ENDPOINT}import-zip-preview/`,
-            fd,
-            900_000, // 15 min
+            { temp_key: objectKey },
+            { timeout: 300_000 }, // 5 min timeout for backend R2 download & parsing
         );
-        return response.data;
+        return { ...response.data, temp_key: objectKey };
     },
 
     /**
      * Confirm a ZIP course import.
-     * Sends the file via upload.ooskills.com (bypasses Cloudflare — no size limit).
+     * Reuses the existing tempKey if provided (from preview) or uploads if file provided.
      */
     importCourseZip: async (
-        file: File,
+        fileOrKey: File | { tempKey: string },
         categoryId?: string,
         instructorId?: string,
     ) => {
-        const fd = new FormData();
-        fd.append('zip_file', file);
-        if (categoryId) fd.append('category_id', categoryId);
-        if (instructorId) fd.append('instructor_id', instructorId);
+        let objectKey: string;
+        if (typeof fileOrKey === 'object' && 'tempKey' in fileOrKey && fileOrKey.tempKey) {
+            objectKey = fileOrKey.tempKey;
+        } else {
+            const res = await uploadFileDirectToR2(fileOrKey as File, 'materials', 'temp-zip');
+            objectKey = res.objectKey;
+        }
 
-        const response = await uploadRequest<AdminCourse>(
+        const response = await axiosClient.post<AdminCourse>(
             `${ENDPOINT}import-zip/`,
-            fd,
-            900_000, // 15 min
+            {
+                temp_key: objectKey,
+                category_id: categoryId || undefined,
+                instructor_id: instructorId || undefined,
+            },
+            { timeout: 300_000 }, // 5 min timeout for backend download & background trigger
         );
         return response.data;
     },

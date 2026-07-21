@@ -45,9 +45,9 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,
-      `media-src 'self' blob: https://*.r2.dev${devOrigins}`,
-      `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev${devOrigins}`,
+      `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,
+      `media-src 'self' blob: https://*.r2.dev https://*.r2.cloudflarestorage.com${devOrigins}`,
+      `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com${devOrigins}`,
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -90,6 +90,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.r2.dev",
+      },
+      {
+        protocol: "https",
+        hostname: "*.r2.cloudflarestorage.com",
       },
       {
         protocol: "https",

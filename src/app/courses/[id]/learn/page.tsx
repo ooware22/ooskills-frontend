@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useEnrollment } from '@/hooks/useEnrollment';
 import { getCourseContentBySlug, getAudioUrl, getFlatSlides } from '@/data/courseContent';
+import { useI18n } from '@/lib/i18n';
 
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchMyEnrollments, saveProgress, fetchMyProgress } from '@/store/slices/enrollmentSlice';
@@ -49,6 +50,7 @@ import {
   PresentationChartBarIcon,
   VideoCameraIcon,
   FolderIcon,
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
 import type { Slide, QuizQuestion, CourseContentModule, CourseContent, Quiz } from '@/data/courseContent';
@@ -172,13 +174,15 @@ function SlideContent({ slide }: { slide: Slide }) {
     );
   }
 
-  return <p className="text-gray-400 text-center italic">No visual content for this slide.</p>;
+  return <p className="text-gray-400 text-center italic" dir="auto">No visual content for this slide.</p>;
 }
 
 /* ─────────────── Quiz Component ─────────────── */
 const MAX_QUIZ_ATTEMPTS = 3;
 
 function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule['quiz']>; onComplete: (score: number, answers: Record<string, number>) => void }) {
+  const { dir, locale } = useI18n();
+  const isRtl = dir === 'rtl';
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -242,14 +246,14 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
             {pct}%
           </div>
           <p className={`text-lg font-semibold ${passed ? 'text-emerald-300' : 'text-red-300'}`}>
-            {passed ? '🎉 أحسنت! لقد نجحت' : '😔 حاول مرة أخرى'}
+            {passed ? (locale === 'ar' ? '🎉 أحسنت! لقد نجحت' : locale === 'en' ? '🎉 Well done! You passed' : '🎉 Bravo ! Vous avez réussi') : (locale === 'ar' ? '😔 حاول مرة أخرى' : locale === 'en' ? '😔 Try again' : '😔 Réessayez')}
           </p>
           <p className="text-gray-400 text-sm mt-2">
-            {correctCount} / {quiz.questions.length} إجابات صحيحة
+            {correctCount} / {quiz.questions.length} {locale === 'ar' ? 'إجابات صحيحة' : locale === 'en' ? 'correct answers' : 'réponses correctes'}
           </p>
           {!passed && !showCorrections && (
             <p className="text-gray-500 text-xs mt-2">
-              المحاولة {attemptCount} / {MAX_QUIZ_ATTEMPTS} — ستظهر التصحيحات بعد استنفاد المحاولات
+              {locale === 'ar' ? `المحاولة ${attemptCount} / ${MAX_QUIZ_ATTEMPTS} — ستظهر التصحيحات بعد استنفاد المحاولات` : locale === 'en' ? `Attempt ${attemptCount} / ${MAX_QUIZ_ATTEMPTS} — corrections will appear after using all attempts` : `Tentative ${attemptCount} / ${MAX_QUIZ_ATTEMPTS} — les corrections s'afficheront après épuisement des tentatives`}
             </p>
           )}
         </motion.div>
@@ -272,10 +276,10 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
                     }`}>
                       {isCorrect ? '✓' : '✗'}
                     </span>
-                    <h4 className="text-white font-semibold text-right flex-1" dir="rtl">{q.question}</h4>
+                    <h4 className={`text-white font-semibold flex-1 ${isRtl ? 'text-right' : 'text-left'}`} dir={dir}>{q.question}</h4>
                   </div>
 
-                  <div className="space-y-2 mr-10" dir="rtl">
+                  <div className={`space-y-2 ${isRtl ? 'mr-10' : 'ml-10'}`} dir={dir}>
                     {q.options.map((opt, oi) => {
                       let optCls = 'text-gray-500';
                       if (oi === q.correct_answer) optCls = 'text-emerald-400 font-semibold';
@@ -292,7 +296,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
                   </div>
 
                   {q.explanation && (
-                    <div className="mt-3 mr-10 p-3 bg-white/5 rounded-lg border border-white/5" dir="rtl">
+                    <div className={`mt-3 ${isRtl ? 'mr-10' : 'ml-10'} p-3 bg-white/5 rounded-lg border border-white/5`} dir={dir}>
                       <p className="text-gray-400 text-xs">{q.explanation}</p>
                     </div>
                   )}
@@ -307,13 +311,13 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           {!passed && (
             <button onClick={handleRetry}
               className="px-8 py-3 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors">
-              🔄 إعادة المحاولة
+              {locale === 'ar' ? '🔄 إعادة المحاولة' : locale === 'en' ? '🔄 Retry' : '🔄 Réessayer'}
             </button>
           )}
           {passed && (
             <button onClick={() => onComplete(pct, answersMap)}
               className="px-10 py-4 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors text-lg">
-              متابعة ←
+              {locale === 'ar' ? 'متابعة ←' : locale === 'en' ? 'Continue →' : 'Continuer →'}
             </button>
           )}
         </div>
@@ -335,7 +339,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
       </div>
 
       <motion.div key={currentQ} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h3 className="text-white text-xl font-bold mb-6 text-right" dir="rtl">{question.question}</h3>
+        <h3 className={`text-white text-xl font-bold mb-6 ${isRtl ? 'text-right' : 'text-left'}`} dir={dir}>{question.question}</h3>
         <div className="space-y-3">
           {question.options.map((opt, i) => {
             let cls = 'border-white/10 hover:border-white/20 bg-white/5';
@@ -349,7 +353,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
             }
             return (
               <button key={i} onClick={() => handleSelect(i)} disabled={showExplanation}
-                className={`w-full text-right p-4 rounded-xl border transition-all ${cls}`} dir="rtl">
+                className={`w-full ${isRtl ? 'text-right' : 'text-left'} p-4 rounded-xl border transition-all ${cls}`} dir={dir}>
                 <span className="text-white">{opt}</span>
               </button>
             );
@@ -358,7 +362,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
 
         {showExplanation && showCorrections && question.explanation && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl" dir="rtl">
+            className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl" dir={dir}>
             <p className="text-gray-300 text-sm">{question.explanation}</p>
           </motion.div>
         )}
@@ -367,7 +371,7 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           <div className="mt-6 flex justify-center">
             <button onClick={handleNext}
               className="px-8 py-3 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors">
-              {isLast ? 'عرض النتيجة' : 'السؤال التالي →'}
+              {isLast ? (locale === 'ar' ? 'عرض النتيجة' : locale === 'en' ? 'See Results' : 'Voir les résultats') : (locale === 'ar' ? 'السؤال التالي →' : locale === 'en' ? 'Next Question →' : 'Question Suivante →')}
             </button>
           </div>
         )}
@@ -387,6 +391,8 @@ function FinalQuizView({
   courseId: string;
   onDone: () => void;
 }) {
+  const { dir } = useI18n();
+  const isRtl = dir === 'rtl';
   const dispatch = useAppDispatch();
 
   // Redux state
@@ -627,7 +633,7 @@ function FinalQuizView({
                   }`}>
                     {fb.is_correct ? '✓' : '✗'}
                   </span>
-                  <div className="flex-1 text-right" dir="rtl">
+                  <div className={`flex-1 ${isRtl ? 'text-right' : 'text-left'}`} dir={dir}>
                     <h4 className="text-white font-semibold mb-2">
                       {questions.find(q => q.id === fb.question_id)?.question || `سؤال ${qi + 1}`}
                     </h4>
@@ -692,13 +698,13 @@ function FinalQuizView({
         </div>
 
         <motion.div key={currentQ} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h3 className="text-white text-xl font-bold mb-6 text-right" dir="rtl">{question.question}</h3>
+          <h3 className={`text-white text-xl font-bold mb-6 ${isRtl ? 'text-right' : 'text-left'}`} dir="auto">{question.question}</h3>
           <div className="space-y-3">
             {question.options.map((opt, i) => (
               <button key={i} onClick={() => handleSelect(i)}
-                className={`w-full text-right p-4 rounded-xl border transition-all ${
+                className={`w-full ${isRtl ? 'text-right' : 'text-left'} p-4 rounded-xl border transition-all ${
                   selected === i ? 'border-gold bg-gold/10' : 'border-white/10 hover:border-white/20 bg-white/5'
-                }`} dir="rtl">
+                }`} dir="auto">
                 <span className="text-white">{opt}</span>
               </button>
             ))}
@@ -722,28 +728,45 @@ function FinalQuizView({
 
 /* ─────────────── Narration Panel ─────────────── */
 function NarrationPanel({ slide }: { slide: Slide }) {
-  const speakers = slide.narration_script.speakers;
+  const { dir } = useI18n();
+  const speakers = slide.narration_script?.speakers;
   if (!speakers || speakers.length === 0) return null;
 
   return (
-    <div className="space-y-3" dir="rtl">
-      {speakers.map((s, i) => (
-        <motion.div key={i} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-          className="flex gap-3">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-            s.speaker === 'أَسْمَاءْ' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
-          }`}>
-            {s.speaker === 'أَسْمَاءْ' ? 'أ' : 'ن'}
-          </div>
-          <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold text-gold">{s.speaker}</span>
-              <span className="text-[10px] text-gray-500 italic">({s.emotion})</span>
+    <div className="space-y-3" dir={dir}>
+      {speakers.map((s, i) => {
+        const initial = s.speaker ? s.speaker.trim().charAt(0).toUpperCase() : '?';
+        const isPink = s.speaker === 'أَسْمَاءْ' || initial === 'A' || initial === 'E';
+
+        // Clean text: strip leading period if present (e.g. ".Toi qui m'écoutes" -> "Toi qui m'écoutes")
+        let cleanText = s.text || '';
+        if (cleanText.startsWith('.')) {
+          cleanText = cleanText.substring(1).trim();
+        }
+
+        // Determine text direction from actual content: Arabic script vs Latin script
+        const hasArabic = /[\u0600-\u06FF]/.test(cleanText);
+        const textDir = hasArabic ? 'rtl' : 'ltr';
+        const textAlign = hasArabic ? 'text-right' : 'text-left';
+
+        return (
+          <motion.div key={i} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+            className="flex gap-3 items-start">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-1 ${
+              isPink ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+            }`}>
+              {initial}
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed">{s.text}</p>
-          </div>
-        </motion.div>
-      ))}
+            <div className={`flex-1 bg-white/5 rounded-xl p-3.5 border border-white/5 ${textAlign}`} dir={textDir}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold text-gold">{s.speaker}</span>
+                {s.emotion && <span className="text-[10px] text-gray-400 italic">({s.emotion})</span>}
+              </div>
+              <p className="text-gray-200 text-sm leading-relaxed" dir={textDir}>{cleanText}</p>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -752,6 +775,7 @@ function NarrationPanel({ slide }: { slide: Slide }) {
 export default function CoursePlayerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { dir, locale, setLocale } = useI18n();
   const slug = id;
   const dispatch = useAppDispatch();
   const userId = useAppSelector((s) => s.auth.user?.id);
@@ -818,6 +842,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const [quizScores, setQuizScores] = useState<Record<string, number>>({});
   const [expandedModules, setExpandedModules] = useState<number[]>([0]);
   const [showMaterials, setShowMaterials] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
 
   // Audio state
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -1224,13 +1249,45 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-400 hover:text-white">
           <Bars3Icon className="w-5 h-5" />
         </button>
-        <h1 className="text-sm font-medium text-white truncate flex-1">{courseTitle}</h1>
+        <h1 className="text-sm font-medium text-white truncate flex-1" dir="auto">{courseTitle}</h1>
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2">
             <div className="w-32 bg-white/10 rounded-full h-1.5">
               <div className="bg-gold h-1.5 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
             </div>
             <span className="text-xs text-gray-400">{progressPct}%</span>
+          </div>
+
+          {/* Language Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-300 hover:text-white transition-colors border border-white/10"
+              title="Change Language"
+            >
+              <GlobeAltIcon className="w-4 h-4 text-gold" />
+              <span className="uppercase">{locale}</span>
+              <ChevronDownIcon className="w-3 h-3 text-gray-400" />
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-[#1a2238] border border-white/10 rounded-xl shadow-xl py-1 z-50">
+                {(['fr', 'en', 'ar'] as const).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => {
+                      setLocale(l);
+                      setLangOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-white/10 transition-colors ${
+                      locale === l ? 'text-gold font-bold bg-gold/10' : 'text-gray-300'
+                    }`}
+                  >
+                    <span>{l === 'fr' ? 'Français' : l === 'en' ? 'English' : 'العربية'}</span>
+                    {locale === l && <span>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -1298,7 +1355,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                                     ) : (
                                       <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${isActive ? 'border-gold' : 'border-gray-600'}`} />
                                     )}
-                                    <span className="truncate">{slide.title}</span>
+                                    <span className="truncate" dir="auto">{slide.title}</span>
                                   </button>
                                 );
                               })}
@@ -1373,7 +1430,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                         : 'bg-gold/10 text-gold hover:bg-gold/20 border border-gold/20'
                     }`}>
                     <AcademicCapIcon className="w-5 h-5" />
-                    الامتحان النهائي
+                    {locale === 'ar' ? 'الامتحان النهائي' : locale === 'en' ? 'Final Exam' : 'Examen Final'}
                   </button>
                 </div>
               )}
@@ -1425,7 +1482,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                   {/* Slide title */}
                   <motion.h2 key={`title-${currentSlideIdx}`}
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="text-2xl lg:text-3xl font-bold text-white mb-8" dir="rtl"
+                    className="text-2xl lg:text-3xl font-bold text-white mb-8" dir="auto"
                   >
                     {currentSlide.title}
                   </motion.h2>
@@ -1451,7 +1508,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                         {(mode === 'slide' || mode === 'both') && (
                           <motion.div key={`content-${currentSlideIdx}`}
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                            className="mb-8" dir="rtl"
+                            className="mb-8" dir="auto"
                           >
                             {/* Diapositive file (image/pdf) */}
                             {currentSlide.diapositiveUrl && (
@@ -1493,11 +1550,13 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                             <div className="flex items-center justify-between mb-4">
                               <h3 className="text-sm font-semibold text-gold flex items-center gap-2">
                                 <SpeakerWaveIcon className="w-4 h-4" />
-                                النَّص الصَّوتي
+                                {locale === 'ar' ? 'النَّص الصَّوتي' : locale === 'en' ? 'Audio Script' : 'Transcription Audio'}
                               </h3>
                               {mode === 'both' && (
                                 <button onClick={() => setShowNarration(false)}
-                                  className="text-xs text-gray-500 hover:text-gray-300">إخفاء</button>
+                                  className="text-xs text-gray-500 hover:text-gray-300">
+                                  {locale === 'ar' ? 'إخفاء' : locale === 'en' ? 'Hide' : 'Masquer'}
+                                </button>
                               )}
                             </div>
                             <NarrationPanel slide={currentSlide} />
@@ -1507,7 +1566,7 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                         {mode === 'both' && !showNarration && (
                           <button onClick={() => setShowNarration(true)}
                             className="mt-4 text-xs text-gray-500 hover:text-gold transition-colors">
-                            عرض النَّص الصَّوتي ↓
+                            {locale === 'ar' ? 'عرض النَّص الصَّوتي ↓' : locale === 'en' ? 'Show Audio Script ↓' : 'Afficher la transcription ↓'}
                           </button>
                         )}
                       </>

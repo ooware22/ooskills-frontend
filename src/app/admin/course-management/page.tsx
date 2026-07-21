@@ -428,10 +428,12 @@ export default function CourseManagementPage() {
     setSaveError(null);
 
     const catId = categories.find((c) => c.slug === formData.category)?.id;
+    const tempKey = (zipPreviewPlan as any)?.temp_key;
 
     const result = await dispatch(
       importAdminCourseFromZip({
-        file: zipFile,
+        file: tempKey ? undefined : zipFile,
+        tempKey: tempKey || undefined,
         categoryId: catId,
       }),
     );

@@ -12,51 +12,70 @@ import {
 } from "@/store/slices/notificationSlice";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { BellIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  BellIcon,
+  CheckIcon,
+  XMarkIcon,
+  ShoppingCartIcon,
+  CheckCircleIcon,
+  AcademicCapIcon,
+  TrophyIcon,
+  ArrowUpCircleIcon,
+  GiftIcon,
+  BanknotesIcon,
+  ClipboardDocumentCheckIcon,
+} from "@heroicons/react/24/outline";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const TYPE_META: Record<string, { icon: string; color: string; bg: string }> = {
+const TYPE_META: Record<
+  string,
+  {
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    bg: string;
+  }
+> = {
   course_purchased: {
-    icon: "🛒",
-    color: "text-blue-600",
+    icon: ShoppingCartIcon,
+    color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-900/20",
   },
   course_completed: {
-    icon: "✅",
-    color: "text-green-600",
+    icon: CheckCircleIcon,
+    color: "text-green-600 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-900/20",
   },
   certificate_earned: {
-    icon: "🏆",
-    color: "text-yellow-600",
+    icon: AcademicCapIcon,
+    color: "text-yellow-600 dark:text-yellow-400",
     bg: "bg-yellow-50 dark:bg-yellow-900/20",
   },
   achievement_unlocked: {
-    icon: "🏅",
-    color: "text-purple-600",
+    icon: TrophyIcon,
+    color: "text-purple-600 dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-900/20",
   },
   level_up: {
-    icon: "⬆️",
-    color: "text-amber-500",
+    icon: ArrowUpCircleIcon,
+    color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-900/20",
   },
   gift_received: {
-    icon: "🎁",
-    color: "text-pink-600",
+    icon: GiftIcon,
+    color: "text-pink-600 dark:text-pink-400",
     bg: "bg-pink-50 dark:bg-pink-900/20",
   },
   referral_bonus: {
-    icon: "💰",
-    color: "text-emerald-600",
+    icon: BanknotesIcon,
+    color: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-900/20",
   },
   quiz_passed: {
-    icon: "📝",
-    color: "text-cyan-600",
+    icon: ClipboardDocumentCheckIcon,
+    color: "text-cyan-600 dark:text-cyan-400",
     bg: "bg-cyan-50 dark:bg-cyan-900/20",
   },
 };
@@ -94,10 +113,11 @@ function NotifRow({
   const dispatch = useAppDispatch();
   const router = useRouter();
   const meta = TYPE_META[notif.type] ?? {
-    icon: "🔔",
-    color: "text-gray-500",
+    icon: BellIcon,
+    color: "text-gray-500 dark:text-white/60",
     bg: "bg-gray-50 dark:bg-white/5",
   };
+  const IconComponent = meta.icon;
 
   const handleClick = () => {
     if (!notif.is_read) dispatch(markOneRead(notif.id));
@@ -119,11 +139,11 @@ function NotifRow({
       {/* Icon */}
       <span
         className={cn(
-          "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base",
+          "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center",
           meta.bg,
         )}
       >
-        {meta.icon}
+        <IconComponent className={cn("w-5 h-5", meta.color)} />
       </span>
 
       {/* Text */}

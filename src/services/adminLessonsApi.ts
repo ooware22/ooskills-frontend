@@ -43,6 +43,8 @@ export interface LessonCreatePayload {
     slide_type: string;
     display_mode?: 'narration' | 'slide' | 'both';
     content?: LessonContent;
+    audioUrl?: string | null;
+    diapositiveUrl?: string | null;
     audioFile?: File | null;
     diapositiveFile?: File | null;
 }
@@ -55,6 +57,8 @@ export interface LessonUpdatePayload {
     slide_type?: string;
     display_mode?: 'narration' | 'slide' | 'both';
     content?: LessonContent;
+    audioUrl?: string | null;
+    diapositiveUrl?: string | null;
     audioFile?: File | null;
     diapositiveFile?: File | null;
 }
