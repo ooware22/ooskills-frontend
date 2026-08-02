@@ -174,6 +174,10 @@ function SlideContent({ slide }: { slide: Slide }) {
     );
   }
 
+  if (slide.diapositiveUrl) {
+    return null;
+  }
+
   return <p className="text-gray-400 text-center italic" dir="auto">No visual content for this slide.</p>;
 }
 

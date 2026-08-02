@@ -9,6 +9,7 @@ const AnimatedBackground = dynamic(() => import("@/components/AnimatedBackground
 const ServerWakeUp = dynamic(() => import("@/components/ServerWakeUp"));
 const GamificationOverlays = dynamic(() => import("@/components/GamificationOverlays"));
 
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -105,15 +106,19 @@ export const metadata: Metadata = {
   category: "education",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const nonce = headersList.get("x-nonce") || undefined;
+
   return (
     <html lang="fr" dir="ltr" suppressHydrationWarning>
       <head>
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -179,6 +184,7 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
+            nonce={nonce}
           >
             <I18nProvider>
               <ServerWakeUp />
