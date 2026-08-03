@@ -37,9 +37,6 @@ import {
   selectGamification,
   selectAchievements,
   selectStreak,
-  addXP,
-  demoLevelUp,
-  demoAchievement,
   fetchGamificationProfile,
   fetchAchievements,
 } from "@/store/slices/gamificationSlice";
@@ -701,35 +698,6 @@ export default function StudentDashboard() {
             </div>
           </motion.div>
         )}
-
-        {/* Demo buttons (for testing — remove in production) */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mb-8 flex flex-wrap gap-2"
-        >
-          <button
-            onClick={() =>
-              dispatch(addXP({ amount: 50, label: "Quiz passed" }))
-            }
-            className="px-3 py-1.5 text-xs font-medium bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-colors"
-          >
-            +50 XP (Demo)
-          </button>
-          <button
-            onClick={() => dispatch(demoLevelUp())}
-            className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
-          >
-            Level Up (Demo)
-          </button>
-          <button
-            onClick={() => dispatch(demoAchievement())}
-            className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500/20 transition-colors"
-          >
-            Achievement (Demo)
-          </button>
-        </motion.div>
 
         {/* Continue Learning */}
         <motion.div

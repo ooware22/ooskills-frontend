@@ -46,10 +46,28 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get saved locale from localStorage
+    // Get saved locale from localStorage or detect system/browser language
     const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null;
     if (savedLocale && ["fr", "en", "ar"].includes(savedLocale)) {
       setLocaleState(savedLocale);
+    } else if (typeof window !== "undefined") {
+      const systemLangs = navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || ""];
+
+      for (const lang of systemLangs) {
+        const primary = lang ? lang.toLowerCase().split("-")[0] : "";
+        if (primary === "ar") {
+          setLocaleState("ar");
+          break;
+        } else if (primary === "en") {
+          setLocaleState("en");
+          break;
+        } else if (primary === "fr") {
+          setLocaleState("fr");
+          break;
+        }
+      }
     }
   }, []);
 

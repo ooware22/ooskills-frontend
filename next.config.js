@@ -37,22 +37,7 @@ const securityHeaders = [
     value:
       "camera=(), microphone=(), geolocation=(), browsing-topics=()",
   },
-  // Content Security Policy — baseline restrictive policy
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,
-      `media-src 'self' blob: https://*.r2.dev${devOrigins}`,
-      `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev${devOrigins}`,
-      "frame-ancestors 'self'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join("; "),
-  },
+
   // Prevent DNS prefetching for privacy
   {
     key: "X-DNS-Prefetch-Control",
@@ -90,6 +75,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.r2.dev",
+      },
+      {
+        protocol: "https",
+        hostname: "*.r2.cloudflarestorage.com",
       },
       {
         protocol: "https",

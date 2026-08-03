@@ -29,6 +29,7 @@ import {
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
+import { uploadFileDirectToR2 } from "@/services/r2Uploader";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
@@ -399,7 +400,16 @@ export default function CourseContentPage() {
     const file = e.target.files?.[0];
     if (file) {
       setAudioFile(file);
-      setAudioPreview(URL.createObjectURL(file));
+      const objectUrl = URL.createObjectURL(file);
+      setAudioPreview(objectUrl);
+      // Auto-detect audio duration in seconds
+      const audioEl = new Audio(objectUrl);
+      audioEl.onloadedmetadata = () => {
+        if (audioEl.duration && !isNaN(audioEl.duration)) {
+          const secs = Math.round(audioEl.duration);
+          setLessonForm((prev) => ({ ...prev, duration_seconds: secs }));
+        }
+      };
     }
   };
 
@@ -421,45 +431,68 @@ export default function CourseContentPage() {
       },
     };
 
-    if (lessonModal === "add") {
-      const result = await dispatch(
-        createLesson({
-          module: lessonParentId,
-          title: lessonForm.title,
-          type: lessonForm.type,
-          sequence: parentModule ? parentModule.lessons_list?.length || 0 : 0,
-          duration_seconds: lessonForm.duration_seconds,
-          slide_type: lessonForm.slide_type,
-          display_mode: lessonForm.displayMode,
-          content,
-          audioFile: audioFile || undefined,
-          diapositiveFile: slideFile || undefined,
-        }),
-      );
-      if (createLesson.fulfilled.match(result)) {
-        showToast(tc("lessonAdded"));
+    let uploadedAudioKey: string | undefined = undefined;
+    let uploadedSlideKey: string | undefined = undefined;
+
+    try {
+      if (audioFile) {
+        const res = await uploadFileDirectToR2(audioFile, 'audios', courseRef || undefined);
+        uploadedAudioKey = res.objectKey;
       }
-    } else if (lessonModal === "edit" && selectedLesson) {
-      const result = await dispatch(
-        updateLesson({
-          id: selectedLesson.id,
-          data: {
+
+      if (slideFile) {
+        const res = await uploadFileDirectToR2(slideFile, 'diapositive', courseRef || undefined);
+        uploadedSlideKey = res.objectKey;
+      }
+
+      if (lessonModal === "add") {
+        const result = await dispatch(
+          createLesson({
+            module: lessonParentId,
             title: lessonForm.title,
             type: lessonForm.type,
+            sequence: parentModule ? parentModule.lessons_list?.length || 0 : 0,
             duration_seconds: lessonForm.duration_seconds,
             slide_type: lessonForm.slide_type,
             display_mode: lessonForm.displayMode,
             content,
-            audioFile: audioFile || undefined,
-            diapositiveFile: slideFile || undefined,
-          },
-        }),
-      );
-      if (updateLesson.fulfilled.match(result)) {
-        showToast(tc("lessonUpdated"));
+            audioUrl: uploadedAudioKey || undefined,
+            diapositiveUrl: uploadedSlideKey || undefined,
+            audioFile: !uploadedAudioKey ? audioFile || undefined : undefined,
+            diapositiveFile: !uploadedSlideKey ? slideFile || undefined : undefined,
+          }),
+        );
+        if (createLesson.fulfilled.match(result)) {
+          showToast(tc("lessonAdded"));
+        }
+      } else if (lessonModal === "edit" && selectedLesson) {
+        const result = await dispatch(
+          updateLesson({
+            id: selectedLesson.id,
+            data: {
+              title: lessonForm.title,
+              type: lessonForm.type,
+              duration_seconds: lessonForm.duration_seconds,
+              slide_type: lessonForm.slide_type,
+              display_mode: lessonForm.displayMode,
+              content,
+              audioUrl: uploadedAudioKey || undefined,
+              diapositiveUrl: uploadedSlideKey || undefined,
+              audioFile: !uploadedAudioKey ? audioFile || undefined : undefined,
+              diapositiveFile: !uploadedSlideKey ? slideFile || undefined : undefined,
+            },
+          }),
+        );
+        if (updateLesson.fulfilled.match(result)) {
+          showToast(tc("lessonUpdated"));
+        }
       }
+    } catch (err) {
+      console.error("Direct R2 upload error:", err);
+      showToast("File upload warning: falling back to server processing");
+    } finally {
+      closeLessonModal();
     }
-    closeLessonModal();
   };
 
   const handleDeleteLesson = async () => {

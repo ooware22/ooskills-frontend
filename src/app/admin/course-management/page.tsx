@@ -196,7 +196,7 @@ export default function CourseManagementPage() {
   const [zipPreviewPlan, setZipPreviewPlan] =
     useState<CourseZipPreviewPlan | null>(null);
   const [zipUploadProgress, setZipUploadProgress] = useState<{
-    loaded: number;
+    percent: number;
     total: number;
   } | null>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
@@ -409,13 +409,13 @@ export default function CourseManagementPage() {
     setZipFile(file);
     setSaveError(null);
     setZipPreviewPlan(null);
-    setZipUploadProgress({ loaded: 0, total: file.size });
+    setZipUploadProgress({ percent: 0, total: file.size });
 
     const result = await dispatch(
       previewAdminCourseZip({
         file,
-        onUploadProgress: (loaded, total) =>
-          setZipUploadProgress({ loaded, total: total ?? file.size }),
+        onUploadProgress: (percent) =>
+          setZipUploadProgress({ percent, total: file.size }),
       }),
     );
     setZipUploadProgress(null);
@@ -444,16 +444,18 @@ export default function CourseManagementPage() {
   const handleImportZipConfirm = async () => {
     if (!zipFile) return;
     setSaveError(null);
-    setZipUploadProgress({ loaded: 0, total: zipFile.size });
+    setZipUploadProgress({ percent: 0, total: zipFile.size });
 
     const catId = categories.find((c) => c.slug === formData.category)?.id;
+    const tempKey = (zipPreviewPlan as any)?.temp_key;
 
     const result = await dispatch(
       importAdminCourseFromZip({
-        file: zipFile,
+        file: tempKey ? undefined : zipFile,
+        tempKey: tempKey || undefined,
         categoryId: catId,
-        onUploadProgress: (loaded, total) =>
-          setZipUploadProgress({ loaded, total: total ?? zipFile.size }),
+        onUploadProgress: (percent) =>
+          setZipUploadProgress({ percent, total: zipFile.size }),
       }),
     );
     setZipUploadProgress(null);
@@ -1241,30 +1243,24 @@ export default function CourseManagementPage() {
                               : "Uploading..."}
                           </span>
                           <span className="font-medium text-oxford dark:text-white">
-                            {formatBytes(zipUploadProgress.loaded)} /{" "}
-                            {formatBytes(zipUploadProgress.total)}
-                            {zipUploadProgress.total > 0 &&
-                              ` (${Math.round(
-                                (zipUploadProgress.loaded /
-                                  zipUploadProgress.total) *
-                                  100,
-                              )}%)`}
+                            {formatBytes(
+                              Math.round(
+                                (zipUploadProgress.percent / 100) *
+                                  zipUploadProgress.total,
+                              ),
+                            )}{" "}
+                            / {formatBytes(zipUploadProgress.total)} (
+                            {Math.round(zipUploadProgress.percent)}%)
                           </span>
                         </div>
                         <div className="h-2 w-full bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-emerald-500 rounded-full transition-all duration-200"
                             style={{
-                              width: `${
-                                zipUploadProgress.total > 0
-                                  ? Math.min(
-                                      100,
-                                      (zipUploadProgress.loaded /
-                                        zipUploadProgress.total) *
-                                        100,
-                                    )
-                                  : 0
-                              }%`,
+                              width: `${Math.min(
+                                100,
+                                Math.max(0, zipUploadProgress.percent),
+                              )}%`,
                             }}
                           />
                         </div>

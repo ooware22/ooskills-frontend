@@ -130,8 +130,9 @@ export const previewAdminCourseZip = createAsyncThunk(
 export const importAdminCourseFromZip = createAsyncThunk(
     "adminCoursesManagement/importZip",
     async (
-        { file, categoryId, instructorId, onUploadProgress }: {
-            file: File;
+        { file, tempKey, categoryId, instructorId, onUploadProgress }: {
+            file?: File;
+            tempKey?: string;
             categoryId?: string;
             instructorId?: string;
             onUploadProgress?: UploadProgressCallback;
@@ -139,7 +140,8 @@ export const importAdminCourseFromZip = createAsyncThunk(
         { rejectWithValue },
     ) => {
         try {
-            return await adminCoursesManagementApi.importCourseZip(file, categoryId, instructorId, onUploadProgress);
+            const target = tempKey ? { tempKey } : (file as File);
+            return await adminCoursesManagementApi.importCourseZip(target, categoryId, instructorId, onUploadProgress);
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
