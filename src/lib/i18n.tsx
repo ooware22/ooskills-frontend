@@ -28,7 +28,7 @@ const LOCALE_STORAGE_KEY = "ooskills-locale";
 function getNestedValue(obj: Record<string, unknown>, path: string): string {
   const keys = path.split(".");
   let current: unknown = obj;
-  
+
   for (const key of keys) {
     if (current && typeof current === "object" && key in current) {
       current = (current as Record<string, unknown>)[key];
@@ -36,7 +36,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
       return path; // Return the key if not found
     }
   }
-  
+
   return typeof current === "string" ? current : path;
 }
 
@@ -119,7 +119,7 @@ export function useI18n() {
 
 export function useTranslations(namespace?: string) {
   const { t, messages } = useI18n();
-  
+
   return (key: string) => {
     const fullKey = namespace ? `${namespace}.${key}` : key;
     return t(fullKey);

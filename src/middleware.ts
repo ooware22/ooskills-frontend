@@ -15,10 +15,15 @@ export function middleware(request: Request) {
     },
   });
 
-  const devOrigins = process.env.NODE_ENV !== "production" ? " http://localhost:8000 http://127.0.0.1:8000" : "";
+  const isDev = process.env.NODE_ENV !== "production";
+  const devOrigins = isDev ? " http://localhost:8000 http://127.0.0.1:8000 ws://localhost:3000 ws://127.0.0.1:3000" : "";
+  const scriptSrc = isDev
+    ? `script-src 'self' 'unsafe-eval' 'unsafe-inline'${devOrigins}`
+    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`;
+
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,

@@ -101,7 +101,7 @@ export const metadata: Metadata = {
   verification: {
     // Add your Google Search Console verification code here
     // google: "YOUR_GOOGLE_VERIFICATION_CODE",
-    google : '7BStn3aHavKARXTVciGMScdn7u8b_v0AH8_2Zfzv_Ds'
+    google: '7BStn3aHavKARXTVciGMScdn7u8b_v0AH8_2Zfzv_Ds'
   },
   category: "education",
 };
@@ -118,8 +118,8 @@ export default async function RootLayout({
     <html lang="fr" dir="ltr" suppressHydrationWarning>
       <head>
         <script
-          nonce={nonce}
           type="application/ld+json"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
@@ -184,7 +184,6 @@ export default async function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-            nonce={nonce}
           >
             <I18nProvider>
               <ServerWakeUp />
