@@ -163,12 +163,23 @@ const UPLOAD_BASE_URL = process.env.NEXT_PUBLIC_UPLOAD_URL || 'https://upload.oo
  * Uses plain axios (not axiosClient) so the request goes to the upload subdomain.
  * Does NOT set Content-Type — the browser auto-adds multipart/form-data with boundary.
  */
-function uploadRequest<T>(path: string, fd: FormData, timeoutMs: number) {
+/** Called with bytes uploaded so far, and total bytes (if known by the browser) */
+export type UploadProgressCallback = (loaded: number, total?: number) => void;
+
+function uploadRequest<T>(
+    path: string,
+    fd: FormData,
+    timeoutMs: number,
+    onUploadProgress?: UploadProgressCallback,
+) {
     const token = getAccessToken();
     return axios.post<T>(`${UPLOAD_BASE_URL}${path}`, fd, {
         timeout: timeoutMs,
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        onUploadProgress: onUploadProgress
+            ? (evt) => onUploadProgress(evt.loaded, evt.total)
+            : undefined,
     });
 }
 
@@ -237,13 +248,14 @@ const adminCoursesManagementApi = {
      * Preview a ZIP course import.
      * Sends the file via upload.ooskills.com (bypasses Cloudflare — no size limit).
      */
-    previewCourseZip: async (file: File) => {
+    previewCourseZip: async (file: File, onUploadProgress?: UploadProgressCallback) => {
         const fd = new FormData();
         fd.append('zip_file', file);
         const response = await uploadRequest<CourseZipPreviewPlan>(
             `${ENDPOINT}import-zip-preview/`,
             fd,
             900_000, // 15 min
+            onUploadProgress,
         );
         return response.data;
     },
@@ -256,6 +268,7 @@ const adminCoursesManagementApi = {
         file: File,
         categoryId?: string,
         instructorId?: string,
+        onUploadProgress?: UploadProgressCallback,
     ) => {
         const fd = new FormData();
         fd.append('zip_file', file);
@@ -266,6 +279,7 @@ const adminCoursesManagementApi = {
             `${ENDPOINT}import-zip/`,
             fd,
             900_000, // 15 min
+            onUploadProgress,
         );
         return response.data;
     },

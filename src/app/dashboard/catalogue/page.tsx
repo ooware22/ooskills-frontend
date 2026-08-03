@@ -24,11 +24,13 @@ import StudentHeader from "@/components/student/StudentHeader";
 import CourseCard, { CourseCardSkeleton } from "@/components/CourseCard";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchMyEnrollments } from "@/store/slices/enrollmentSlice";
+import { fetchMyWishlist, toggleWishlist } from "@/store/slices/wishlistSlice";
 import {
   fetchPublicCourses,
   fetchPublicCategories,
 } from "@/store/slices/publicCoursesSlice";
 import EnrollDialog from "@/components/EnrollDialog";
+import type { PublicCourse } from "@/services/publicCoursesApi";
 import type { ComponentType, SVGProps } from "react";
 
 /** Map backend icon name → Heroicon component */
@@ -62,11 +64,22 @@ export default function CataloguePage() {
     [enrollments],
   );
 
-  // Fetch courses + categories + enrollments on mount
+  // Wishlist
+  const wishlistItems = useAppSelector((state) => state.wishlist.items);
+  const wishlistedSlugs = useMemo(
+    () => new Set(wishlistItems.map((w) => w.course.slug)),
+    [wishlistItems],
+  );
+  const handleToggleWishlist = (course: PublicCourse) => {
+    dispatch(toggleWishlist({ slug: course.slug, course }));
+  };
+
+  // Fetch courses + categories + enrollments + wishlist on mount
   useEffect(() => {
     dispatch(fetchPublicCourses(undefined));
     dispatch(fetchPublicCategories());
     dispatch(fetchMyEnrollments());
+    dispatch(fetchMyWishlist());
   }, [dispatch]);
 
   // Enroll dialog
@@ -350,6 +363,8 @@ export default function CataloguePage() {
                         badgeText={categoryLabel(course.category)}
                         levelLabel={levelLabel(course.level)}
                         hoursLabel={` ${t("hours")}`}
+                        wishlisted={wishlistedSlugs.has(course.slug)}
+                        onToggleWishlist={() => handleToggleWishlist(course)}
                         overlayBadge={
                           isEnrolled ? (
                             <span className="absolute top-3 end-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">

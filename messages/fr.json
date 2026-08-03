@@ -231,7 +231,8 @@
       "sectionTitle": "Titre de section",
       "sectionSubtitle": "Sous-titre de section",
       "editingLanguage": "Modification",
-      "selectEditingLanguage": "Sélectionner la langue d'édition"
+      "selectEditingLanguage": "Sélectionner la langue d'édition",
+      "selectCategory": "Sélectionner une catégorie"
     },
     "sidebar": {
       "dashboard": "Tableau de bord",
@@ -556,6 +557,10 @@
       "categoryDeleted": "Catégorie supprimée avec succès !",
       "totalCategories": "Total des catégories",
       "noCategoriesFound": "Aucune catégorie trouvée"
+    },
+    "promoCodes": {
+      "title": "Codes Promo",
+      "subtitle": "Gérez vos codes promotionnels et réductions"
     }
   },
   "auth": {
@@ -674,6 +679,11 @@
     "backToCourses": "Retour aux formations",
     "enrollNow": "S'inscrire maintenant",
     "addToWishlist": "Ajouter aux favoris",
+    "removeFromWishlist": "Retirer des favoris",
+    "guestPromptTitle": "Inscrivez-vous pour rejoindre ce cours",
+    "guestPromptDesc": "Vous n'êtes pas encore connecté. Créez un compte pour vous inscrire, ou connectez-vous si vous avez déjà un compte.",
+    "createAccount": "Créer un compte",
+    "signInInstead": "J'ai déjà un compte",
     "whatYouLearn": "Ce que vous apprendrez",
     "prerequisites": "Prérequis",
     "curriculum": "Programme du cours",
@@ -731,6 +741,10 @@
     "promo_apply": "Appliquer",
     "listenAudio": "Écouter l'audio",
     "viewSlides": "Voir les diapositives",
+    "preview": "Aperçu",
+    "previewAudioTab": "Audio",
+    "previewSlidesTab": "Diapositives",
+    "previewOpenInNewTab": "Ouvrir dans un nouvel onglet",
     "freePreview": "Aperçu gratuit",
     "lockedSectionHint": "Inscrivez-vous au cours pour débloquer cette section",
     "unlockAllTitle": "Débloquer toutes les sections",
@@ -751,6 +765,7 @@
     "sidebar": {
       "dashboard": "Tableau de bord",
       "myCourses": "Mes formations",
+      "wishlist": "Favoris",
       "certificates": "Badges",
       "settings": "Paramètres",
       "logout": "Se déconnecter",
@@ -800,6 +815,12 @@
       "enrolledOn": "Inscrit le",
       "progress": "Progression",
       "cancelled": "Annulé",
+      "browseCatalog": "Parcourir le catalogue"
+    },
+    "wishlist": {
+      "title": "Mes favoris",
+      "subtitle": "Formations que vous avez enregistrées pour plus tard.",
+      "empty": "Votre liste de favoris est vide.",
       "browseCatalog": "Parcourir le catalogue"
     },
     "certificates": {

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export default function AuthLayout({
@@ -8,31 +7,5 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Disable scrolling on mount, restore on unmount
-  useEffect(() => {
-    // Save original styles
-    const originalOverflow = document.body.style.overflow;
-    const originalHeight = document.body.style.height;
-    const htmlOverflow = document.documentElement.style.overflow;
-    
-    // Disable scrolling
-    document.body.style.overflow = "hidden";
-    document.body.style.height = "100vh";
-    document.documentElement.style.overflow = "hidden";
-    
-    return () => {
-      // Restore original styles
-      document.body.style.overflow = originalOverflow;
-      document.body.style.height = originalHeight;
-      document.documentElement.style.overflow = htmlOverflow;
-    };
-  }, []);
-
-  return (
-    <ToastProvider>
-      <div className="fixed inset-0 overflow-hidden">
-        {children}
-      </div>
-    </ToastProvider>
-  );
+  return <ToastProvider>{children}</ToastProvider>;
 }

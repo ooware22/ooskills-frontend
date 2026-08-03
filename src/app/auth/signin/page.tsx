@@ -9,6 +9,7 @@ import {
   EnvelopeIcon as Mail,
   LockClosedIcon as Lock,
   ArrowRightIcon as ArrowRight,
+  ArrowLeftIcon as ArrowLeft,
   EyeIcon as Eye,
   EyeSlashIcon as EyeOff,
   ExclamationTriangleIcon as AlertIcon,
@@ -134,12 +135,12 @@ export default function SignIn() {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <div 
-      className={`auth-page h-screen overflow-hidden flex items-center justify-center p-4 transition-colors duration-300 ${
-        isDark 
-          ? "bg-gradient-to-br from-oxford via-oxford to-oxford-light" 
+    <div
+      className={`relative min-h-dvh w-full overflow-x-hidden overflow-y-auto flex flex-col items-center p-4 py-8 transition-colors duration-300 ${
+        isDark
+          ? "bg-gradient-to-br from-oxford via-oxford to-oxford-light"
           : "bg-gradient-to-br from-cream via-white to-blue-light"
-      }`} 
+      }`}
       dir={dir}
     >
       {/* Background Pattern */}
@@ -155,11 +156,22 @@ export default function SignIn() {
       <div className={`absolute top-1/4 -left-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/10" : "bg-gold/20"}`} />
       <div className={`absolute bottom-1/4 -right-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/5" : "bg-oxford/5"}`} />
 
+      {/* Back to home */}
+      <Link
+        href="/"
+        className={`absolute z-10 top-4 start-4 sm:top-6 sm:start-6 inline-flex items-center gap-1.5 text-xs sm:text-sm transition-colors ${
+          isDark ? "text-white/50 hover:text-white/80" : "text-oxford/50 hover:text-oxford/80"
+        }`}
+      >
+        <ArrowLeft className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${dir === "rtl" ? "rotate-180" : ""}`} />
+        {locale === "ar" ? "العودة إلى الصفحة الرئيسية" : locale === "fr" ? "Retour à l'accueil" : "Back to home"}
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative w-full max-w-md px-4 sm:px-0"
+        className="relative w-full max-w-md px-4 sm:px-0 my-auto"
       >
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">

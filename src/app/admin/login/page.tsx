@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import {
   EnvelopeIcon as Mail,
   LockClosedIcon as Lock,
   ArrowRightIcon as ArrowRight,
+  ArrowLeftIcon as ArrowLeft,
   EyeIcon as Eye,
   EyeSlashIcon as EyeOff,
   ExclamationTriangleIcon as AlertIcon,
@@ -82,7 +84,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-oxford flex items-center justify-center p-4">
+    <div className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-oxford flex flex-col items-center p-4 py-8">
       {/* Background Pattern */}
       <div
         className="absolute inset-0 opacity-[0.03]"
@@ -92,11 +94,20 @@ export default function AdminLogin() {
         }}
       />
 
+      {/* Back to home */}
+      <Link
+        href="/"
+        className="absolute z-10 top-4 start-4 sm:top-6 sm:start-6 inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white/80 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to home
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative w-full max-w-md"
+        className="relative w-full max-w-md my-auto"
       >
         {/* Logo */}
         <div className="text-center mb-8">

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TagIcon,
+  ReceiptPercentIcon,
   PlusIcon,
   PencilIcon,
   TrashIcon,
@@ -11,6 +11,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import AdminHeader from "@/components/admin/AdminHeader";
 import { promoApi, type PromoCode, type PromoCodePayload } from "@/services/promoGiftApi";
 
 type ModalMode = "create" | "edit" | null;
@@ -119,12 +120,18 @@ export default function AdminPromoCodesPage() {
   }, [feedback]);
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+    <div className="min-h-screen">
+      <AdminHeader
+        titleKey="admin.promoCodes.title"
+        subtitleKey="admin.promoCodes.subtitle"
+      />
+
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-oxford dark:text-white flex items-center gap-3">
-            <TagIcon className="w-7 h-7 text-gold" />
+            <ReceiptPercentIcon className="w-7 h-7 text-gold" />
             Codes Promo
           </h1>
           <p className="text-sm text-silver dark:text-gray-400 mt-1">
@@ -171,7 +178,7 @@ export default function AdminPromoCodesPage() {
           </div>
         ) : promoCodes.length === 0 ? (
           <div className="p-12 text-center">
-            <TagIcon className="w-12 h-12 text-silver/30 mx-auto mb-3" />
+            <ReceiptPercentIcon className="w-12 h-12 text-silver/30 mx-auto mb-3" />
             <p className="text-sm text-silver dark:text-gray-400">Aucun code promo</p>
           </div>
         ) : (
@@ -412,6 +419,7 @@ export default function AdminPromoCodesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

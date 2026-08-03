@@ -15,6 +15,7 @@ import adminCategoriesReducer from "./slices/adminCategoriesSlice";
 import adminCoursesManagementReducer from "./slices/adminCoursesManagementSlice";
 import adminCourseContentReducer from "./slices/adminCourseContentSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
+import wishlistReducer from "./slices/wishlistSlice";
 import publicCoursesReducer from "./slices/publicCoursesSlice";
 import gamificationReducer from "./slices/gamificationSlice";
 import learnReducer from "./slices/learnSlice";
@@ -50,6 +51,9 @@ export const store = configureStore({
 
     // Student enrollment
     enrollment: enrollmentReducer,
+
+    // Student wishlist (saved courses)
+    wishlist: wishlistReducer,
 
     // Public course browsing
     publicCourses: publicCoursesReducer,

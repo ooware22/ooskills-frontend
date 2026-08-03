@@ -142,6 +142,12 @@ const extractError = (payload: any): string => {
   return "An unknown error occurred.";
 };
 
+const formatBytes = (bytes: number): string => {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${bytes} B`;
+};
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
@@ -151,7 +157,7 @@ export default function CourseManagementPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   // Redux state
-  const { courses, totalCount, loading, saving, filters } = useSelector(
+  const { courses, totalCount, loading, saving, previewing, filters } = useSelector(
     (state: RootState) => state.adminCoursesManagement,
   );
   const { categories } = useSelector(
@@ -189,6 +195,10 @@ export default function CourseManagementPage() {
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [zipPreviewPlan, setZipPreviewPlan] =
     useState<CourseZipPreviewPlan | null>(null);
+  const [zipUploadProgress, setZipUploadProgress] = useState<{
+    loaded: number;
+    total: number;
+  } | null>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
 
   // Save error — shown inside the modal
@@ -399,8 +409,16 @@ export default function CourseManagementPage() {
     setZipFile(file);
     setSaveError(null);
     setZipPreviewPlan(null);
+    setZipUploadProgress({ loaded: 0, total: file.size });
 
-    const result = await dispatch(previewAdminCourseZip(file));
+    const result = await dispatch(
+      previewAdminCourseZip({
+        file,
+        onUploadProgress: (loaded, total) =>
+          setZipUploadProgress({ loaded, total: total ?? file.size }),
+      }),
+    );
+    setZipUploadProgress(null);
     if (previewAdminCourseZip.fulfilled.match(result)) {
       const plan = result.payload as CourseZipPreviewPlan;
       setZipPreviewPlan(plan);
@@ -426,6 +444,7 @@ export default function CourseManagementPage() {
   const handleImportZipConfirm = async () => {
     if (!zipFile) return;
     setSaveError(null);
+    setZipUploadProgress({ loaded: 0, total: zipFile.size });
 
     const catId = categories.find((c) => c.slug === formData.category)?.id;
 
@@ -433,8 +452,11 @@ export default function CourseManagementPage() {
       importAdminCourseFromZip({
         file: zipFile,
         categoryId: catId,
+        onUploadProgress: (loaded, total) =>
+          setZipUploadProgress({ loaded, total: total ?? zipFile.size }),
       }),
     );
+    setZipUploadProgress(null);
 
     if (importAdminCourseFromZip.fulfilled.match(result)) {
       showToast("Import lancé ! Le cours apparaîtra après traitement.");
@@ -457,6 +479,7 @@ export default function CourseManagementPage() {
     setSelectedCourse(null);
 
     setSaveError(null);
+    setZipUploadProgress(null);
     resetForm();
   };
 
@@ -1204,10 +1227,49 @@ export default function CourseManagementPage() {
                           accept=".zip,application/zip"
                           ref={zipInputRef}
                           onChange={handleZipFileChange}
-                          disabled={saving}
+                          disabled={saving || previewing}
                         />
                       </label>
                     </div>
+
+                    {zipUploadProgress && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                          <span>
+                            {previewing
+                              ? "Uploading for preview..."
+                              : "Uploading..."}
+                          </span>
+                          <span className="font-medium text-oxford dark:text-white">
+                            {formatBytes(zipUploadProgress.loaded)} /{" "}
+                            {formatBytes(zipUploadProgress.total)}
+                            {zipUploadProgress.total > 0 &&
+                              ` (${Math.round(
+                                (zipUploadProgress.loaded /
+                                  zipUploadProgress.total) *
+                                  100,
+                              )}%)`}
+                          </span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-200"
+                            style={{
+                              width: `${
+                                zipUploadProgress.total > 0
+                                  ? Math.min(
+                                      100,
+                                      (zipUploadProgress.loaded /
+                                        zipUploadProgress.total) *
+                                        100,
+                                    )
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {saveError && (
@@ -1263,7 +1325,7 @@ export default function CourseManagementPage() {
                           className="w-full px-4 py-2.5 bg-white dark:bg-oxford border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors"
                         >
                           <option value="" disabled>
-                            {t("admin.common.selectAction")}
+                            {t("admin.common.selectCategory")}
                           </option>
                           {categories.map((cat) => (
                             <option key={cat.id} value={cat.slug}>

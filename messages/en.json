@@ -262,7 +262,8 @@
       "sectionTitle": "Section Title",
       "sectionSubtitle": "Section Subtitle",
       "editingLanguage": "Editing",
-      "selectEditingLanguage": "Select editing language"
+      "selectEditingLanguage": "Select editing language",
+      "selectCategory": "Select a category"
     },
     "sidebar": {
       "dashboard": "Dashboard",
@@ -587,6 +588,10 @@
       "categoryDeleted": "Category deleted successfully!",
       "totalCategories": "Total Categories",
       "noCategoriesFound": "No categories found"
+    },
+    "promoCodes": {
+      "title": "Promo Codes",
+      "subtitle": "Manage your promotional codes and discounts"
     }
   },
   "auth": {
@@ -705,6 +710,11 @@
     "backToCourses": "Back to Courses",
     "enrollNow": "Enroll Now",
     "addToWishlist": "Add to Wishlist",
+    "removeFromWishlist": "Remove from Wishlist",
+    "guestPromptTitle": "Sign up to join this course",
+    "guestPromptDesc": "You're not signed in yet. Create an account to enroll, or sign in if you already have one.",
+    "createAccount": "Create an account",
+    "signInInstead": "I already have an account",
     "whatYouLearn": "What You'll Learn",
     "prerequisites": "Prerequisites",
     "curriculum": "Course Curriculum",
@@ -762,6 +772,10 @@
     "promo_apply": "Apply",
     "listenAudio": "Listen to audio",
     "viewSlides": "View slides",
+    "preview": "Preview",
+    "previewAudioTab": "Audio",
+    "previewSlidesTab": "Slides",
+    "previewOpenInNewTab": "Open in a new tab",
     "freePreview": "Free preview",
     "lockedSectionHint": "Enroll in the course to unlock this section",
     "unlockAllTitle": "Unlock all sections",
@@ -782,6 +796,7 @@
     "sidebar": {
       "dashboard": "Dashboard",
       "myCourses": "My Courses",
+      "wishlist": "Wishlist",
       "certificates": "Badges",
       "settings": "Settings",
       "logout": "Log out",
@@ -831,6 +846,12 @@
       "enrolledOn": "Enrolled on",
       "progress": "Progress",
       "cancelled": "Cancelled",
+      "browseCatalog": "Browse Courses"
+    },
+    "wishlist": {
+      "title": "My Wishlist",
+      "subtitle": "Courses you've saved to look at later.",
+      "empty": "Your wishlist is empty.",
       "browseCatalog": "Browse Courses"
     },
     "certificates": {

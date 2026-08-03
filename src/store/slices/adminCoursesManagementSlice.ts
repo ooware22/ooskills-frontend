@@ -5,6 +5,7 @@ import type {
     AdminCourseCreatePayload,
     AdminCourseUpdatePayload,
     CourseListParams,
+    UploadProgressCallback,
 } from "@/services/adminCoursesManagementApi";
 import { getErrorMessage } from "@/lib/axios";
 import { CACHE_DURATION, shouldFetch } from "@/lib/cache";
@@ -19,6 +20,7 @@ interface AdminCoursesManagementState {
     totalCount: number;
     loading: boolean;
     saving: boolean;
+    previewing: boolean;
     error: string | null;
     lastFetched: number | null;
     filters: {
@@ -37,6 +39,7 @@ const initialState: AdminCoursesManagementState = {
     totalCount: 0,
     loading: false,
     saving: false,
+    previewing: false,
     error: null,
     lastFetched: null,
     filters: {
@@ -112,9 +115,12 @@ export const deleteAdminCourse = createAsyncThunk(
 
 export const previewAdminCourseZip = createAsyncThunk(
     "adminCoursesManagement/previewZip",
-    async (file: File, { rejectWithValue }) => {
+    async (
+        { file, onUploadProgress }: { file: File; onUploadProgress?: UploadProgressCallback },
+        { rejectWithValue },
+    ) => {
         try {
-            return await adminCoursesManagementApi.previewCourseZip(file);
+            return await adminCoursesManagementApi.previewCourseZip(file, onUploadProgress);
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
@@ -123,9 +129,17 @@ export const previewAdminCourseZip = createAsyncThunk(
 
 export const importAdminCourseFromZip = createAsyncThunk(
     "adminCoursesManagement/importZip",
-    async ({ file, categoryId, instructorId }: { file: File; categoryId?: string; instructorId?: string }, { rejectWithValue }) => {
+    async (
+        { file, categoryId, instructorId, onUploadProgress }: {
+            file: File;
+            categoryId?: string;
+            instructorId?: string;
+            onUploadProgress?: UploadProgressCallback;
+        },
+        { rejectWithValue },
+    ) => {
         try {
-            return await adminCoursesManagementApi.importCourseZip(file, categoryId, instructorId);
+            return await adminCoursesManagementApi.importCourseZip(file, categoryId, instructorId, onUploadProgress);
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
@@ -209,6 +223,18 @@ const adminCoursesManagementSlice = createSlice({
             })
             .addCase(deleteAdminCourse.rejected, (state, action) => {
                 state.saving = false;
+                state.error = action.payload as string;
+            })
+            // Preview ZIP
+            .addCase(previewAdminCourseZip.pending, (state) => {
+                state.previewing = true;
+                state.error = null;
+            })
+            .addCase(previewAdminCourseZip.fulfilled, (state) => {
+                state.previewing = false;
+            })
+            .addCase(previewAdminCourseZip.rejected, (state, action) => {
+                state.previewing = false;
                 state.error = action.payload as string;
             })
             // Import ZIP

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,6 +11,8 @@ import {
   fetchPublicCourses,
   fetchPublicCategories,
 } from "@/store/slices/publicCoursesSlice";
+import { fetchMyWishlist, toggleWishlist } from "@/store/slices/wishlistSlice";
+import type { PublicCourse } from "@/services/publicCoursesApi";
 import CourseCard, { CourseCardSkeleton } from "@/components/CourseCard";
 import {
   MagnifyingGlassIcon,
@@ -46,6 +49,7 @@ export default function CoursesPage() {
   const t = useTranslations("coursesPage");
   const { locale } = useI18n();
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const {
     courses,
@@ -53,6 +57,8 @@ export default function CoursesPage() {
     loading,
     categoriesLoading,
   } = useAppSelector((s) => s.publicCourses);
+  const wishlistItems = useAppSelector((s) => s.wishlist.items);
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -64,7 +70,23 @@ export default function CoursesPage() {
   useEffect(() => {
     dispatch(fetchPublicCategories());
     dispatch(fetchPublicCourses(undefined));
-  }, [dispatch]);
+    if (isAuthenticated) {
+      dispatch(fetchMyWishlist());
+    }
+  }, [dispatch, isAuthenticated]);
+
+  const wishlistedSlugs = useMemo(
+    () => new Set(wishlistItems.map((w) => w.course.slug)),
+    [wishlistItems],
+  );
+
+  const handleToggleWishlist = (course: PublicCourse) => {
+    if (!isAuthenticated) {
+      router.push(`/auth/signin?returnUrl=${encodeURIComponent("/courses")}`);
+      return;
+    }
+    dispatch(toggleWishlist({ slug: course.slug, course }));
+  };
 
   // Client-side filter + sort
   const filteredCourses = useMemo(() => {
@@ -340,6 +362,8 @@ export default function CoursesPage() {
                         badgeText={categoryLabel(course.category)}
                         levelLabel={levelLabel(course.level)}
                         hoursLabel={` ${t("hours")}`}
+                        wishlisted={wishlistedSlugs.has(course.slug)}
+                        onToggleWishlist={() => handleToggleWishlist(course)}
                       />
                     ))}
                   </motion.div>

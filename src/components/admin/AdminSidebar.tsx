@@ -26,6 +26,7 @@ import {
   FireIcon as Fire,
   StarIcon as Star,
   TrashIcon as Trash,
+  ReceiptPercentIcon as ReceiptPercent,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -92,7 +93,7 @@ const navItems: NavItem[] = [
         labelKey: "categoriesList",
         icon: Tag,
       },
-      { href: "/admin/promo-codes", labelKey: "promoCodes", icon: Tag },
+      { href: "/admin/promo-codes", labelKey: "promoCodes", icon: ReceiptPercent },
     ],
   },
   {

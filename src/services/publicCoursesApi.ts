@@ -211,6 +211,32 @@ const ratingApi = {
     },
 };
 
-export { ratingApi };
+export interface WishlistItem {
+    id: string;
+    course: PublicCourse;
+    created_at: string;
+}
+
+const WISHLIST_ENDPOINT = '/formation/wishlist/';
+
+const wishlistApi = {
+    /** List the current user's saved (wishlisted) courses */
+    getMyWishlist: async (): Promise<WishlistItem[]> => {
+        const response = await axiosClient.get<WishlistItem[] | PaginatedResponse<WishlistItem>>(
+            WISHLIST_ENDPOINT,
+        );
+        return extractResults(response.data).results;
+    },
+
+    /** Add the course to the wishlist, or remove it if already saved (single idempotent toggle) */
+    toggleWishlist: async (slug: string): Promise<{ wishlisted: boolean }> => {
+        const response = await axiosClient.post<{ wishlisted: boolean }>(
+            `${COURSES_ENDPOINT}${slug}/toggle-wishlist/`,
+        );
+        return response.data;
+    },
+};
+
+export { ratingApi, wishlistApi };
 export default publicCoursesApi;
 

@@ -231,7 +231,8 @@
       "sectionTitle": "عنوان القسم",
       "sectionSubtitle": "العنوان الفرعي للقسم",
       "editingLanguage": "تحرير",
-      "selectEditingLanguage": "اختر لغة التحرير"
+      "selectEditingLanguage": "اختر لغة التحرير",
+      "selectCategory": "اختر فئة"
     },
     "sidebar": {
       "dashboard": "لوحة التحكم",
@@ -556,6 +557,10 @@
       "categoryDeleted": "تم حذف الفئة بنجاح!",
       "totalCategories": "إجمالي الفئات",
       "noCategoriesFound": "لم يتم العثور على فئات"
+    },
+    "promoCodes": {
+      "title": "أكواد الخصم",
+      "subtitle": "إدارة أكواد الخصم والعروض الترويجية"
     }
   },
   "auth": {
@@ -674,6 +679,11 @@
     "backToCourses": "العودة للدورات",
     "enrollNow": "سجّل الآن",
     "addToWishlist": "أضف للمفضلة",
+    "removeFromWishlist": "إزالة من المفضلة",
+    "guestPromptTitle": "سجّل للانضمام إلى هذه الدورة",
+    "guestPromptDesc": "لم تسجّل الدخول بعد. أنشئ حسابًا للتسجيل في الدورة، أو سجّل الدخول إذا كان لديك حساب بالفعل.",
+    "createAccount": "إنشاء حساب",
+    "signInInstead": "لدي حساب بالفعل",
     "whatYouLearn": "ماذا ستتعلم",
     "prerequisites": "المتطلبات المسبقة",
     "curriculum": "منهج الدورة",
@@ -731,6 +741,10 @@
     "promo_apply": "تطبيق",
     "listenAudio": "استمع للصوت",
     "viewSlides": "عرض الشرائح",
+    "preview": "معاينة",
+    "previewAudioTab": "الصوت",
+    "previewSlidesTab": "الشرائح",
+    "previewOpenInNewTab": "فتح في علامة تبويب جديدة",
     "freePreview": "معاينة مجانية",
     "lockedSectionHint": "سجّل في الدورة لفتح هذا القسم",
     "unlockAllTitle": "فتح جميع الأقسام",
@@ -751,6 +765,7 @@
     "sidebar": {
       "dashboard": "لوحة التحكم",
       "myCourses": "دوراتي",
+      "wishlist": "المفضلة",
       "certificates": "الشارات",
       "settings": "الإعدادات",
       "logout": "تسجيل الخروج",
@@ -800,6 +815,12 @@
       "enrolledOn": "مسجل في",
       "progress": "التقدم",
       "cancelled": "ملغى",
+      "browseCatalog": "تصفّح الدورات"
+    },
+    "wishlist": {
+      "title": "المفضلة",
+      "subtitle": "الدورات التي حفظتها لوقت لاحق.",
+      "empty": "قائمة المفضلة فارغة.",
       "browseCatalog": "تصفّح الدورات"
     },
     "certificates": {

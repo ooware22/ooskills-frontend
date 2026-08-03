@@ -8,8 +8,9 @@ import {
   ChartBarIcon,
   UserGroupIcon,
   AcademicCapIcon,
+  HeartIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
+import { StarIcon, HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 
 /** Format large student counts as e.g. "2.4k" */
 function formatStudents(n: number) {
@@ -44,6 +45,10 @@ export interface CourseCardProps {
   overlayBadge?: React.ReactNode;
   /** Optional footer content (e.g. enroll button) rendered below the rating row */
   footer?: React.ReactNode;
+  /** Whether this course is in the user's wishlist (shows a heart toggle on the thumbnail) */
+  wishlisted?: boolean;
+  /** Called when the wishlist heart is clicked. Omit to hide the heart entirely. */
+  onToggleWishlist?: (e: React.MouseEvent) => void;
 }
 
 export default function CourseCard({
@@ -54,6 +59,8 @@ export default function CourseCard({
   hoursLabel = "h",
   overlayBadge,
   footer,
+  wishlisted = false,
+  onToggleWishlist,
 }: CourseCardProps) {
   return (
     <Link href={`/courses/${course.slug}`} className="block">
@@ -79,6 +86,24 @@ export default function CourseCard({
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {onToggleWishlist && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleWishlist(e);
+              }}
+              aria-label="Toggle wishlist"
+              className="absolute top-3 start-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors z-10"
+            >
+              {wishlisted ? (
+                <HeartIconSolid className="w-4 h-4 text-red-500" />
+              ) : (
+                <HeartIcon className="w-4 h-4 text-white" />
+              )}
+            </button>
+          )}
           {overlayBadge}
         </div>
 

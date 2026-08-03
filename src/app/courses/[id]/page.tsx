@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EnrollDialog from "@/components/EnrollDialog";
 import GiftDialog from "@/components/GiftDialog";
+import LessonPreviewDialog from "@/components/LessonPreviewDialog";
 import CourseRatingSection from "@/components/CourseRatingSection";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -17,6 +18,7 @@ import {
   clearCourseDetail,
 } from "@/store/slices/publicCoursesSlice";
 import { fetchMyEnrollments } from "@/store/slices/enrollmentSlice";
+import { fetchMyWishlist, toggleWishlist } from "@/store/slices/wishlistSlice";
 import {
   ArrowLeftIcon,
   ClockIcon,
@@ -33,10 +35,8 @@ import {
   LockClosedIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  SpeakerWaveIcon,
-  PresentationChartBarIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
+import { StarIcon, HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 
 /** Format large student counts as e.g. "2.4k" */
 function formatStudents(n: number) {
@@ -64,20 +64,28 @@ export default function CourseDetailPage({
   } = useAppSelector((s) => s.publicCourses);
 
   const { enrollments } = useAppSelector((s) => s.enrollment);
+  const wishlistItems = useAppSelector((s) => s.wishlist.items);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [giftDialogOpen, setGiftDialogOpen] = useState(false);
   const [guestAuthPromptOpen, setGuestAuthPromptOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<number>(0);
+  const [previewLesson, setPreviewLesson] = useState<{
+    title: string;
+    audioUrl?: string;
+    slidesUrl?: string;
+  } | null>(null);
 
   // Check if user is enrolled in this course (compare by slug)
   const enrolled = enrollments.some((e) => e.course_slug === slug);
+  const wishlisted = wishlistItems.some((w) => w.course.slug === slug);
 
   useEffect(() => {
     dispatch(fetchCourseDetail(slug));
     if (isAuthenticated) {
       dispatch(fetchMyEnrollments());
+      dispatch(fetchMyWishlist());
       setGuestAuthPromptOpen(false);
     }
     return () => {
@@ -92,6 +100,14 @@ export default function CourseDetailPage({
     }
     setDialogOpen(true);
   }, [isAuthenticated]);
+
+  const handleToggleWishlist = useCallback(() => {
+    if (!isAuthenticated) {
+      setGuestAuthPromptOpen(true);
+      return;
+    }
+    dispatch(toggleWishlist({ slug, course: course ?? undefined }));
+  }, [isAuthenticated, dispatch, slug, course]);
 
   const handleStart = useCallback(() => {
     router.push(`/courses/${slug}/learn`);
@@ -520,29 +536,23 @@ export default function CourseDetailPage({
                                                       {lesson.title}
                                                     </span>
                                                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                                                      {lesson.audioUrl && (
-                                                        <a
-                                                          href={lesson.audioUrl}
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-gold/10 hover:bg-gold/20 text-gold text-[11px] font-medium rounded-md transition-colors"
-                                                        >
-                                                          <SpeakerWaveIcon className="w-3 h-3" />
-                                                          {t("listenAudio")}
-                                                        </a>
-                                                      )}
-                                                      {lesson.diapositiveUrl && (
-                                                        <a
-                                                          href={
-                                                            lesson.diapositiveUrl
+                                                      {(lesson.audioUrl ||
+                                                        lesson.diapositiveUrl) && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() =>
+                                                            setPreviewLesson({
+                                                              title: lesson.title,
+                                                              audioUrl: lesson.audioUrl,
+                                                              slidesUrl:
+                                                                lesson.diapositiveUrl,
+                                                            })
                                                           }
-                                                          target="_blank"
-                                                          rel="noopener noreferrer"
-                                                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[11px] font-medium rounded-md transition-colors"
+                                                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-gold/15 to-blue-500/15 hover:from-gold/25 hover:to-blue-500/25 text-oxford dark:text-white text-[11px] font-semibold rounded-md border border-gold/20 transition-colors"
                                                         >
-                                                          <PresentationChartBarIcon className="w-3 h-3" />
-                                                          {t("viewSlides")}
-                                                        </a>
+                                                          <PlayCircleIcon className="w-3 h-3 text-gold" />
+                                                          {t("preview")}
+                                                        </button>
                                                       )}
                                                     </div>
                                                   </div>
@@ -665,9 +675,20 @@ export default function CourseDetailPage({
                   </button>
                 )}
                 <div className="flex gap-2">
-                  <button className="flex-1 py-3.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
-                    <HeartIcon className="w-4 h-4" />
-                    {t("addToWishlist")}
+                  <button
+                    onClick={handleToggleWishlist}
+                    className={`flex-1 py-3.5 rounded-xl transition-colors text-sm font-medium flex items-center justify-center gap-2 ${
+                      wishlisted
+                        ? "bg-red-500/10 hover:bg-red-500/20 text-red-500"
+                        : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white"
+                    }`}
+                  >
+                    {wishlisted ? (
+                      <HeartIconSolid className="w-4 h-4" />
+                    ) : (
+                      <HeartIcon className="w-4 h-4" />
+                    )}
+                    {wishlisted ? t("removeFromWishlist") : t("addToWishlist")}
                   </button>
                   {enrolled && course.price > 0 && (
                     <button
@@ -779,11 +800,10 @@ export default function CourseDetailPage({
 
             <div className="mb-5">
               <h3 className="text-xl font-bold text-oxford dark:text-white mb-2">
-                Inscrivez-vous pour rejoindre ce cours
+                {t("guestPromptTitle")}
               </h3>
               <p className="text-sm text-silver dark:text-gray-400 leading-relaxed">
-                Vous n&apos;êtes pas encore connecté. Créez un compte pour vous
-                inscrire, ou connectez-vous si vous avez déjà un compte.
+                {t("guestPromptDesc")}
               </p>
             </div>
 
@@ -792,13 +812,13 @@ export default function CourseDetailPage({
                 href={`/auth/signup?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`}
                 className="flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-oxford transition-colors hover:bg-gold/90"
               >
-                Créer un compte
+                {t("createAccount")}
               </Link>
               <Link
                 href={`/auth/signin?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`}
                 className="flex w-full items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-3 text-sm font-medium text-oxford dark:text-white transition-colors hover:bg-gray-50 dark:hover:bg-white/10"
               >
-                J&apos;ai déjà un compte
+                {t("signInInstead")}
               </Link>
             </div>
           </div>
@@ -826,6 +846,15 @@ export default function CourseDetailPage({
           courseTitle={course.title}
         />
       )}
+
+      {/* Lesson Preview Dialog (audio + slides) */}
+      <LessonPreviewDialog
+        open={!!previewLesson}
+        onClose={() => setPreviewLesson(null)}
+        lessonTitle={previewLesson?.title ?? ""}
+        audioUrl={previewLesson?.audioUrl}
+        slidesUrl={previewLesson?.slidesUrl}
+      />
     </>
   );
 }
