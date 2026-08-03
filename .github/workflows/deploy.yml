@@ -1,0 +1,54 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Type-check & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    name: Deploy to VPS
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            su - ooskills -c '
+              set -e
+              cd /var/www/ooskills/ooskills-frontend
+              git fetch origin
+              git reset --hard origin/main
+              npm ci
+              npm run build
+            '
+            systemctl restart ooskills-frontend
+            sleep 2
+            systemctl is-active --quiet ooskills-frontend
