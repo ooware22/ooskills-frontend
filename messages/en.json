@@ -285,7 +285,8 @@
       "categoriesList": "Categories",
       "gamification": "Gamification",
       "achievements": "Achievements",
-      "promoCodes": "Promo Codes"
+      "promoCodes": "Promo Codes",
+      "marketingCampaigns": "Flash Campaigns"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -592,6 +593,10 @@
     "promoCodes": {
       "title": "Promo Codes",
       "subtitle": "Manage your promotional codes and discounts"
+    },
+    "campaigns": {
+      "title": "Marketing Campaigns",
+      "subtitle": "Manage site-wide flash sales and discounts"
     }
   },
   "auth": {

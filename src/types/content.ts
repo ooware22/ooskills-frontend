@@ -423,3 +423,21 @@ export interface CacheInvalidationResponse {
     status: 'success';
     message: string;
 }
+
+
+// =============================================================================
+// MARKETING CAMPAIGNS
+// =============================================================================
+
+export interface MarketingCampaign {
+    id: string;
+    name: string;
+    title: TranslatedField;
+    subtitle: TranslatedField;
+    discount_percentage: number;
+    is_active: boolean;
+    start_date: string | null;
+    end_date: string | null;
+    show_countdown: boolean;
+}
+

@@ -834,6 +834,9 @@ export default function CourseDetailPage({
           courseTitle={course.title}
           coursePrice={course.price}
           courseOriginalPrice={course.originalPrice}
+          isCampaignActive={course.is_campaign_active}
+          campaignDiscount={course.campaign_discount}
+          isWelcomeApplied={course.is_welcome_applied}
         />
       )}
 

@@ -151,3 +151,45 @@ export const giftApi = {
     return res.data;
   },
 };
+
+
+// =============================================================================
+// CAMPAIGNS API (admin)
+// =============================================================================
+
+export interface CampaignPayload {
+  name: string;
+  title: Record<string, string>;
+  subtitle: Record<string, string>;
+  discount_percentage: number;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean;
+  show_countdown: boolean;
+}
+
+export const campaignsApi = {
+  /** List all campaigns (admin) */
+  list: async (): Promise<any[]> => {
+    const res = await axiosClient.get<any[]>('/formation/marketing-campaigns/');
+    return Array.isArray(res.data) ? res.data : (res.data as any).results ?? [];
+  },
+
+  /** Create a campaign (admin) */
+  create: async (data: CampaignPayload): Promise<any> => {
+    const res = await axiosClient.post<any>('/formation/marketing-campaigns/', data);
+    return res.data;
+  },
+
+  /** Update a campaign (admin) */
+  update: async (id: string, data: Partial<CampaignPayload>): Promise<any> => {
+    const res = await axiosClient.patch<any>(`/formation/marketing-campaigns/${id}/`, data);
+    return res.data;
+  },
+
+  /** Delete a campaign (admin) */
+  delete: async (id: string): Promise<void> => {
+    await axiosClient.delete(`/formation/marketing-campaigns/${id}/`);
+  },
+};
+

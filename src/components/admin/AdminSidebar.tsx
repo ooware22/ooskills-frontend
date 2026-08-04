@@ -94,6 +94,7 @@ const navItems: NavItem[] = [
         icon: Tag,
       },
       { href: "/admin/promo-codes", labelKey: "promoCodes", icon: ReceiptPercent },
+      { href: "/admin/campaigns", labelKey: "marketingCampaigns", icon: Sparkles },
     ],
   },
   {

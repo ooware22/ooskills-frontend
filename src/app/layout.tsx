@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { I18nProvider } from "@/lib/i18n";
 import { ReduxProvider } from "@/store/provider";
+import PromotionalBanner from "@/components/PromotionalBanner";
 import dynamic from "next/dynamic";
 import "./globals.css";
 
@@ -186,6 +187,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <I18nProvider>
+              <PromotionalBanner />
               <ServerWakeUp />
               <AnimatedBackground />
               <GamificationOverlays />

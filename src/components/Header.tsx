@@ -56,6 +56,8 @@ export default function Header() {
   const [themeOpen, setThemeOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [bannerHeight, setBannerHeight] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -65,9 +67,28 @@ export default function Header() {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
+      setScrollY(window.scrollY);
     };
+
+    const updateBannerHeight = () => {
+      const bannerHeightStr = getComputedStyle(document.documentElement).getPropertyValue('--banner-height') || '0px';
+      setBannerHeight(parseFloat(bannerHeightStr) || 0);
+    };
+
+    updateBannerHeight();
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", updateBannerHeight);
+
+    const observer = new MutationObserver(updateBannerHeight);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateBannerHeight);
+      observer.disconnect();
+    };
   }, []);
 
   // Close dropdowns when clicking outside
@@ -118,11 +139,12 @@ export default function Header() {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-200",
+        "fixed left-0 right-0 z-50 transition-all duration-200",
         isScrolled || isOpen
           ? "bg-white/95 dark:bg-oxford/95 backdrop-blur-lg border-b border-gray-200/50 dark:border-white/5"
           : "bg-transparent",
       )}
+      style={{ top: `${Math.max(0, bannerHeight - scrollY)}px` }}
     >
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">

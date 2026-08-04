@@ -254,7 +254,8 @@
       "categoriesList": "Catégories",
       "gamification": "Gamification",
       "achievements": "Réalisations",
-      "promoCodes": "Codes Promo"
+      "promoCodes": "Codes Promo",
+      "marketingCampaigns": "Campagnes Flash"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -561,6 +562,10 @@
     "promoCodes": {
       "title": "Codes Promo",
       "subtitle": "Gérez vos codes promotionnels et réductions"
+    },
+    "campaigns": {
+      "title": "Campagnes Marketing",
+      "subtitle": "Gérez vos ventes flash et réductions globales"
     }
   },
   "auth": {

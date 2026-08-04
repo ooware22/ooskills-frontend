@@ -65,6 +65,9 @@ export interface PublicCourse {
     language: string;
     certificate: boolean;
     lastUpdated: string;
+    is_campaign_active?: boolean;
+    campaign_discount?: number;
+    is_welcome_applied?: boolean;
 }
 
 export interface CategoryName {
@@ -164,6 +167,18 @@ const publicCoursesApi = {
     listCategories: async () => {
         const response = await axiosClient.get<PublicCategory[] | PaginatedResponse<PublicCategory>>(CATEGORIES_ENDPOINT);
         return extractResults(response.data);
+    },
+
+    /**
+     * Get the current active marketing campaign
+     */
+    getActiveCampaign: async (): Promise<any | null> => {
+        try {
+            const response = await axiosClient.get<any>('/formation/marketing-campaigns/active/');
+            return response.data;
+        } catch (e) {
+            return null;
+        }
     },
 };
 

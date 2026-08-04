@@ -254,7 +254,8 @@
       "categoriesList": "الفئات",
       "gamification": "التلعيب",
       "achievements": "الإنجازات",
-      "promoCodes": "أكواد الخصم"
+      "promoCodes": "أكواد الخصم",
+      "marketingCampaigns": "الحملات الترويجية"
     },
     "dashboard": {
       "title": "لوحة التحكم",
@@ -561,6 +562,10 @@
     "promoCodes": {
       "title": "أكواد الخصم",
       "subtitle": "إدارة أكواد الخصم والعروض الترويجية"
+    },
+    "campaigns": {
+      "title": "الحملات الترويجية",
+      "subtitle": "إدارة التخفيضات الشاملة للموقع والعروض السريعة"
     }
   },
   "auth": {
