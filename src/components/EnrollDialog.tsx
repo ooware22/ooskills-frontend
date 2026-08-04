@@ -225,14 +225,14 @@ export default function EnrollDialog({
                       <div className="mt-2 pt-2 border-t border-gray-200 dark:border-white/10 space-y-1">
                         {isCampaignActive && campaignDiscount > 0 && (
                           <div className="flex justify-between items-center text-xs text-emerald-600 dark:text-emerald-400">
-                            <span className="flex items-center gap-1">✨ Vente Flash (-{campaignDiscount}%)</span>
-                            <span>Appliqué</span>
+                            <span className="flex items-center gap-1">✨ {t("payment_flashSale")} (-{campaignDiscount}%)</span>
+                            <span>{t("payment_applied")}</span>
                           </div>
                         )}
                         {isWelcomeApplied && (
                           <div className="flex justify-between items-center text-xs text-emerald-600 dark:text-emerald-400">
-                            <span className="flex items-center gap-1">🎁 Offre de Bienvenue (-20%)</span>
-                            <span>Appliqué</span>
+                            <span className="flex items-center gap-1">🎁 {t("payment_welcomeOffer")} (-20%)</span>
+                            <span>{t("payment_applied")}</span>
                           </div>
                         )}
                       </div>
