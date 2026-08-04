@@ -27,6 +27,7 @@ import {
   StarIcon as Star,
   TrashIcon as Trash,
   ReceiptPercentIcon as ReceiptPercent,
+  ShoppingBagIcon as ShoppingBag,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -72,6 +73,7 @@ const navItems: NavItem[] = [
     ],
   },
   { type: "link", href: "/admin/users", labelKey: "users", icon: Users },
+  { type: "link", href: "/admin/orders", labelKey: "orders", icon: ShoppingBag },
   {
     type: "link",
     href: "/admin/deletion-requests",

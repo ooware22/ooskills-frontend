@@ -309,6 +309,9 @@ export interface AdminSiteSettingsData extends BaseContentModel {
     maintenance_mode: boolean;
     registration_enabled: boolean;
 
+    // Pricing
+    welcome_discount_percentage: number;
+
     // Social Media Links
     facebook_url: string;
     twitter_url: string;
@@ -336,6 +339,7 @@ export interface PublicSiteSettingsData {
     notifications_enabled: boolean;
     maintenance_mode: boolean;
     registration_enabled: boolean;
+    welcome_discount_percentage: number;
     facebook_url: string;
     twitter_url: string;
     instagram_url: string;
@@ -361,6 +365,7 @@ export interface SiteSettingsPayload {
     notifications_enabled?: boolean;
     maintenance_mode?: boolean;
     registration_enabled?: boolean;
+    welcome_discount_percentage?: number;
     facebook_url?: string;
     twitter_url?: string;
     instagram_url?: string;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, CheckIcon as Check, GlobeAltIcon as Globe, SwatchIcon as Palette, BellIcon as Bell, ShieldCheckIcon as Shield, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, CheckIcon as Check, GlobeAltIcon as Globe, SwatchIcon as Palette, BellIcon as Bell, ShieldCheckIcon as Shield, ExclamationCircleIcon, GiftIcon as Gift } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -38,6 +38,7 @@ export default function SettingsAdmin() {
     notifications_enabled: true,
     maintenance_mode: false,
     registration_enabled: true,
+    welcome_discount_percentage: 20,
   });
 
   // Fetch settings from Redux/backend on mount (with caching)
@@ -60,6 +61,7 @@ export default function SettingsAdmin() {
         notifications_enabled: reduxSettings.notificationsEnabled ?? true,
         maintenance_mode: reduxSettings.maintenanceMode ?? false,
         registration_enabled: reduxSettings.registrationEnabled ?? true,
+        welcome_discount_percentage: reduxSettings.welcomeDiscountPercentage ?? 20,
       });
       setIsInitialized(true);
     }
@@ -80,6 +82,7 @@ export default function SettingsAdmin() {
         notificationsEnabled: settings.notifications_enabled,
         maintenanceMode: settings.maintenance_mode,
         registrationEnabled: settings.registration_enabled,
+        welcomeDiscountPercentage: settings.welcome_discount_percentage,
       })).unwrap();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -375,6 +378,35 @@ export default function SettingsAdmin() {
                 />
                 <div className="w-11 h-6 bg-gray-300 dark:bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gold/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
               </label>
+            </div>
+
+            {/* Welcome Discount (First-Time Buyer) */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-oxford rounded-lg">
+              <div className="flex items-center gap-3">
+                <Gift className="w-5 h-5 text-oxford dark:text-white" />
+                <div>
+                  <p className="font-medium text-oxford dark:text-white">Welcome Discount (First-Time Buyers)</p>
+                  <p className="text-xs text-silver dark:text-white/50">
+                    Extra % off applied on a user&apos;s first purchase, on top of the course promo and any active campaign
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={settings.welcome_discount_percentage}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      welcome_discount_percentage: Math.min(100, Math.max(0, Number(e.target.value))),
+                    })
+                  }
+                  className="w-20 px-3 py-1.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-oxford dark:text-white text-right focus:outline-none focus:ring-2 focus:ring-gold/50"
+                />
+                <span className="text-sm text-silver dark:text-white/50">%</span>
+              </div>
             </div>
           </div>
         </motion.div>

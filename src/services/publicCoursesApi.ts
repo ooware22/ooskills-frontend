@@ -68,6 +68,7 @@ export interface PublicCourse {
     is_campaign_active?: boolean;
     campaign_discount?: number;
     is_welcome_applied?: boolean;
+    welcome_discount_percentage?: number;
 }
 
 export interface CategoryName {

@@ -31,6 +31,7 @@ interface EnrollDialogProps {
   isCampaignActive?: boolean;
   campaignDiscount?: number;
   isWelcomeApplied?: boolean;
+  welcomeDiscountPercentage?: number;
 }
 
 type PaymentMethod = "edahabia" | "cib";
@@ -46,6 +47,7 @@ export default function EnrollDialog({
   isCampaignActive = false,
   campaignDiscount = 0,
   isWelcomeApplied = false,
+  welcomeDiscountPercentage = 20,
 }: EnrollDialogProps) {
   const t = useTranslations("courseDetail");
   const dispatch = useAppDispatch();
@@ -231,7 +233,7 @@ export default function EnrollDialog({
                         )}
                         {isWelcomeApplied && (
                           <div className="flex justify-between items-center text-xs text-emerald-600 dark:text-emerald-400">
-                            <span className="flex items-center gap-1">🎁 {t("payment_welcomeOffer")} (-20%)</span>
+                            <span className="flex items-center gap-1">🎁 {t("payment_welcomeOffer")} (-{welcomeDiscountPercentage}%)</span>
                             <span>{t("payment_applied")}</span>
                           </div>
                         )}

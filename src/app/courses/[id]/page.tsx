@@ -837,6 +837,7 @@ export default function CourseDetailPage({
           isCampaignActive={course.is_campaign_active}
           campaignDiscount={course.campaign_discount}
           isWelcomeApplied={course.is_welcome_applied}
+          welcomeDiscountPercentage={course.welcome_discount_percentage}
         />
       )}
 

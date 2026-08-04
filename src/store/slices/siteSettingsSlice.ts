@@ -30,6 +30,9 @@ export interface SiteSettings {
     notificationsEnabled: boolean;
     maintenanceMode: boolean;
     registrationEnabled: boolean;
+
+    // Pricing
+    welcomeDiscountPercentage: number;
 }
 
 /** State structure for site settings slice */
@@ -69,6 +72,8 @@ const transformSettings = (data: AdminSiteSettingsData | null): SiteSettings | n
         notificationsEnabled: data.notifications_enabled,
         maintenanceMode: data.maintenance_mode,
         registrationEnabled: data.registration_enabled,
+
+        welcomeDiscountPercentage: data.welcome_discount_percentage,
     };
 };
 
@@ -90,6 +95,8 @@ const transformToPayload = (settings: Partial<SiteSettings>): SiteSettingsPayloa
     if (settings.notificationsEnabled !== undefined) payload.notifications_enabled = settings.notificationsEnabled;
     if (settings.maintenanceMode !== undefined) payload.maintenance_mode = settings.maintenanceMode;
     if (settings.registrationEnabled !== undefined) payload.registration_enabled = settings.registrationEnabled;
+
+    if (settings.welcomeDiscountPercentage !== undefined) payload.welcome_discount_percentage = settings.welcomeDiscountPercentage;
 
     return payload;
 };
@@ -154,7 +161,7 @@ export const updateSiteSettings = createAsyncThunk(
 export const updateSettingField = createAsyncThunk(
     "siteSettings/updateField",
     async (
-        { field, value }: { field: keyof SiteSettings; value: string | boolean },
+        { field, value }: { field: keyof SiteSettings; value: string | boolean | number },
         { rejectWithValue }
     ) => {
         try {
@@ -259,3 +266,5 @@ export const selectMaintenanceMode = (state: RootState): boolean =>
     state.siteSettings.data?.maintenance_mode || false;
 export const selectDarkModeEnabled = (state: RootState): boolean =>
     state.siteSettings.data?.dark_mode_enabled ?? true;
+export const selectWelcomeDiscountPercentage = (state: RootState): number =>
+    state.siteSettings.data?.welcome_discount_percentage ?? 20;
