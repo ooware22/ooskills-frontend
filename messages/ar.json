@@ -12,7 +12,8 @@
     "dark": "داكن",
     "system": "تلقائي",
     "myCourses": "دوراتي",
-    "myDashboard": "لوحة التحكم"
+    "myDashboard": "لوحة التحكم",
+    "adminPanel": "لوحة الإدارة"
   },
   "hero": {
     "badge": "منصة التعليم الإلكتروني رقم 1 في الجزائر",
@@ -243,6 +244,7 @@
       "courses": "الدورات",
       "faq": "الأسئلة الشائعة",
       "contact": "التواصل والشبكات",
+      "contactMessages": "رسائل التواصل",
       "settings": "الإعدادات",
       "users": "المستخدمون",
       "orders": "الطلبات",
@@ -612,6 +614,36 @@
       "toastResyncSuccess": "تمت إعادة المزامنة مع Chargily.",
       "toastEnrollSuccess": "تم منح الوصول إلى الدورة.",
       "toastRefundSuccess": "تم تعليم الطلب كمسترد."
+    },
+    "contactMessages": {
+      "title": "رسائل التواصل",
+      "subtitle": "الرسائل المرسلة عبر نموذج \"اتصل بنا\" العام",
+      "statTotal": "إجمالي الرسائل",
+      "statUnread": "غير مقروءة",
+      "tableFrom": "من",
+      "tableSubject": "الموضوع",
+      "tableDate": "التاريخ",
+      "tableStatus": "الحالة",
+      "statusUnread": "غير مقروءة",
+      "statusRead": "مقروءة",
+      "loading": "جارٍ تحميل الرسائل...",
+      "noMessagesFound": "لا توجد رسائل بعد.",
+      "showing": "عرض",
+      "of": "من",
+      "messagesWord": "رسالة",
+      "prev": "السابق",
+      "next": "التالي",
+      "page": "صفحة",
+      "modalFrom": "من",
+      "modalMessage": "الرسالة",
+      "actionMarkUnread": "تعليم كغير مقروءة",
+      "actionMarkRead": "تعليم كمقروءة",
+      "actionReply": "الرد عبر البريد الإلكتروني",
+      "actionDelete": "حذف",
+      "confirmDelete": "حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "toastMarkedRead": "تم التعليم كمقروءة.",
+      "toastMarkedUnread": "تم التعليم كغير مقروءة.",
+      "toastDeleted": "تم حذف الرسالة."
     }
   },
   "auth": {
@@ -800,6 +832,7 @@
     "previewSlidesTab": "الشرائح",
     "previewOpenInNewTab": "فتح في علامة تبويب جديدة",
     "freePreview": "معاينة مجانية",
+    "goToSection": "الذهاب إلى الدورة",
     "lockedSectionHint": "سجّل في الدورة لفتح هذا القسم",
     "unlockAllTitle": "فتح جميع الأقسام",
     "unlockAllDesc": "سجّل للحصول على حق الوصول الكامل لجميع محتويات الدورة.",

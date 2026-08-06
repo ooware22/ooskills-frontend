@@ -28,6 +28,7 @@ import {
   TrashIcon as Trash,
   ReceiptPercentIcon as ReceiptPercent,
   ShoppingBagIcon as ShoppingBag,
+  EnvelopeIcon as Envelope,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -69,6 +70,7 @@ const navItems: NavItem[] = [
       { href: "/admin/features", labelKey: "features", icon: Award },
       { href: "/admin/faq", labelKey: "faq", icon: HelpCircle },
       { href: "/admin/contact", labelKey: "contact", icon: Phone },
+      { href: "/admin/contact-messages", labelKey: "contactMessages", icon: Envelope },
       { href: "/admin/settings", labelKey: "settings", icon: Settings },
     ],
   },

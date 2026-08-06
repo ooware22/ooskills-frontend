@@ -12,7 +12,8 @@
     "dark": "Sombre",
     "system": "Système",
     "myCourses": "Mes formations",
-    "myDashboard": "Mon Tableau de bord"
+    "myDashboard": "Mon Tableau de bord",
+    "adminPanel": "Panneau Admin"
   },
   "hero": {
     "badge": "Plateforme E-Learning #1 en Algérie",
@@ -243,6 +244,7 @@
       "courses": "Formations",
       "faq": "FAQ",
       "contact": "Contact & Réseaux",
+      "contactMessages": "Messages de Contact",
       "settings": "Paramètres",
       "users": "Utilisateurs",
       "orders": "Commandes",
@@ -612,6 +614,36 @@
       "toastResyncSuccess": "Resynchronisation avec Chargily effectuée.",
       "toastEnrollSuccess": "Accès au cours accordé.",
       "toastRefundSuccess": "Commande marquée comme remboursée."
+    },
+    "contactMessages": {
+      "title": "Messages de Contact",
+      "subtitle": "Messages envoyés via le formulaire de contact public",
+      "statTotal": "Total des messages",
+      "statUnread": "Non lus",
+      "tableFrom": "De",
+      "tableSubject": "Sujet",
+      "tableDate": "Date",
+      "tableStatus": "Statut",
+      "statusUnread": "Non lu",
+      "statusRead": "Lu",
+      "loading": "Chargement des messages...",
+      "noMessagesFound": "Aucun message pour le moment.",
+      "showing": "Affichage de",
+      "of": "sur",
+      "messagesWord": "messages",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "page": "Page",
+      "modalFrom": "De",
+      "modalMessage": "Message",
+      "actionMarkUnread": "Marquer comme non lu",
+      "actionMarkRead": "Marquer comme lu",
+      "actionReply": "Répondre par email",
+      "actionDelete": "Supprimer",
+      "confirmDelete": "Supprimer ce message ? Cette action est irréversible.",
+      "toastMarkedRead": "Marqué comme lu.",
+      "toastMarkedUnread": "Marqué comme non lu.",
+      "toastDeleted": "Message supprimé."
     }
   },
   "auth": {
@@ -800,6 +832,7 @@
     "previewSlidesTab": "Diapositives",
     "previewOpenInNewTab": "Ouvrir dans un nouvel onglet",
     "freePreview": "Aperçu gratuit",
+    "goToSection": "Accéder au cours",
     "lockedSectionHint": "Inscrivez-vous au cours pour débloquer cette section",
     "unlockAllTitle": "Débloquer toutes les sections",
     "unlockAllDesc": "Inscrivez-vous pour accéder à l'intégralité du contenu de cette formation.",

@@ -88,6 +88,30 @@ export default function SignUp() {
     }
   }, []);
 
+  const handleSocialLogin = (provider: 'google' | 'facebook') => {
+    const redirectUri = `${window.location.origin}/auth/callback/${provider}`;
+
+    if (provider === 'google') {
+      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${googleClientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code` +
+        `&scope=${encodeURIComponent('openid email profile')}` +
+        `&access_type=offline` +
+        `&prompt=consent`;
+      window.location.href = url;
+    } else {
+      const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+      const url = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${facebookAppId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&scope=email` +
+        `&response_type=code`;
+      window.location.href = url;
+    }
+  };
+
   // Filter wilayas based on search
   const filteredWilayas = WILAYAS.filter(
     (w) =>
@@ -1025,9 +1049,10 @@ export default function SignUp() {
             {/* Google */}
             <button
               type="button"
+              onClick={() => handleSocialLogin('google')}
               className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isDark 
-                  ? "bg-white/10 hover:bg-white/20 border border-white/10" 
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 border border-white/10"
                   : "bg-white hover:bg-gray-50 border border-gray-200 shadow-sm"
               }`}
               title="Google"
@@ -1043,9 +1068,10 @@ export default function SignUp() {
             {/* Facebook */}
             <button
               type="button"
+              onClick={() => handleSocialLogin('facebook')}
               className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isDark 
-                  ? "bg-white/10 hover:bg-white/20 border border-white/10" 
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 border border-white/10"
                   : "bg-white hover:bg-gray-50 border border-gray-200 shadow-sm"
               }`}
               title="Facebook"

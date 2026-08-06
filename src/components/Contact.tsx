@@ -34,6 +34,7 @@ const Twitter = ({ className }: { className?: string }) => (
 );
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
+import axiosClient from "@/lib/axios";
 import type { PublicSiteSettingsData } from "@/types/content";
 
 interface ContactProps {
@@ -57,7 +58,7 @@ export default function Contact({ settings }: ContactProps) {
     setFormState("loading");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await axiosClient.post("/public/contact/", formData);
       setFormState("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
       setTimeout(() => setFormState("idle"), 3000);

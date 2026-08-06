@@ -288,7 +288,8 @@ export default function AdminOrdersPage() {
 
           {!loading && orders.length > 0 && (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop Table */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-white/10">
@@ -341,6 +342,44 @@ export default function AdminOrdersPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden divide-y divide-gray-100 dark:divide-white/5">
+                {orders.map((order) => (
+                  <div
+                    key={order.id}
+                    onClick={() => setSelectedOrder(order)}
+                    className="p-4 space-y-2.5 active:bg-gray-50 dark:active:bg-white/5 cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-oxford dark:text-white truncate">{order.user_name}</p>
+                        <p className="text-xs text-silver dark:text-white/50 truncate">{order.user_email}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-oxford dark:text-white whitespace-nowrap shrink-0">
+                        {order.total.toLocaleString()} DA
+                      </p>
+                    </div>
+                    <p className="text-xs text-silver dark:text-white/50 truncate">
+                      {order.items.map((i) => i.course_title).join(", ")}
+                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", statusColor(order.status))}>
+                          {statusLabel(order.status)}
+                        </span>
+                        {order.is_mismatched && (
+                          <ExclamationTriangleIcon className="w-4 h-4 text-red-500 shrink-0" />
+                        )}
+                        <span className="text-xs text-silver dark:text-white/50 uppercase">{order.paymentMethod}</span>
+                      </div>
+                      <span className="text-xs text-silver dark:text-white/50 whitespace-nowrap">
+                        {formatDate(order.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="px-5 py-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">

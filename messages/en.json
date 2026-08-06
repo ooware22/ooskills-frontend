@@ -12,7 +12,8 @@
     "dark": "Dark",
     "system": "System",
     "myCourses": "My Courses",
-    "myDashboard": "My Dashboard"
+    "myDashboard": "My Dashboard",
+    "adminPanel": "Admin Panel"
   },
   "hero": {
     "badge": "#1 E-Learning Platform in Algeria",
@@ -274,6 +275,7 @@
       "courses": "Courses",
       "faq": "FAQ",
       "contact": "Contact & Social",
+      "contactMessages": "Contact Messages",
       "settings": "Settings",
       "users": "Users",
       "orders": "Orders",
@@ -643,6 +645,36 @@
       "toastResyncSuccess": "Re-synced with Chargily.",
       "toastEnrollSuccess": "Course access granted.",
       "toastRefundSuccess": "Order marked as refunded."
+    },
+    "contactMessages": {
+      "title": "Contact Messages",
+      "subtitle": "Messages submitted through the public Contact Us form",
+      "statTotal": "Total Messages",
+      "statUnread": "Unread",
+      "tableFrom": "From",
+      "tableSubject": "Subject",
+      "tableDate": "Date",
+      "tableStatus": "Status",
+      "statusUnread": "Unread",
+      "statusRead": "Read",
+      "loading": "Loading messages...",
+      "noMessagesFound": "No messages yet.",
+      "showing": "Showing",
+      "of": "of",
+      "messagesWord": "messages",
+      "prev": "Prev",
+      "next": "Next",
+      "page": "Page",
+      "modalFrom": "From",
+      "modalMessage": "Message",
+      "actionMarkUnread": "Mark as Unread",
+      "actionMarkRead": "Mark as Read",
+      "actionReply": "Reply by Email",
+      "actionDelete": "Delete",
+      "confirmDelete": "Delete this message? This can't be undone.",
+      "toastMarkedRead": "Marked as read.",
+      "toastMarkedUnread": "Marked as unread.",
+      "toastDeleted": "Message deleted."
     }
   },
   "auth": {
@@ -831,6 +863,7 @@
     "previewSlidesTab": "Slides",
     "previewOpenInNewTab": "Open in a new tab",
     "freePreview": "Free preview",
+    "goToSection": "Go to course",
     "lockedSectionHint": "Enroll in the course to unlock this section",
     "unlockAllTitle": "Unlock all sections",
     "unlockAllDesc": "Enroll to get full access to all course content.",

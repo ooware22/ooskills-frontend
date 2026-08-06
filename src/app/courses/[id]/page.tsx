@@ -410,9 +410,17 @@ export default function CourseDetailPage({
                         className="rounded-xl overflow-hidden border border-gray-100 dark:border-white/5"
                       >
                         {/* Section Header */}
-                        <button
+                        <div
+                          role="button"
+                          tabIndex={isUnlocked ? 0 : -1}
                           onClick={() => {
                             if (isUnlocked) {
+                              setExpandedSection(isExpanded ? -1 : i);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (isUnlocked && (e.key === "Enter" || e.key === " ")) {
+                              e.preventDefault();
                               setExpandedSection(isExpanded ? -1 : i);
                             }
                           }}
@@ -458,10 +466,24 @@ export default function CourseDetailPage({
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            {isIntro && !enrolled && (
-                              <span className="hidden sm:inline-flex px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase tracking-wider">
-                                {t("freePreview")}
-                              </span>
+                            {enrolled ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStart();
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase tracking-wider transition-colors"
+                              >
+                                <PlayCircleIcon className="w-3.5 h-3.5" />
+                                {t("goToSection")}
+                              </button>
+                            ) : (
+                              isIntro && (
+                                <span className="hidden sm:inline-flex px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase tracking-wider">
+                                  {t("freePreview")}
+                                </span>
+                              )
                             )}
                             {isUnlocked ? (
                               isExpanded ? (
@@ -473,7 +495,7 @@ export default function CourseDetailPage({
                               <LockClosedIcon className="w-4 h-4 text-gray-300 dark:text-gray-600" />
                             )}
                           </div>
-                        </button>
+                        </div>
 
                         {/* Expanded Modules List */}
                         <AnimatePresence initial={false}>

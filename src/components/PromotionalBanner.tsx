@@ -28,12 +28,12 @@ export default function PromotionalBanner() {
   const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const isExcluded =
-      pathname?.startsWith("/admin") ||
-      pathname?.startsWith("/dashboard") ||
-      pathname?.includes("/learn");
+    // Only the landing page and a course's own detail page should show the
+    // banner — not the catalog list, dashboard, admin, learn player, auth, etc.
+    const isAllowedPage =
+      pathname === "/" || /^\/courses\/[^/]+$/.test(pathname || "");
 
-    if (!campaign || !isVisible || isExcluded || !bannerRef.current) {
+    if (!campaign || !isVisible || !isAllowedPage || !bannerRef.current) {
       document.documentElement.style.setProperty("--banner-height", "0px");
       return;
     }
@@ -96,13 +96,10 @@ export default function PromotionalBanner() {
     setIsVisible(false);
   };
 
-  if (
-    !isVisible ||
-    !campaign ||
-    pathname?.startsWith("/admin") ||
-    pathname?.startsWith("/dashboard") ||
-    pathname?.includes("/learn")
-  ) {
+  const isAllowedPage =
+    pathname === "/" || /^\/courses\/[^/]+$/.test(pathname || "");
+
+  if (!isVisible || !campaign || !isAllowedPage) {
     return null;
   }
 
