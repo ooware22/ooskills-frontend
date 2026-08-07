@@ -696,39 +696,40 @@ export default function CourseDetailPage({
                     {t("enrollNow")}
                   </button>
                 )}
-                <div className="flex gap-2">
+                <div className="flex gap-2.5">
                   <button
                     onClick={handleToggleWishlist}
-                    className={`flex-1 py-3.5 rounded-xl transition-colors text-sm font-medium flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-3 px-3 rounded-xl transition-all text-xs font-semibold flex items-center justify-center gap-1.5 border ${
                       wishlisted
-                        ? "bg-red-500/10 hover:bg-red-500/20 text-red-500"
-                        : "bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-oxford dark:text-white"
+                        ? "bg-red-500/10 border-red-500/20 hover:bg-red-500/20 text-red-500"
+                        : "bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 text-oxford dark:text-white"
                     }`}
                   >
                     {wishlisted ? (
-                      <HeartIconSolid className="w-4 h-4" />
+                      <HeartIconSolid className="w-4 h-4 text-red-500 shrink-0" />
                     ) : (
-                      <HeartIcon className="w-4 h-4" />
+                      <HeartIcon className="w-4 h-4 shrink-0" />
                     )}
-                    {wishlisted ? t("removeFromWishlist") : t("addToWishlist")}
+                    <span className="truncate">
+                      {wishlisted ? t("removeFromWishlist") : t("addToWishlist")}
+                    </span>
                   </button>
-                  {enrolled && course.price > 0 && (
-                    <button
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          router.push(
-                            `/auth/signin?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`,
-                          );
-                          return;
-                        }
-                        setGiftDialogOpen(true);
-                      }}
-                      className="py-3.5 px-4 bg-gold/10 hover:bg-gold/20 text-gold font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
-                      title="Offrir ce cours"
-                    >
-                      <GiftIcon className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        router.push(
+                          `/auth/signin?returnUrl=${encodeURIComponent(`/courses/${slug}`)}`,
+                        );
+                        return;
+                      }
+                      setGiftDialogOpen(true);
+                    }}
+                    className="flex-1 py-3 px-3 bg-gold/10 hover:bg-gold/20 text-gold border border-gold/25 font-semibold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5"
+                    title={t("giftCourse")}
+                  >
+                    <GiftIcon className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{t("giftCourse")}</span>
+                  </button>
                 </div>
 
                 {/* Course Info */}
@@ -870,6 +871,12 @@ export default function CourseDetailPage({
           onClose={() => setGiftDialogOpen(false)}
           courseId={String(course.id)}
           courseTitle={course.title}
+          coursePrice={course.price}
+          courseOriginalPrice={course.originalPrice}
+          isCampaignActive={course.is_campaign_active}
+          campaignDiscount={course.campaign_discount}
+          isWelcomeApplied={course.is_welcome_applied}
+          welcomeDiscountPercentage={course.welcome_discount_percentage}
         />
       )}
 

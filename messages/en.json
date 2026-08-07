@@ -792,8 +792,9 @@
   "courseDetail": {
     "backToCourses": "Back to Courses",
     "enrollNow": "Enroll Now",
-    "addToWishlist": "Add to Wishlist",
-    "removeFromWishlist": "Remove from Wishlist",
+    "addToWishlist": "Wishlist",
+    "removeFromWishlist": "Wishlisted",
+    "giftCourse": "Gift Course",
     "guestPromptTitle": "Sign up to join this course",
     "guestPromptDesc": "You're not signed in yet. Create an account to enroll, or sign in if you already have one.",
     "createAccount": "Create an account",

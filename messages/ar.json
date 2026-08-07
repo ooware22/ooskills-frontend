@@ -761,8 +761,9 @@
   "courseDetail": {
     "backToCourses": "العودة للدورات",
     "enrollNow": "سجّل الآن",
-    "addToWishlist": "أضف للمفضلة",
-    "removeFromWishlist": "إزالة من المفضلة",
+    "addToWishlist": "المفضلة",
+    "removeFromWishlist": "في المفضلة",
+    "giftCourse": "إهداء الدورة",
     "guestPromptTitle": "سجّل للانضمام إلى هذه الدورة",
     "guestPromptDesc": "لم تسجّل الدخول بعد. أنشئ حسابًا للتسجيل في الدورة، أو سجّل الدخول إذا كان لديك حساب بالفعل.",
     "createAccount": "إنشاء حساب",

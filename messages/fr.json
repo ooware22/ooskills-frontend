@@ -761,8 +761,9 @@
   "courseDetail": {
     "backToCourses": "Retour aux formations",
     "enrollNow": "S'inscrire maintenant",
-    "addToWishlist": "Ajouter aux favoris",
-    "removeFromWishlist": "Retirer des favoris",
+    "addToWishlist": "Favoris",
+    "removeFromWishlist": "Dans les favoris",
+    "giftCourse": "Offrir ce cours",
     "guestPromptTitle": "Inscrivez-vous pour rejoindre ce cours",
     "guestPromptDesc": "Vous n'êtes pas encore connecté. Créez un compte pour vous inscrire, ou connectez-vous si vous avez déjà un compte.",
     "createAccount": "Créer un compte",

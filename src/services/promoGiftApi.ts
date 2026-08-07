@@ -66,10 +66,23 @@ export interface CourseGift {
 }
 
 export interface GiftSendResponse {
-  gift_code: string;
+  gift_code?: string;
   recipient_email: string;
   course_title: string;
-  message: string;
+  message?: string;
+  order_id?: string;
+  total?: number;
+  is_free?: boolean;
+  checkout_url?: string;
+}
+
+export interface GiftSendPayload {
+  courseId: string;
+  recipientEmail: string;
+  message?: string;
+  paymentMethod?: string;
+  promoCode?: string;
+  useWallet?: boolean;
 }
 
 export interface GiftClaimResponse {
@@ -121,13 +134,36 @@ export const promoApi = {
 // =============================================================================
 
 export const giftApi = {
-  /** Send a course as gift */
-  send: async (courseId: string, recipientEmail: string, message = ''): Promise<GiftSendResponse> => {
-    const res = await axiosClient.post<GiftSendResponse>('/formation/gifts/send/', {
-      course_id: courseId,
-      recipient_email: recipientEmail,
-      message,
-    });
+  /** Send / purchase a course as gift */
+  send: async (
+    payloadOrCourseId: string | GiftSendPayload,
+    recipientEmail = '',
+    message = '',
+    paymentMethod = 'edahabia',
+    promoCode = '',
+    useWallet = false
+  ): Promise<GiftSendResponse> => {
+    let body: Record<string, any>;
+    if (typeof payloadOrCourseId === 'string') {
+      body = {
+        course_id: payloadOrCourseId,
+        recipient_email: recipientEmail,
+        message,
+        paymentMethod,
+        promo_code: promoCode,
+        use_wallet: useWallet,
+      };
+    } else {
+      body = {
+        course_id: payloadOrCourseId.courseId,
+        recipient_email: payloadOrCourseId.recipientEmail,
+        message: payloadOrCourseId.message || '',
+        paymentMethod: payloadOrCourseId.paymentMethod || 'edahabia',
+        promo_code: payloadOrCourseId.promoCode || '',
+        use_wallet: Boolean(payloadOrCourseId.useWallet),
+      };
+    }
+    const res = await axiosClient.post<GiftSendResponse>('/formation/gifts/send/', body);
     return res.data;
   },
 
