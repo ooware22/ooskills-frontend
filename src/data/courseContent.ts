@@ -82,8 +82,13 @@ export interface QuizQuestion {
   type: string;
   question: string;
   options: string[];
-  correct_answer: number;
-  explanation: string;
+  /**
+   * Answer key — only present in static/demo content. The API no longer ships
+   * this to students; live quizzes are graded server-side and the correct
+   * answer comes back per-attempt in the grading feedback.
+   */
+  correct_answer?: number;
+  explanation?: string;
   difficulty: string;
   category: string;
   /** Real backend UUID when loaded from API */

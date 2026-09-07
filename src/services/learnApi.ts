@@ -213,10 +213,13 @@ function transformSectionsToContent(
                   typeof opt === 'object' ? opt.fr || opt.en || '' : opt
                 )
               : [],
-            correct_answer: qn.correct_answer ?? 0,
+            // The API no longer returns the answer key to students. Only carry
+            // it through when actually present (static/demo content); never
+            // default it to 0, which would silently mark option A as correct.
+            ...(qn.correct_answer !== undefined ? { correct_answer: qn.correct_answer } : {}),
             explanation: typeof qn.explanation === 'object'
               ? qn.explanation.fr || qn.explanation.en || ''
-              : qn.explanation || '',
+              : qn.explanation || undefined,
             difficulty: qn.difficulty || 'easy',
             category: qn.category || 'general',
           })),

@@ -184,18 +184,46 @@ function SlideContent({ slide }: { slide: Slide }) {
 /* ─────────────── Quiz Component ─────────────── */
 const MAX_QUIZ_ATTEMPTS = 3;
 
-function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule['quiz']>; onComplete: (score: number, answers: Record<string, number>) => void }) {
+interface QuizGradedItem {
+  question_id: string;
+  selected: number | null;
+  correct_answer: number;
+  is_correct: boolean;
+  explanation: string;
+}
+
+interface QuizGradedResult {
+  score: number;
+  passed: boolean;
+  feedback: QuizGradedItem[];
+  remaining_attempts: number | null;
+}
+
+function QuizView({
+  quiz,
+  onComplete,
+  onSubmit,
+}: {
+  quiz: NonNullable<CourseContentModule['quiz']>;
+  onComplete: (score: number, answers: Record<string, number>) => void;
+  // Submits answers to the server and returns the authoritative attempt.
+  // Returns null when there is no backing quiz id (e.g. static demo content),
+  // in which case we fall back to client-side grading of the local answer key.
+  onSubmit: (answers: Record<string, number>) => Promise<QuizGradedResult | null>;
+}) {
   const { dir, locale } = useI18n();
   const isRtl = dir === 'rtl';
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [scores, setScores] = useState<boolean[]>([]);
   const [selections, setSelections] = useState<(number | null)[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [answersMap, setAnswersMap] = useState<Record<string, number>>({});
-  // Attempt tracking — corrections only show on last attempt or when passed
   const [attemptCount, setAttemptCount] = useState(1);
+  // Authoritative grading comes back from the server on submit. The answer key
+  // is no longer shipped to the browser, so correctness is unknown until then.
+  const [result, setResult] = useState<QuizGradedResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const question = quiz.questions[currentQ];
   const isLast = currentQ === quiz.questions.length - 1;
@@ -204,41 +232,86 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
     setAttemptCount(prev => prev + 1);
     setCurrentQ(0);
     setSelected(null);
-    setShowExplanation(false);
-    setScores([]);
     setSelections([]);
     setAnswersMap({});
     setShowResults(false);
+    setResult(null);
+    setSubmitError(null);
   };
 
-  const handleSelect = (idx: number) => {
-    if (showExplanation) return;
-    setSelected(idx);
-    setShowExplanation(true);
-    setScores(prev => [...prev, idx === question.correct_answer]);
-    setSelections(prev => [...prev, idx]);
-    const qKey = question.apiQuestionId || String(question.id);
-    setAnswersMap(prev => ({ ...prev, [qKey]: idx }));
+  const gradeLocally = (finalAnswers: Record<string, number>): QuizGradedResult => {
+    // Fallback path for static/demo content that still carries the answer key.
+    const feedback: QuizGradedItem[] = quiz.questions.map((q) => {
+      const qKey = q.apiQuestionId || String(q.id);
+      const sel = finalAnswers[qKey] ?? null;
+      const answer = q.correct_answer ?? -1;
+      return {
+        question_id: qKey,
+        selected: sel,
+        correct_answer: answer,
+        is_correct: sel !== null && sel === answer,
+        explanation: q.explanation || '',
+      };
+    });
+    const correct = feedback.filter(f => f.is_correct).length;
+    const score = quiz.questions.length > 0
+      ? Math.round((correct / quiz.questions.length) * 100)
+      : 0;
+    return {
+      score,
+      passed: score >= (quiz.pass_threshold || 70),
+      feedback,
+      remaining_attempts: null,
+    };
   };
 
-  const handleNext = () => {
-    if (isLast) {
+  const submitAnswers = async (finalAnswers: Record<string, number>) => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const server = await onSubmit(finalAnswers);
+      setResult(server ?? gradeLocally(finalAnswers));
       setShowResults(true);
-    } else {
-      setCurrentQ(prev => prev + 1);
-      setSelected(null);
-      setShowExplanation(false);
+    } catch {
+      setSubmitError(
+        locale === 'ar' ? 'تعذّر إرسال الإجابات. حاول مرة أخرى.'
+        : locale === 'en' ? 'Could not submit your answers. Please try again.'
+        : "Impossible d'envoyer vos réponses. Veuillez réessayer."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const correctCount = scores.filter(Boolean).length;
-  const pct = quiz.questions.length > 0 ? Math.round((correctCount / quiz.questions.length) * 100) : 0;
-  const passed = pct >= (quiz.pass_threshold || 70);
-  // Show corrections only when passed OR all attempts used
+  const handleSelect = (idx: number) => {
+    setSelected(idx);
+  };
+
+  const handleNext = () => {
+    if (selected === null) return;
+    const qKey = question.apiQuestionId || String(question.id);
+    const nextSelections = [...selections, selected];
+    const nextAnswers = { ...answersMap, [qKey]: selected };
+    setSelections(nextSelections);
+    setAnswersMap(nextAnswers);
+    if (isLast) {
+      submitAnswers(nextAnswers);
+    } else {
+      setCurrentQ(prev => prev + 1);
+      setSelected(null);
+    }
+  };
+
+  const passed = result?.passed ?? false;
+  const pct = result?.score ?? 0;
+  const correctCount = result ? result.feedback.filter(f => f.is_correct).length : 0;
+  // Show corrections when passed OR all attempts used — mirrors prior behaviour.
   const showCorrections = passed || attemptCount >= MAX_QUIZ_ATTEMPTS;
+  const feedbackByQuestion = (qKey: string) =>
+    result?.feedback.find(f => f.question_id === qKey);
 
   /* ─── Results Summary ─── */
-  if (showResults) {
+  if (showResults && result) {
     return (
       <div className="max-w-2xl mx-auto">
         {/* Score Header */}
@@ -266,8 +339,11 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
         {showCorrections && (
           <div className="space-y-4 mb-8">
             {quiz.questions.map((q, qi) => {
-              const userAnswer = selections[qi];
-              const isCorrect = userAnswer === q.correct_answer;
+              const qKey = q.apiQuestionId || String(q.id);
+              const fb = feedbackByQuestion(qKey);
+              const userAnswer = fb ? fb.selected : null;
+              const answer = fb ? fb.correct_answer : -1;
+              const isCorrect = fb ? fb.is_correct : false;
               return (
                 <motion.div key={qi} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: qi * 0.05 }}
@@ -286,22 +362,22 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
                   <div className={`space-y-2 ${isRtl ? 'mr-10' : 'ml-10'}`} dir={dir}>
                     {q.options.map((opt, oi) => {
                       let optCls = 'text-gray-500';
-                      if (oi === q.correct_answer) optCls = 'text-emerald-400 font-semibold';
-                      else if (oi === userAnswer && oi !== q.correct_answer) optCls = 'text-red-400 line-through';
+                      if (oi === answer) optCls = 'text-emerald-400 font-semibold';
+                      else if (oi === userAnswer && oi !== answer) optCls = 'text-red-400 line-through';
                       return (
                         <div key={oi} className={`flex items-center gap-2 text-sm ${optCls}`}>
-                          {oi === q.correct_answer && <span>✅</span>}
-                          {oi === userAnswer && oi !== q.correct_answer && <span>❌</span>}
-                          {oi !== q.correct_answer && oi !== userAnswer && <span className="w-5 inline-block" />}
+                          {oi === answer && <span>✅</span>}
+                          {oi === userAnswer && oi !== answer && <span>❌</span>}
+                          {oi !== answer && oi !== userAnswer && <span className="w-5 inline-block" />}
                           <span>{opt}</span>
                         </div>
                       );
                     })}
                   </div>
 
-                  {q.explanation && (
+                  {fb?.explanation && (
                     <div className={`mt-3 ${isRtl ? 'mr-10' : 'ml-10'} p-3 bg-white/5 rounded-lg border border-white/5`} dir={dir}>
-                      <p className="text-gray-400 text-xs">{q.explanation}</p>
+                      <p className="text-gray-400 text-xs">{fb.explanation}</p>
                     </div>
                   )}
                 </motion.div>
@@ -347,16 +423,11 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
         <div className="space-y-3">
           {question.options.map((opt, i) => {
             let cls = 'border-white/10 hover:border-white/20 bg-white/5';
-            if (showExplanation) {
-              if (i === selected && i === question.correct_answer) cls = 'border-emerald-500 bg-emerald-500/10';
-              else if (i === selected && i !== question.correct_answer) cls = 'border-red-500 bg-red-500/10';
-              // Don't reveal the correct answer inline if corrections are locked
-              else if (showCorrections && i === question.correct_answer) cls = 'border-emerald-500 bg-emerald-500/10';
-            } else if (i === selected) {
+            if (i === selected) {
               cls = 'border-gold bg-gold/10';
             }
             return (
-              <button key={i} onClick={() => handleSelect(i)} disabled={showExplanation}
+              <button key={i} onClick={() => handleSelect(i)} disabled={submitting}
                 className={`w-full ${isRtl ? 'text-right' : 'text-left'} p-4 rounded-xl border transition-all ${cls}`} dir={dir}>
                 <span className="text-white">{opt}</span>
               </button>
@@ -364,21 +435,18 @@ function QuizView({ quiz, onComplete }: { quiz: NonNullable<CourseContentModule[
           })}
         </div>
 
-        {showExplanation && showCorrections && question.explanation && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl" dir={dir}>
-            <p className="text-gray-300 text-sm">{question.explanation}</p>
-          </motion.div>
+        {submitError && (
+          <p className="mt-4 text-red-400 text-sm text-center" dir={dir}>{submitError}</p>
         )}
 
-        {showExplanation && (
-          <div className="mt-6 flex justify-center">
-            <button onClick={handleNext}
-              className="px-8 py-3 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors">
-              {isLast ? (locale === 'ar' ? 'عرض النتيجة' : locale === 'en' ? 'See Results' : 'Voir les résultats') : (locale === 'ar' ? 'السؤال التالي →' : locale === 'en' ? 'Next Question →' : 'Question Suivante →')}
-            </button>
-          </div>
-        )}
+        <div className="mt-6 flex justify-center">
+          <button onClick={handleNext} disabled={selected === null || submitting}
+            className="px-8 py-3 bg-gold hover:bg-gold/90 text-oxford font-bold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            {submitting
+              ? (locale === 'ar' ? 'جارٍ التصحيح…' : locale === 'en' ? 'Grading…' : 'Correction…')
+              : isLast ? (locale === 'ar' ? 'إرسال وعرض النتيجة' : locale === 'en' ? 'Submit & See Results' : 'Envoyer et voir les résultats') : (locale === 'ar' ? 'السؤال التالي →' : locale === 'en' ? 'Next Question →' : 'Question Suivante →')}
+          </button>
+        </div>
       </motion.div>
     </div>
   );
@@ -1138,20 +1206,15 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
       const passed = score >= passThreshold;
       const key = `mod_${currentFlat.moduleIndex}`;
 
-      // Only lock the quiz score if the student PASSED
+      // Only lock the quiz score if the student PASSED. The score is the
+      // server's authoritative result (submission happens in QuizView.onSubmit),
+      // so there is no separate dispatch here anymore — that would double-count
+      // the attempt against the quiz's max-attempts limit.
       if (passed) {
         setQuizScores(prev => ({ ...prev, [key]: score }));
         if (!completedModules.includes(currentFlat.moduleIndex)) {
           setCompletedModules(prev => [...prev, currentFlat.moduleIndex]);
         }
-      }
-
-      // Submit quiz attempt to backend API if we have a real quiz ID
-      if (mod.quiz?.apiQuizId && isAuthenticated) {
-        dispatch(submitQuizAttempt({
-          quizId: mod.quiz.apiQuizId,
-          answers,
-        }));
       }
 
       setShowQuiz(false);
@@ -1160,6 +1223,25 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
       }
       // If failed, stay on current slide — student can retry via goNext
     }
+  };
+
+  // Submit a section-quiz attempt to the server and return the authoritative
+  // grading. Returns null when there's no backing quiz id (static demo data),
+  // letting QuizView fall back to client-side grading.
+  const submitSectionQuiz = async (
+    quizId: string | undefined,
+    answers: Record<string, number>,
+  ): Promise<QuizGradedResult | null> => {
+    if (!quizId || !isAuthenticated) return null;
+    const attempt = await dispatch(
+      submitQuizAttempt({ quizId, answers }),
+    ).unwrap();
+    return {
+      score: Number(attempt.score),
+      passed: Boolean(attempt.passed),
+      feedback: attempt.feedback ?? [],
+      remaining_attempts: attempt.remaining_attempts ?? null,
+    };
   };
 
   // Auto-mark quiz-less modules as completed when all their slides are done
@@ -1470,7 +1552,11 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
                   onDone={() => setShowFinalQuiz(false)}
                 />
               ) : showQuiz && currentModule.quiz ? (
-                <QuizView quiz={currentModule.quiz} onComplete={handleQuizComplete} />
+                <QuizView
+                  quiz={currentModule.quiz}
+                  onComplete={handleQuizComplete}
+                  onSubmit={(answers) => submitSectionQuiz(currentModule.quiz?.apiQuizId, answers)}
+                />
               ) : (
                 <>
                   {/* Module badge */}

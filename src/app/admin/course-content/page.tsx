@@ -63,6 +63,7 @@ import type {
   LessonDisplayMode,
 } from "./types";
 import JsonBulkImport from "./JsonBulkImport";
+import adminQuizzesApi from "@/services/adminQuizzesApi";
 
 // =============================================================================
 // ID GENERATOR
@@ -579,10 +580,24 @@ export default function CourseContentPage() {
   // QUIZ CRUD (stays local — no separate API)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const openQuizEditor = (sectionId: string, quiz: AdminSectionQuiz | null) => {
+  const openQuizEditor = async (sectionId: string, quiz: AdminSectionQuiz | null) => {
     setQuizParentId(sectionId);
     if (quiz) {
-      setQuizForm({ ...quiz });
+      // The nested section payload no longer carries the answer key, so load
+      // the full questions (with correct_answer / explanation) from the
+      // admin-only questions endpoint before opening the editor.
+      let questions = quiz.questions;
+      if (quiz.id) {
+        try {
+          const full = await adminQuizzesApi.listQuestions(quiz.id);
+          if (Array.isArray(full) && full.length > 0) {
+            questions = full as unknown as AdminSectionQuiz["questions"];
+          }
+        } catch {
+          // Fall back to the (answer-free) nested questions on failure.
+        }
+      }
+      setQuizForm({ ...quiz, questions });
       setQuizModal("edit");
     } else {
       setQuizForm({

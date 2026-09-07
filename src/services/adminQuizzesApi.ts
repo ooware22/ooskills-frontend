@@ -134,6 +134,19 @@ const adminQuizzesApi = {
     deleteQuestion: async (id: string) => {
         await axiosClient.delete(`${QUESTION_ENDPOINT}${id}/`);
     },
+
+    /**
+     * List a quiz's questions WITH the answer key.
+     *
+     * The nested section/quiz payloads no longer include correct_answer or
+     * explanation (they're stripped for students), so the admin editor loads
+     * the full questions from this admin-only endpoint when editing a quiz.
+     */
+    listQuestions: async (quizId: string): Promise<QuizQuestion[]> => {
+        const response = await axiosClient.get(`${QUESTION_ENDPOINT}?quiz=${quizId}`);
+        const data = response.data;
+        return Array.isArray(data) ? data : (data.results ?? []);
+    },
 };
 
 export default adminQuizzesApi;
