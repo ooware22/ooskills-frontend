@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { RocketLaunchIcon as Rocket, BellIcon as Bell } from "@heroicons/react/24/outline";
-import { useTranslations } from "@/lib/i18n";
+import { useTranslations, useI18n } from "@/lib/i18n";
+import countdownApi, { type PublicCountdown } from "@/services/countdownApi";
 
 interface TimeLeft {
   days: number;
@@ -14,18 +15,25 @@ interface TimeLeft {
 
 export default function Countdown() {
   const t = useTranslations("countdown");
-  const launchDate = new Date("2026-05-01T00:00:00");
-  
+  const { locale } = useI18n();
+
+  const [config, setConfig] = useState<PublicCountdown | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    
+    countdownApi.getPublic(locale).then(setConfig).catch(() => setConfig(null));
+  }, [locale]);
+
+  useEffect(() => {
+    if (!config?.launch_date) return;
+    const launchDate = new Date(config.launch_date);
+
     const calculateTimeLeft = () => {
       const now = new Date();
       const difference = launchDate.getTime() - now.getTime();
-      
+
       if (difference > 0) {
         return {
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -38,13 +46,13 @@ export default function Countdown() {
     };
 
     setTimeLeft(calculateTimeLeft());
-    
+
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [config?.launch_date]);
 
   const timeUnits = [
     { key: "days", value: timeLeft.days, labelKey: "days" },
@@ -53,21 +61,21 @@ export default function Countdown() {
     { key: "seconds", value: timeLeft.seconds, labelKey: "seconds" },
   ];
 
-  if (!mounted) {
+  if (!mounted || !config || !config.is_active) {
     return null;
   }
 
   return (
     <section className="py-16 bg-oxford dark:bg-oxford-light relative overflow-hidden">
       {/* Subtle background pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
           backgroundSize: '24px 24px',
         }}
       />
-      
+
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -83,10 +91,10 @@ export default function Countdown() {
 
           {/* Title */}
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            {t("title")}
+            {config.title}
           </h2>
           <p className="text-white/60 mb-10 text-sm md:text-base">
-            {t("subtitle")}
+            {config.subtitle}
           </p>
 
           {/* Countdown Grid */}
@@ -124,13 +132,17 @@ export default function Countdown() {
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-light text-oxford text-sm font-medium rounded-lg transition-colors duration-200"
             >
               <Bell className="w-4 h-4" />
-              {t("cta")}
+              {config.cta_text}
             </a>
           </motion.div>
 
           {/* Launch Date */}
           <p className="mt-6 text-xs text-white/40">
-            {t("launchDate")}
+            {new Date(config.launch_date).toLocaleDateString(locale, {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </motion.div>
       </div>

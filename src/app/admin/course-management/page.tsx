@@ -561,6 +561,30 @@ export default function CourseManagementPage() {
       return;
     }
 
+    // The JSON textareas only update formData when "Apply JSON" is clicked, so an
+    // admin who edits the textarea and goes straight to Save would lose the edit.
+    // Parse the textarea here so what's on screen is what gets saved.
+    const resolveList = (field: "prerequisites" | "whatYouLearn"): string[] | null => {
+      const raw = listJson[field];
+      if (!raw || !raw.trim()) return formData[field].filter(Boolean);
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) throw new Error("Value must be a JSON array");
+        return parsed
+          .map((item) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean);
+      } catch (err) {
+        setListJsonError((prev) => ({ ...prev, [field]: (err as Error).message }));
+        return null;
+      }
+    };
+    const prerequisites = resolveList("prerequisites");
+    const whatYouLearn = resolveList("whatYouLearn");
+    if (prerequisites === null || whatYouLearn === null) {
+      setSaveError("Invalid JSON in Prerequisites or What You'll Learn — fix it before saving.");
+      return;
+    }
+
     const payload: AdminCourseCreatePayload = {
       title: formData.title,
       slug: formData.slug,
@@ -571,8 +595,8 @@ export default function CourseManagementPage() {
       originalPrice: formData.originalPrice,
       discount: formData.discount,
       description: formData.description,
-      prerequisites: formData.prerequisites.filter(Boolean),
-      whatYouLearn: formData.whatYouLearn.filter(Boolean),
+      prerequisites,
+      whatYouLearn,
       language: formData.language,
       certificate: formData.certificate,
       status: formData.status,

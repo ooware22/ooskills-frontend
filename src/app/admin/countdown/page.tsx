@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { DocumentCheckIcon as Save, CheckIcon as Check, GlobeAltIcon as Globe, CalendarIcon as Calendar, ClockIcon as Clock } from "@heroicons/react/24/outline";
+import { DocumentCheckIcon as Save, CheckIcon as Check, GlobeAltIcon as Globe, CalendarIcon as Calendar, ClockIcon as Clock, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminLanguage, AdminLocale, adminLocaleLabels } from "@/contexts/AdminLanguageContext";
 import { useI18n } from "@/lib/i18n";
+import countdownApi, { type AdminCountdown } from "@/services/countdownApi";
+import { getErrorMessage } from "@/lib/axios";
 
 type CountdownFormData = {
   title: string;
@@ -13,78 +15,136 @@ type CountdownFormData = {
   ctaText: string;
 };
 
-// Shared settings (same across all languages)
-type SharedSettings = {
-  launchDate: string;
-  launchTime: string;
-  isActive: boolean;
-};
+const emptyContent = (): Record<AdminLocale, CountdownFormData> => ({
+  en: { title: "", subtitle: "", ctaText: "" },
+  fr: { title: "", subtitle: "", ctaText: "" },
+  ar: { title: "", subtitle: "", ctaText: "" },
+});
 
-// Default content per language
-const defaultContent: Record<AdminLocale, CountdownFormData> = {
-  en: {
-    title: "Platform Launching Soon",
-    subtitle: "Get ready for an exceptional learning experience",
-    ctaText: "Notify Me at Launch",
-  },
-  fr: {
-    title: "Lancement de la plateforme bientôt",
-    subtitle: "Préparez-vous pour une expérience d'apprentissage exceptionnelle",
-    ctaText: "Me notifier au lancement",
-  },
-  ar: {
-    title: "انطلاقة المنصة قريباً",
-    subtitle: "استعدوا لتجربة تعليمية استثنائية",
-    ctaText: "أخبرني عند الإطلاق",
-  },
-};
-
-const defaultSharedSettings: SharedSettings = {
-  launchDate: "2026-05-01",
-  launchTime: "09:00",
-  isActive: true,
-};
+function splitDateTime(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return { date: "", time: "" };
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
 
 export default function CountdownAdmin() {
   const { editingLocale } = useAdminLanguage();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  
-  // Store content for all languages
-  const [allContent, setAllContent] = useState<Record<AdminLocale, CountdownFormData>>(defaultContent);
-  
-  // Shared settings (same across all languages)
-  const [sharedSettings, setSharedSettings] = useState<SharedSettings>(defaultSharedSettings);
-  
-  // Current form data based on selected language
+  const [error, setError] = useState<string | null>(null);
+
+  const [allContent, setAllContent] = useState<Record<AdminLocale, CountdownFormData>>(emptyContent());
+  const [launchDate, setLaunchDate] = useState("");
+  const [launchTime, setLaunchTime] = useState("");
+  const [isActive, setIsActive] = useState(true);
+
+  const applyServerData = (data: AdminCountdown) => {
+    setAllContent({
+      en: {
+        title: data.title?.en || "",
+        subtitle: data.subtitle?.en || "",
+        ctaText: data.cta_text?.en || "",
+      },
+      fr: {
+        title: data.title?.fr || "",
+        subtitle: data.subtitle?.fr || "",
+        ctaText: data.cta_text?.fr || "",
+      },
+      ar: {
+        title: data.title?.ar || "",
+        subtitle: data.subtitle?.ar || "",
+        ctaText: data.cta_text?.ar || "",
+      },
+    });
+    const { date, time } = splitDateTime(data.launch_date);
+    setLaunchDate(date);
+    setLaunchTime(time);
+    setIsActive(data.is_active);
+  };
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await countdownApi.getAdmin();
+      applyServerData(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
   const formData = allContent[editingLocale];
 
   const updateFormData = (updates: Partial<CountdownFormData>) => {
-    setAllContent(prev => ({
+    setAllContent((prev) => ({
       ...prev,
-      [editingLocale]: { ...prev[editingLocale], ...updates }
+      [editingLocale]: { ...prev[editingLocale], ...updates },
     }));
   };
 
   const handleSave = async () => {
+    if (!launchDate || !launchTime) {
+      setError(t("admin.countdown.launchDate") + " / " + t("admin.countdown.launchTime") + " required.");
+      return;
+    }
     setSaving(true);
-    console.log(`Saving ${editingLocale} content:`, formData);
-    console.log("Saving shared settings:", sharedSettings);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setError(null);
+    try {
+      const localIso = `${launchDate}T${launchTime}:00`;
+      const updated = await countdownApi.update({
+        title: { en: allContent.en.title, fr: allContent.fr.title, ar: allContent.ar.title },
+        subtitle: { en: allContent.en.subtitle, fr: allContent.fr.subtitle, ar: allContent.ar.subtitle },
+        cta_text: { en: allContent.en.ctaText, fr: allContent.fr.ctaText, ar: allContent.ar.ctaText },
+        launch_date: new Date(localIso).toISOString(),
+        is_active: isActive,
+      });
+      applyServerData(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <AdminHeader titleKey="admin.countdown.title" subtitleKey="admin.countdown.subtitle" />
+        <div className="p-6 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
-      <AdminHeader 
+      <AdminHeader
         titleKey="admin.countdown.title"
         subtitleKey="admin.countdown.subtitle"
       />
-      
-      <div className="p-6 space-y-6">
+
+      <div className="p-4 lg:p-6 space-y-6">
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-3">
+            <ExclamationCircleIcon className="w-5 h-5 text-red-500 shrink-0" />
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        )}
+
         {/* Language-Specific Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -135,7 +195,7 @@ export default function CountdownAdmin() {
                 dir={editingLocale === "ar" ? "rtl" : "ltr"}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-oxford dark:text-white mb-2">
                 {t("admin.countdown.countdownSubtitle")}
@@ -182,8 +242,8 @@ export default function CountdownAdmin() {
               </label>
               <input
                 type="date"
-                value={sharedSettings.launchDate}
-                onChange={(e) => setSharedSettings(s => ({ ...s, launchDate: e.target.value }))}
+                value={launchDate}
+                onChange={(e) => setLaunchDate(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
             </div>
@@ -194,8 +254,8 @@ export default function CountdownAdmin() {
               </label>
               <input
                 type="time"
-                value={sharedSettings.launchTime}
-                onChange={(e) => setSharedSettings(s => ({ ...s, launchTime: e.target.value }))}
+                value={launchTime}
+                onChange={(e) => setLaunchTime(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
               />
             </div>
@@ -203,12 +263,12 @@ export default function CountdownAdmin() {
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={sharedSettings.isActive}
-                  onChange={(e) => setSharedSettings(s => ({ ...s, isActive: e.target.checked }))}
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
                   className="w-5 h-5 rounded border-gray-300 text-gold focus:ring-gold"
                 />
                 <span className="text-sm font-medium text-oxford dark:text-white">
-                  {sharedSettings.isActive ? t("admin.countdown.showCountdown") : t("admin.countdown.hideCountdown")}
+                  {isActive ? t("admin.countdown.showCountdown") : t("admin.countdown.hideCountdown")}
                 </span>
               </label>
             </div>
