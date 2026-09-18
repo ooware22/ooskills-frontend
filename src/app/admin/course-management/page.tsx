@@ -26,11 +26,12 @@ import {
   PresentationChartBarIcon,
   VideoCameraIcon,
   FolderIcon,
+  ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import axiosClient from "@/lib/axios";
+import axiosClient, { getErrorMessage } from "@/lib/axios";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
@@ -180,6 +181,8 @@ export default function CourseManagementPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // JSON import state (add and edit modes)
+  // id of the course material currently uploading (shows a spinner on that row)
+  const [uploadingMaterialId, setUploadingMaterialId] = useState<string | null>(null);
   const [jsonMode, setJsonMode] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -2373,89 +2376,111 @@ export default function CourseManagementPage() {
                                 {t("admin.courseManagement.materialTypeOther")}
                               </option>
                             </select>
-                            <label className="flex items-center gap-1 px-2.5 py-1.5 bg-gold/10 text-gold rounded-lg text-xs font-semibold hover:bg-gold/20 transition-colors cursor-pointer">
-                              <ArrowUpTrayIcon className="w-3.5 h-3.5" />
-                              {t("admin.courseManagement.uploadFile")}
+                            {mat.url && mat.url !== "#" ? (
+                              <a
+                                href={mat.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
+                                title={tc("materialOpen")}
+                              >
+                                <CheckCircleIcon className="w-3.5 h-3.5" />
+                                {tc("materialUploadedShort")}
+                                <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                              </a>
+                            ) : (
+                            <label
+                              className={cn(
+                                "flex items-center gap-1 px-2.5 py-1.5 bg-gold/10 text-gold rounded-lg text-xs font-semibold transition-colors",
+                                uploadingMaterialId === mat.id
+                                  ? "opacity-60 cursor-wait"
+                                  : "hover:bg-gold/20 cursor-pointer",
+                              )}
+                            >
+                              {uploadingMaterialId === mat.id ? (
+                                <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <ArrowUpTrayIcon className="w-3.5 h-3.5" />
+                              )}
+                              {uploadingMaterialId === mat.id
+                                ? tc("materialUploading")
+                                : t("admin.courseManagement.uploadFile")}
                               <input
                                 type="file"
                                 className="hidden"
+                                disabled={uploadingMaterialId !== null}
                                 onChange={async (e) => {
                                   const file = e.target.files?.[0];
+                                  e.target.value = "";
                                   if (!file) return;
-                                  // Update name from filename if empty
-                                  const updated = [...formData.materials];
-                                  if (!updated[idx].name) {
-                                    updated[idx] = {
-                                      ...updated[idx],
-                                      name: file.name.replace(/\.[^/.]+$/, ""),
-                                    };
-                                  }
-                                  // Compute human-readable size
+                                  const matId = mat.id;
                                   const sizeKB = file.size / 1024;
                                   const sizeStr =
                                     sizeKB > 1024
                                       ? `${(sizeKB / 1024).toFixed(1)} MB`
                                       : `${Math.round(sizeKB)} KB`;
-                                  updated[idx] = {
-                                    ...updated[idx],
-                                    size: sizeStr,
-                                  };
-                                  setFormData({
-                                    ...formData,
-                                    materials: updated,
-                                  });
-                                  // Upload via API if we have a course ID (edit mode)
-                                  if (selectedCourse?.id) {
-                                    try {
-                                      const fd = new FormData();
-                                      fd.append("course", selectedCourse.id);
-                                      fd.append(
-                                        "name",
-                                        updated[idx].name || file.name,
-                                      );
-                                      fd.append("type", updated[idx].type);
-                                      fd.append("size", sizeStr);
-                                      fd.append("file", file);
-                                      fd.append("sequence", String(idx));
-                                      const res = await axiosClient.post(
-                                        "/formation/course-materials/",
-                                        fd,
-                                        {
-                                          headers: {
-                                            "Content-Type":
-                                              "multipart/form-data",
-                                          },
-                                        },
-                                      );
-                                      // Update local state with backend response
-                                      const finalUpdated = [
-                                        ...formData.materials,
-                                      ];
-                                      finalUpdated[idx] = {
-                                        ...finalUpdated[idx],
-                                        id: res.data.id,
-                                        url:
-                                          res.data.download_url ||
-                                          res.data.url ||
-                                          res.data.file ||
-                                          "#",
-                                        size: res.data.size || sizeStr,
-                                      };
-                                      setFormData({
-                                        ...formData,
-                                        materials: finalUpdated,
-                                      });
-                                    } catch (err) {
-                                      console.error(
-                                        "Failed to upload material:",
-                                        err,
-                                      );
-                                    }
+                                  const name =
+                                    mat.name || file.name.replace(/\.[^/.]+$/, "");
+                                  // Functional updates keyed by id: the upload is async, and
+                                  // rebuilding from this render's `formData` afterwards would
+                                  // wipe the name set here (and anything edited meanwhile).
+                                  const patchMaterial = (
+                                    id: string,
+                                    patch: Partial<CourseMaterial>,
+                                  ) =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      materials: prev.materials.map((m) =>
+                                        m.id === id ? { ...m, ...patch } : m,
+                                      ),
+                                    }));
+                                  patchMaterial(matId, { name, size: sizeStr });
+
+                                  // A new course has no id until it's saved, so there is
+                                  // nothing to attach the file to yet.
+                                  if (!selectedCourse?.id) {
+                                    showToast(tc("materialSaveCourseFirst"));
+                                    return;
                                   }
-                                  e.target.value = "";
+                                  setUploadingMaterialId(matId);
+                                  try {
+                                    const fd = new FormData();
+                                    fd.append("course", selectedCourse.id);
+                                    fd.append("name", name || file.name);
+                                    fd.append("type", mat.type);
+                                    fd.append("size", sizeStr);
+                                    fd.append("file", file);
+                                    fd.append("sequence", String(idx));
+                                    const res = await axiosClient.post(
+                                      "/formation/course-materials/",
+                                      fd,
+                                      {
+                                        headers: {
+                                          "Content-Type": "multipart/form-data",
+                                        },
+                                      },
+                                    );
+                                    patchMaterial(matId, {
+                                      id: res.data.id,
+                                      url:
+                                        res.data.download_url ||
+                                        res.data.url ||
+                                        res.data.file ||
+                                        "#",
+                                      size: res.data.size || sizeStr,
+                                    });
+                                    showToast(tc("materialUploaded"));
+                                  } catch (err) {
+                                    showToast(
+                                      `${tc("materialUploadFailed")}: ${getErrorMessage(err)}`,
+                                    );
+                                  } finally {
+                                    setUploadingMaterialId(null);
+                                  }
                                 }}
                               />
                             </label>
+                            )}
                             <button
                               type="button"
                               onClick={async () => {
