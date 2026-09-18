@@ -179,7 +179,7 @@ export default function CourseManagementPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // JSON import state (only used in "add" mode)
+  // JSON import state (add and edit modes)
   const [jsonMode, setJsonMode] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -301,56 +301,144 @@ export default function CourseManagementPage() {
     setModalMode("import-zip");
   };
 
-  /** Parse pasted JSON and populate the form. Image is always left empty (null). */
+  /** URL slug from free text, keeping accented letters as their base letter (é → e). */
+  const slugify = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+  const toStringList = (value: unknown): string[] | undefined => {
+    if (Array.isArray(value)) {
+      return value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    if (typeof value === "string" && value.trim()) return [value.trim()];
+    return undefined;
+  };
+
+  /** The editable course fields as JSON — pre-fills the JSON panel in edit mode. */
+  const formToJson = (form: CourseForm) =>
+    JSON.stringify(
+      {
+        title: form.title,
+        slug: form.slug,
+        description: form.description,
+        category: form.category,
+        level: form.level,
+        status: form.status,
+        duration: form.duration,
+        language: form.language,
+        originalPrice: form.originalPrice,
+        discount: form.discount,
+        price: form.price,
+        certificate: form.certificate,
+        prerequisites: form.prerequisites,
+        whatYouLearn: form.whatYouLearn,
+      },
+      null,
+      2,
+    );
+
+  /**
+   * Parse pasted/uploaded JSON into the form.
+   *
+   * Add mode: builds the course from scratch (missing fields get defaults).
+   * Edit mode: only the fields present in the JSON are changed — anything left out
+   * keeps the course's current value, so filling in what a ZIP import left empty
+   * can't accidentally unpublish the course, clear its category or change its URL.
+   */
   const parseJsonInput = () => {
     try {
       const parsed = JSON.parse(jsonText);
-      const origPrice = parsed.originalPrice ?? parsed.original_price ?? 0;
-      const disc = parsed.discount ?? 0;
-      const computedPrice =
-        parsed.price ?? Math.round(origPrice * (1 - disc / 100));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("The JSON must be an object: { ... }");
+      }
+      const isEdit = modalMode === "edit";
+      const base: CourseForm = isEdit ? formData : emptyForm;
+      const given = (value: unknown) =>
+        value !== undefined && value !== null && value !== "";
+
+      const rawOrig = parsed.originalPrice ?? parsed.original_price;
+      const origPrice = given(rawOrig) ? Number(rawOrig) : base.originalPrice;
+      const disc = given(parsed.discount) ? Number(parsed.discount) : base.discount;
+      const discountType = disc <= 100 ? "percent" : "fixed";
+      let price = base.price;
+      if (given(parsed.price)) {
+        price = Number(parsed.price);
+      } else if (given(rawOrig) || given(parsed.discount)) {
+        price =
+          discountType === "percent"
+            ? Math.round(origPrice * (1 - disc / 100))
+            : Math.max(0, origPrice - disc);
+      }
+
+      let duration = base.duration;
+      if (given(parsed.duration)) {
+        duration = Math.round(Number(parsed.duration));
+      } else if (Array.isArray(parsed.modules)) {
+        const minutes = parsed.modules.reduce(
+          (sum: number, m: { duration_minutes?: number }) =>
+            sum + (m.duration_minutes || 0),
+          0,
+        );
+        duration = Math.round(minutes / 60);
+      }
+
+      // Never change an existing course's URL unless the JSON asks for it explicitly.
+      const slug = given(parsed.slug)
+        ? slugify(String(parsed.slug))
+        : isEdit
+          ? base.slug
+          : slugify(String(parsed.title || ""));
+
+      const prerequisites = toStringList(parsed.prerequisites) ?? base.prerequisites;
+      const whatYouLearn =
+        toStringList(parsed.whatYouLearn ?? parsed.objectives) ?? base.whatYouLearn;
+
       setFormData({
-        title: parsed.title || "",
-        slug: (parsed.slug || parsed.title || "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, ""),
-        category: parsed.category || "",
-        level: parsed.level || "initialisation",
-        duration:
-          parsed.duration ??
-          (parsed.modules?.reduce(
-            (sum: number, m: { duration_minutes?: number }) =>
-              sum + (m.duration_minutes || 0),
-            0,
-          ) ?? 0) / 60,
-        price: computedPrice,
+        ...base,
+        title: given(parsed.title) ? String(parsed.title) : base.title,
+        slug,
+        category: given(parsed.category) ? String(parsed.category) : base.category,
+        level: given(parsed.level) ? String(parsed.level) : base.level,
+        duration,
+        price,
         originalPrice: origPrice,
         discount: disc,
         pricingMode: origPrice > 0 && disc > 0 ? "reduction" : "direct",
-        discountType: disc <= 100 ? "percent" : "fixed",
-        description: parsed.description || parsed.subtitle || "",
-        prerequisites: Array.isArray(parsed.prerequisites)
-          ? typeof parsed.prerequisites[0] === "string"
-            ? parsed.prerequisites
-            : []
-          : typeof parsed.prerequisites === "string" && parsed.prerequisites
-            ? [parsed.prerequisites]
-            : [],
-        whatYouLearn: Array.isArray(parsed.whatYouLearn || parsed.objectives)
-          ? parsed.whatYouLearn || parsed.objectives
-          : [],
-        language: parsed.language || "",
-        certificate: parsed.certificate ?? true,
-        image: "",
-        status: parsed.status || "draft",
-        materials: [],
+        discountType,
+        description: given(parsed.description)
+          ? String(parsed.description)
+          : given(parsed.subtitle)
+            ? String(parsed.subtitle)
+            : base.description,
+        prerequisites,
+        whatYouLearn,
+        language: given(parsed.language) ? String(parsed.language) : base.language,
+        certificate:
+          typeof parsed.certificate === "boolean" ? parsed.certificate : base.certificate,
+        status: given(parsed.status) ? String(parsed.status) : base.status,
+        image: isEdit ? base.image : "",
+        materials: isEdit ? base.materials : [],
       });
-      setImageFile(null);
-      setImagePreview(null);
+      // Save reads these textareas, so they must match what was just applied.
+      setListJson({
+        prerequisites: JSON.stringify(prerequisites, null, 2),
+        whatYouLearn: JSON.stringify(whatYouLearn, null, 2),
+      });
+      setListJsonError({});
+      if (!isEdit) {
+        setImageFile(null);
+        setImagePreview(null);
+      }
       setJsonError(null);
       setJsonMode(false); // switch back to form view so user can review
-      showToast(tc("jsonApplied") || "JSON applied — review and save");
+      showToast(tc("jsonApplied"));
     } catch (err) {
       setJsonError((err as Error).message);
     }
@@ -1115,11 +1203,16 @@ export default function CourseManagementPage() {
                     {modalMode === "view" && tc("viewCourse")}
                     {modalMode === "delete" && tc("deleteCourse")}
                   </h3>
-                  {/* JSON toggle — only in add mode */}
-                  {modalMode === "add" && (
+                  {/* JSON toggle — add and edit modes */}
+                  {(modalMode === "add" || modalMode === "edit") && (
                     <button
                       type="button"
                       onClick={() => {
+                        // In edit mode, start from the course's current values so the
+                        // admin only has to fill in what's missing.
+                        if (!jsonMode && modalMode === "edit") {
+                          setJsonText(formToJson(formData));
+                        }
                         setJsonMode(!jsonMode);
                         setJsonError(null);
                       }}
@@ -1538,12 +1631,11 @@ export default function CourseManagementPage() {
                 </div>
               )}
 
-              {/* JSON Import Panel (add mode only) */}
-              {modalMode === "add" && jsonMode && (
+              {/* JSON Import Panel (add and edit modes) */}
+              {(modalMode === "add" || modalMode === "edit") && jsonMode && (
                 <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                   <p className="text-xs text-silver dark:text-white/50">
-                    {tc("jsonHint") ||
-                      "Paste your course JSON below. The image field will stay empty — you can upload it later."}
+                    {modalMode === "edit" ? tc("jsonHintEdit") : tc("jsonHint")}
                   </p>
                   <textarea
                     rows={18}

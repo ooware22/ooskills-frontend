@@ -481,6 +481,7 @@
       "discount": "Discount",
       "importJson": "Import from JSON",
       "jsonHint": "Paste your course JSON below. The image field will stay empty — you can upload it later.",
+      "jsonHintEdit": "Upload a .json file or edit below. It starts with this course's current values: fill in what's empty and change what you need. Fields you remove stay as they are.",
       "applyJson": "Apply JSON",
       "jsonApplied": "JSON applied — review the form and save",
       "importFile": "Import File",

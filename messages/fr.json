@@ -450,6 +450,7 @@
       "discount": "Réduction",
       "importJson": "Importer depuis JSON",
       "jsonHint": "Collez votre JSON de cours ci-dessous. Le champ image restera vide — vous pourrez le télécharger plus tard.",
+      "jsonHintEdit": "Importez un fichier .json ou modifiez ci-dessous. Les valeurs actuelles du cours sont pré-remplies : complétez ce qui est vide et changez ce qu'il faut. Les champs retirés restent inchangés.",
       "applyJson": "Appliquer le JSON",
       "jsonApplied": "JSON appliqué — vérifiez le formulaire et enregistrez",
       "importFile": "Importer un fichier",
