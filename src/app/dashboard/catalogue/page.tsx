@@ -8,17 +8,8 @@ import {
   XMarkIcon,
   CheckCircleIcon,
   PlusIcon,
-  AcademicCapIcon,
-  BeakerIcon,
-  LanguageIcon,
-  ComputerDesktopIcon,
-  BriefcaseIcon,
-  MusicalNoteIcon,
-  PaintBrushIcon,
-  HeartIcon,
-  CubeIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import StudentHeader from "@/components/student/StudentHeader";
 import CourseCard, { CourseCardSkeleton } from "@/components/CourseCard";
@@ -31,21 +22,6 @@ import {
 } from "@/store/slices/publicCoursesSlice";
 import EnrollDialog from "@/components/EnrollDialog";
 import type { PublicCourse } from "@/services/publicCoursesApi";
-import type { ComponentType, SVGProps } from "react";
-
-/** Map backend icon name → Heroicon component */
-const CATEGORY_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
-  academic: AcademicCapIcon,
-  star: StarIcon,
-  science: BeakerIcon,
-  language: LanguageIcon,
-  computer: ComputerDesktopIcon,
-  business: BriefcaseIcon,
-  music: MusicalNoteIcon,
-  art: PaintBrushIcon,
-  health: HeartIcon,
-  default: CubeIcon,
-};
 
 export default function CataloguePage() {
   const t = useTranslations("coursesPage");
@@ -136,10 +112,6 @@ export default function CataloguePage() {
     const cat = categories.find((c) => c.slug === slug);
     if (!cat) return slug;
     return getCategoryName(cat.name as unknown as Record<string, string>);
-  };
-
-  const getCategoryIcon = (iconName: string) => {
-    return CATEGORY_ICONS[iconName] || CATEGORY_ICONS.default;
   };
 
   // Client-side filter + sort

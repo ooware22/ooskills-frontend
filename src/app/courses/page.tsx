@@ -18,32 +18,8 @@ import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
   XMarkIcon,
-  AcademicCapIcon,
-  BeakerIcon,
-  LanguageIcon,
-  ComputerDesktopIcon,
-  BriefcaseIcon,
-  MusicalNoteIcon,
-  PaintBrushIcon,
-  HeartIcon,
-  CubeIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
-import type { ComponentType, SVGProps } from "react";
-
-/** Map backend icon name → Heroicon component */
-const CATEGORY_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
-  academic: AcademicCapIcon,
-  star: StarIcon,
-  science: BeakerIcon,
-  language: LanguageIcon,
-  computer: ComputerDesktopIcon,
-  business: BriefcaseIcon,
-  music: MusicalNoteIcon,
-  art: PaintBrushIcon,
-  health: HeartIcon,
-  default: CubeIcon,
-};
+import { getCategoryIcon } from "@/lib/categoryIcons";
 
 export default function CoursesPage() {
   const t = useTranslations("coursesPage");
@@ -155,10 +131,6 @@ export default function CoursesPage() {
     const cat = categories.find((c) => c.slug === slug);
     if (!cat) return slug;
     return getCategoryName(cat.name as unknown as Record<string, string>);
-  };
-
-  const getCategoryIcon = (iconName: string) => {
-    return CATEGORY_ICONS[iconName] || CATEGORY_ICONS.default;
   };
 
   return (

@@ -13,26 +13,8 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
-  // Icon options for categories
-  CodeBracketIcon,
-  BriefcaseIcon,
-  PaintBrushIcon,
-  GlobeAltIcon,
-  BookOpenIcon,
-  MusicalNoteIcon,
-  CameraIcon,
-  HeartIcon,
-  ChartBarIcon,
-  CalculatorIcon,
-  CpuChipIcon,
-  StarIcon,
-  AcademicCapIcon,
-  LightBulbIcon,
-  WrenchScrewdriverIcon,
-  RocketLaunchIcon,
-  ShieldCheckIcon,
-  CubeIcon,
 } from "@heroicons/react/24/outline";
+import { CATEGORY_ICON_OPTIONS, getCategoryIcon } from "@/lib/categoryIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -50,31 +32,10 @@ import type { AdminCategory, AdminCategoryCreatePayload } from "@/services/admin
 // ICON MAP AND HELPERS
 // =============================================================================
 
-const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
-  star: StarIcon,
-  code: CodeBracketIcon,
-  briefcase: BriefcaseIcon,
-  palette: PaintBrushIcon,
-  globe: GlobeAltIcon,
-  book: BookOpenIcon,
-  music: MusicalNoteIcon,
-  camera: CameraIcon,
-  heart: HeartIcon,
-  chart: ChartBarIcon,
-  calculator: CalculatorIcon,
-  cpu: CpuChipIcon,
-  academic: AcademicCapIcon,
-  lightbulb: LightBulbIcon,
-  wrench: WrenchScrewdriverIcon,
-  rocket: RocketLaunchIcon,
-  shield: ShieldCheckIcon,
-  cube: CubeIcon,
-};
-
-const ICON_OPTIONS = Object.keys(ICON_MAP);
+const ICON_OPTIONS = CATEGORY_ICON_OPTIONS;
 
 const CategoryIcon = ({ iconName, className }: { iconName: string; className?: string }) => {
-  const IconComp = ICON_MAP[iconName] || StarIcon;
+  const IconComp = getCategoryIcon(iconName);
   return <IconComp className={className} />;
 };
 
