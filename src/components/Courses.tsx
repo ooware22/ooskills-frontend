@@ -25,9 +25,11 @@ export default function Courses() {
     }
   }, [dispatch, courses.length]);
 
-  // Show up to 4 courses sorted by popularity
+  // Show the 4 most recently imported courses, newest first. Sorted here too
+  // (not only by the API) because this list is shared with the catalog page,
+  // which may have loaded it with a different sort order.
   const displayCourses = [...courses]
-    .sort((a, b) => b.students - a.students)
+    .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
     .slice(0, 4);
 
   return (

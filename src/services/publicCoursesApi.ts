@@ -65,6 +65,7 @@ export interface PublicCourse {
     language: string;
     certificate: boolean;
     lastUpdated: string;
+    created_at?: string;
     is_campaign_active?: boolean;
     campaign_discount?: number;
     is_welcome_applied?: boolean;
