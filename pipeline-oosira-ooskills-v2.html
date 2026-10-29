@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banc d'essai v0.2 — Pipeline Oosira → OoSkills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#F1F4F3; --panel:#FBFCFC; --ink:#13202A; --ink-soft:#5A6B75;
+  --rule:#CBD5D8; --rule-soft:#E3E9EA;
+  --petrol:#0F5C6B; --gap:#A82753; --held:#4A7130; --off:#96A3AA; --amber:#8A6100;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --ar:'Noto Naskh Arabic',serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1300px;margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{font-family:var(--mono);letter-spacing:-.01em}
+a{color:var(--petrol)}
+
+/* ── masthead ─────────────────────────── */
+.masthead{border-bottom:1px solid var(--rule);background:var(--panel)}
+.masthead .wrap{padding:36px 24px 30px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--petrol);margin:0 0 16px}
+h1{font-weight:600;font-size:clamp(25px,4.2vw,42px);line-height:1.08;margin:0 0 18px;max-width:20ch}
+h1 em{font-style:normal;color:var(--gap)}
+.thesis{max-width:64ch;margin:0 0 24px;color:var(--ink-soft);font-size:15.5px}
+.thesis strong{color:var(--ink);font-weight:600}
+.tabs{display:flex;gap:0;flex-wrap:wrap;border-bottom:0}
+.tabs button{
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  padding:11px 16px;border:1px solid var(--rule);border-bottom:none;background:var(--ground);
+  color:var(--ink-soft);cursor:pointer;margin-right:-1px;transition:all .15s;
+}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);border-color:var(--rule);box-shadow:inset 0 2px 0 var(--petrol);font-weight:500}
+.tabs button:focus-visible{outline:2px solid var(--gap);outline-offset:-2px}
+
+button{font-family:var(--mono)}
+.btn{font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:10px 16px;border:1px solid var(--ink);background:var(--ink);color:var(--panel);cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.82}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:focus-visible{outline:2px solid var(--gap);outline-offset:2px}
+.hint{font-family:var(--mono);font-size:11px;color:var(--off)}
+
+/* ── panneaux ─────────────────────────── */
+.panel{display:none;padding:28px 0 72px}
+.panel.on{display:block}
+.card{background:var(--panel);border:1px solid var(--rule);padding:24px 26px 26px;margin-bottom:16px}
+h2{font-size:19px;font-weight:600;margin:0 0 6px}
+h2 .idx{color:var(--off);margin-right:12px}
+.sub{color:var(--ink-soft);margin:0 0 20px;max-width:66ch;font-size:14.5px}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--panel);background:var(--petrol);padding:3px 8px;display:inline-block;margin-bottom:14px}
+.tag.x{background:var(--gap)} .tag.r{background:var(--ink-soft)} .tag.h{background:var(--amber)}
+
+pre{font-family:var(--mono);font-size:12px;line-height:1.65;margin:0;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+pre .k{color:var(--petrol)} pre .s{color:var(--held)} pre .c{color:var(--off)}
+code{font-family:var(--mono);font-size:12.5px;background:var(--ground);padding:1px 5px}
+
+.io{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:18px}
+@media(max-width:700px){.io{grid-template-columns:1fr}}
+.io>div{background:var(--panel);padding:14px 16px;min-width:0}
+.io h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--off);margin:0 0 10px;font-weight:500}
+
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:0}
+@media(max-width:700px){.meta{grid-template-columns:1fr}}
+.meta>div{background:var(--panel);padding:12px 15px}
+.meta dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--off);margin-bottom:4px}
+.meta dd{margin:0;font-size:12.5px;font-family:var(--mono);line-height:1.5}
+
+.note{border-left:2px solid var(--gap);padding:12px 0 12px 15px;margin-top:18px;font-size:14px}
+.note b{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gap);display:block;margin-bottom:5px;font-weight:600}
+.note.p{border-left-color:var(--petrol)} .note.p b{color:var(--petrol)}
+.note.a{border-left-color:var(--amber)} .note.a b{color:var(--amber)}
+
+/* ── tableaux référentiel ─────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.tbl th{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--off);text-align:left;font-weight:500;padding:9px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.tbl tr:hover td{background:var(--ground)}
+.tbl .m{font-family:var(--mono);font-size:11.5px}
+.tbl .arv{font-family:var(--ar);font-size:14px;direction:rtl}
+.scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel)}
+
+.prov{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.dot.ok{background:var(--held)} .dot.warn{background:var(--amber)} .dot.bad{background:var(--gap)}
+.prov.ok{color:var(--held)} .prov.warn{color:var(--amber)} .prov.bad{color:var(--gap)}
+
+/* ── sélecteur de CV ──────────────────── */
+.cvbar{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:18px}
+.cvbar button{
+  background:var(--panel);border:none;padding:11px 13px;text-align:left;cursor:pointer;
+  display:block;width:100%;font-family:var(--sans);transition:background .15s;border-left:2px solid transparent;
+}
+.cvbar button:hover{background:var(--ground)}
+.cvbar button[aria-pressed="true"]{background:var(--ground);border-left-color:var(--petrol)}
+.cvbar .cn{font-family:var(--mono);font-size:9.5px;color:var(--off);letter-spacing:.1em}
+.cvbar .cnom{font-size:13px;font-weight:600;margin:2px 0 1px;line-height:1.25}
+.cvbar .cmet{font-size:11px;color:var(--ink-soft);line-height:1.3}
+.cvbar .cflag{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;display:inline-block;padding:1px 5px;border:1px solid var(--gap);color:var(--gap)}
+
+/* ── rail étapes ──────────────────────── */
+.bench{display:grid;grid-template-columns:232px 1fr;gap:28px}
+@media(max-width:940px){.bench{grid-template-columns:1fr;gap:16px}}
+.rail{position:sticky;top:16px;align-self:start}
+@media(max-width:940px){.rail{position:static}.rail ol{display:flex;overflow-x:auto;gap:6px;padding-bottom:6px}.rail li{flex:0 0 auto}}
+.rail ol{list-style:none;margin:0;padding:0}
+.rail li{margin-bottom:2px}
+.rail button{width:100%;text-align:left;background:transparent;border:none;border-left:2px solid var(--rule);color:var(--ink-soft);padding:8px 11px;font-size:12.5px;cursor:pointer;display:flex;gap:9px;align-items:baseline;font-family:var(--sans)}
+.rail button:hover{border-left-color:var(--off);color:var(--ink)}
+.rail button .n{font-family:var(--mono);font-weight:600;color:var(--off);font-size:11px}
+.rail li.on button{border-left-color:var(--petrol);background:var(--panel);color:var(--ink);font-weight:500}
+.rail li.on button .n{color:var(--petrol)}
+.rail li.done button .n{color:var(--held)}
+.rail .legend{font-family:var(--mono);font-size:10.5px;color:var(--off);border-top:1px solid var(--rule);margin-top:14px;padding-top:12px;line-height:1.95}
+.rail .legend b{display:block;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;font-weight:500}
+.sw{display:inline-block;width:9px;height:9px;margin-right:7px}
+
+/* ── chips ────────────────────────────── */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-family:var(--mono);font-size:11.5px;padding:4px 8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);display:inline-flex;gap:6px;align-items:center;transition:all .3s ease}
+.chip .id{color:var(--off);font-size:9.5px}
+.chip.held{border-color:var(--held);color:var(--held)}
+.chip.ess::after{content:'!';color:var(--gap);font-weight:600}
+.chip.matched{opacity:.28;text-decoration:line-through;border-color:var(--rule);color:var(--off)}
+.chip.gap{border-color:var(--gap);color:var(--gap);background:#FDF2F6;font-weight:500}
+.chip.dropped{opacity:.45;border-style:dashed;color:var(--off)}
+.chip.kept{border-color:var(--petrol);color:var(--petrol);background:#EFF6F7}
+.chip.soon{border-color:var(--amber);color:var(--amber);border-style:dashed}
+
+/* ── soustraction ─────────────────────── */
+.subtract{border:1px solid var(--rule);background:var(--panel);margin-bottom:18px}
+.subtract .row{padding:15px 17px;border-bottom:1px solid var(--rule)}
+.subtract .row:last-of-type{background:#FDF2F6}
+.subtract .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--off);margin-bottom:10px;display:flex;justify-content:space-between}
+.formula{font-family:var(--mono);font-size:13.5px;padding:13px 17px;border-top:1px solid var(--rule);color:var(--ink-soft);background:var(--ground)}
+.formula b{color:var(--gap);font-weight:600}
+
+/* ── reco ─────────────────────────────── */
+.reco{border:1px solid var(--rule);background:var(--panel)}
+.reco .r{display:grid;grid-template-columns:30px 1fr auto;gap:14px;align-items:center;padding:14px 17px;border-bottom:1px solid var(--rule)}
+.reco .r:last-child{border-bottom:none}
+.reco .rk{font-family:var(--mono);font-size:19px;font-weight:600;color:var(--gap)}
+.reco .nm{font-weight:600;font-size:14.5px}
+.reco .why{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:2px}
+.reco .pc{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--petrol);text-align:right}
+.reco .pc small{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--off);font-weight:400}
+.empty{border:1px dashed var(--amber);background:#FCF8EF;padding:18px 20px}
+.empty h4{margin:0 0 7px;color:var(--amber);font-size:14px}
+.empty p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+
+/* ── état ─────────────────────────────── */
+.state{background:var(--ink);color:#D7E0E4;padding:16px 18px;border:1px solid var(--ink)}
+.state h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#7E939D;margin:0 0 10px;font-weight:500}
+.state pre{color:#D7E0E4;font-size:11px}
+.state pre .k{color:#6FB3C4} .state pre .s{color:#A9C98B} .state pre .c{color:#5E727C}
+
+/* ── matrice ──────────────────────────── */
+.mx{width:100%;border-collapse:collapse;font-size:12px}
+.mx th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--off);font-weight:500;padding:9px 8px;border-bottom:1px solid var(--rule);text-align:center}
+.mx th.l{text-align:left}
+.mx td{padding:8px;border-bottom:1px solid var(--rule-soft);text-align:center;font-family:var(--mono);font-size:12px}
+.mx td.l{text-align:left;font-family:var(--sans)}
+.mx tr:hover td{background:var(--ground)}
+.mx .nm{font-weight:600;font-size:13px}
+.mx .mt{font-size:11px;color:var(--ink-soft)}
+.mx .zero{color:var(--gap);font-weight:600}
+.mx .one{color:var(--amber);font-weight:600}
+.mx .many{color:var(--held);font-weight:600}
+.mx tfoot td{border-top:1px solid var(--rule);border-bottom:none;font-weight:600;padding-top:11px}
+.toggle{display:inline-flex;border:1px solid var(--rule);margin-bottom:16px}
+.toggle button{background:var(--panel);border:none;padding:9px 15px;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:18px}
+.bars>div{background:var(--panel);padding:15px 17px}
+.bars .big{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1;margin-bottom:5px}
+.bars .lb{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--off)}
+.bars .cm{font-size:12.5px;color:var(--ink-soft);margin-top:7px;line-height:1.45}
+
+/* ── outro ────────────────────────────── */
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule)}
+@media(max-width:800px){.cols{grid-template-columns:1fr}}
+.cols>div{background:var(--panel);padding:19px}
+.cols h4{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 9px;color:var(--petrol)}
+.cols p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+.disc{font-family:var(--mono);font-size:11px;color:var(--off);margin-top:24px;line-height:1.85;border-top:1px solid var(--rule);padding-top:16px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Banc d'essai · spécification exécutable · v0.2 — 10 profils, référentiel tracé</p>
+    <h1>Un CV entre. Une <em>soustraction</em> sort.</h1>
+    <p class="thesis">
+      Quatre opérations relient Oosira à OoSkills : <strong>un classement</strong> pour identifier le métier visé,
+      <strong>une extraction</strong> pour lister ce que la personne sait faire, <strong>une soustraction</strong>
+      pour trouver le trou, <strong>un filtre</strong> pour ne proposer que ce qui existe au catalogue.
+      Cette page montre la donnée à chaque étape, sur dix profils réels du marché algérien — dont cinq
+      qui cassent le pipeline. Chaque identifiant porte son statut de provenance.
+    </p>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-p="bench">Le banc · 10 profils</button>
+      <button role="tab" aria-selected="false" data-p="ref">Le référentiel · identifiants</button>
+      <button role="tab" aria-selected="false" data-p="mx">La couverture · matrice</button>
+      <button role="tab" aria-selected="false" data-p="out">Hors périmètre</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ═══════════ BANC ═══════════ -->
+<section class="panel on" id="p-bench">
+  <div class="cvbar" id="cvbar" role="group" aria-label="Choisir un profil"></div>
+  <div class="bench">
+    <nav class="rail" aria-label="Étapes">
+      <ol id="rail"></ol>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn" id="play" style="flex:1">Dérouler</button>
+        <button class="btn ghost" id="reset">↺</button>
+      </div>
+      <div class="legend">
+        <b>Code couleur</b>
+        <span class="sw" style="background:var(--held)"></span>détenu<br>
+        <span class="sw" style="background:var(--gap)"></span>manquant<br>
+        <span class="sw" style="background:var(--petrol)"></span>couvert au catalogue<br>
+        <span class="sw" style="background:var(--amber)"></span>produit, non publié<br>
+        <span class="sw" style="background:var(--off)"></span>écarté
+      </div>
+    </nav>
+    <main>
+      <section class="card" id="stepCard" aria-live="polite"></section>
+      <section class="state"><h3>État accumulé — objet passé d'une étape à l'autre</h3><pre id="stateOut"></pre></section>
+    </main>
+  </div>
+</section>
+
+<!-- ═══════════ RÉFÉRENTIEL ═══════════ -->
+<section class="panel" id="p-ref">
+  <div class="card">
+    <span class="tag h">Provenance</span>
+    <h2>Trois statuts d'identifiant, et un seul qui t'appartient</h2>
+    <p class="sub">
+      La règle : <strong>ta clé primaire est locale</strong> (<code>OO.*</code>), les identifiants externes sont
+      des attributs avec un statut. Aucun UUID ESCO n'est écrit en dur dans cette page — ils se résolvent par
+      import du dataset, jamais à la main. Un identifiant sans statut de provenance est un identifiant qu'un
+      dev recopiera en production sans savoir s'il est vrai.
+    </p>
+    <div class="scroll"><table class="tbl">
+      <thead><tr><th>Statut</th><th>Signifie</th><th>Qui le remplit</th><th>Quand</th></tr></thead>
+      <tbody>
+        <tr><td><span class="prov ok"><span class="dot ok"></span>réel</span></td>
+            <td>Code officiel publié, vérifiable en ligne aujourd'hui</td><td class="m">personne — on le copie</td><td class="m">immédiat</td></tr>
+        <tr><td><span class="prov warn"><span class="dot warn"></span>à résoudre</span></td>
+            <td>L'identifiant existe mais c'est un UUID — il vient du fichier, pas de la mémoire</td>
+            <td class="m">script d'import ESCO</td><td class="m">P0, une fois</td></tr>
+        <tr><td><span class="prov bad"><span class="dot bad"></span>à sourcer</span></td>
+            <td>Codification non publiée en accès machine — à confirmer à la source</td>
+            <td class="m">humain, sur name.anem.dz</td><td class="m">avant P1 — bloquant</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note a"><b>Le seul risque réel du plan</b>
+      Si la NAME n'est pas exportable (CSV, API, dump) et reste consultable en HTML uniquement, toute la colonne
+      NAME passe en travail manuel ou en scraping. C'est la vérification à faire avant d'écrire une ligne de code.
+      Repli si elle échoue : ROME 4.0 en couche d'affichage, avec une table d'appellations DZ maison par-dessus.
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag r">Table 1 / 3</span>
+    <h2>Métiers — la chaîne NAME → ROME → ISCO → ESCO</h2>
+    <p class="sub">
+      Dix métiers cibles couvrant les dix profils. La NAME est conçue avec France Travail sur l'architecture ROME :
+      c'est ce qui rend le mapping praticable. ISCO-08 est la charnière que ESCO utilise nativement pour ses
+      occupations — c'est le maillon le plus solide de la chaîne.
+    </p>
+    <div class="scroll"><table class="tbl" id="tMetiers"></table></div>
+  </div>
+
+  <div class="card">
+    <span class="tag r">Table 2 / 3</span>
+    <h2>Compétences — <code>OO.*</code> + <code>esco_id</code> + libellés trilingues</h2>
+    <p class="sub">
+      Quarante compétences amorcées à la main pour les secteurs pilotes. Le champ <code>esco_id</code> existe
+      dès la première ligne, vide. C'est le correctif à cinq minutes qui évite l'enfermement dans le vocabulaire
+      maison. La colonne arabe n'est pas un <code>"..."</code> — Oosira est trilingue, un CV en arabe a besoin
+      de son propre dictionnaire d'extraction, pas d'une traduction d'étiquettes.
+    </p>
+    <div class="scroll"><table class="tbl" id="tSkills"></table></div>
+    <div class="note"><b>Ce qui ne figure pas dans cette table</b>
+      Aucun <code>poids_par_metier</code>. Quarante compétences × 422 fiches NAME = 21 100 pondérations à
+      maintenir à la main. La relation compétence↔métier se lit dans <code>occupationSkillRelations</code>,
+      elle ne s'écrit pas. Et la pondération se dérive de la fréquence réelle dans les offres DZ — pas d'un
+      chiffre décidé par celui qui remplit le YAML.
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag r">Table 3 / 3</span>
+    <h2>Catalogue OoSkills — publié vs produit</h2>
+    <p class="sub">
+      Cinq formations en ligne, onze produites mais non publiées. Cette distinction n'est pas cosmétique :
+      elle décide du séquencement de tout le projet. Voir l'onglet <strong>Couverture</strong>.
+    </p>
+    <div class="scroll"><table class="tbl" id="tForm"></table></div>
+  </div>
+</section>
+
+<!-- ═══════════ MATRICE ═══════════ -->
+<section class="panel" id="p-mx">
+  <div class="card">
+    <span class="tag x">Le calcul qui décide du séquencement</span>
+    <h2>Dix profils passés au catalogue réel</h2>
+    <p class="sub">
+      Le moteur de recommandation ne vaut que ce que vaut le catalogue. Bascule entre les deux états ci-dessous :
+      à gauche ce qui est en ligne aujourd'hui, à droite ce qui est produit et attend d'être publié.
+      La différence n'est pas marginale — elle dit si le pont est constructible maintenant ou dans trois mois.
+    </p>
+    <div class="toggle" role="group" aria-label="État du catalogue">
+      <button id="tgPub" aria-pressed="true">Catalogue publié · 5</button>
+      <button id="tgPro" aria-pressed="false">Catalogue produit · 16</button>
+    </div>
+    <div class="scroll"><table class="mx" id="mxTable"></table></div>
+    <div class="bars" id="mxStats"></div>
+    <div class="note" id="mxNote"></div>
+  </div>
+</section>
+
+<!-- ═══════════ OUTRO ═══════════ -->
+<section class="panel" id="p-out">
+  <div class="card">
+    <h2>Ce qui n'est pas dans le pipeline</h2>
+    <p class="sub">Autant de lignes de code qu'un dev zélé écrira si personne ne lui dit de ne pas les écrire.</p>
+    <div class="cols">
+      <div><h4>Pas de LLM dans le matching</h4>
+        <p>Les étapes 03 à 06 sont de l'arithmétique ensembliste sur des identifiants. Déterministe, testable,
+        rejouable. Le LLM sert à l'extraction floue (étape 02) et à rédiger le conseil en FR ou AR. Jamais à
+        décider quoi recommander.</p></div>
+      <div><h4>Pas de score 0–100 par compétence</h4>
+        <p>Compter les occurrences d'un mot-clé mesure le style de rédaction, pas la maîtrise. Trois états —
+        absent / partiel / acquis — suffisent, et alimentent très bien la calibration de niveau.</p></div>
+      <div><h4>Pas de taxonomie maison durable</h4>
+        <p>Le YAML d'amorçage est un échafaudage, pas un actif. <code>esco_id</code> et <code>name_metiers</code>
+        vides dès le jour 1 préservent la sortie.</p></div>
+      <div><h4>Pas de machinerie d'affiliation</h4>
+        <p>Codes promo croisés, cookie 30 j, dashboard d'attribution : ce sont des outils de négociation entre
+        deux entreprises. Tu possèdes les deux. Un compteur suffit.</p></div>
+      <div><h4>Pas de champ obligatoire avant la valeur</h4>
+        <p>« Poste visé » obligatoire tue la conversion du builder gratuit sans inscription. On devine, on
+        affiche, on laisse corriger.</p></div>
+      <div><h4>Pas de microservice en v0</h4>
+        <p>Un module du monolithe et un JSON de règles. On ne sort <code>bridge.ooware.com</code>, OIDC et
+        pgvector qu'après avoir mesuré le premier taux de clic.</p></div>
+    </div>
+    <div class="note p"><b>La seule chose à ajouter, en revanche</b>
+      Une page publique <code>/verify/{uuid}</code> et un QR sur le CV. Un badge « Vérifié OoSkills » qu'un
+      recruteur ne peut pas contrôler est décoratif — et c'est tout ce qui sépare le pont retour d'un simple
+      pré-remplissage de champ.
+    </div>
+    <p class="disc">
+      Démonstration à visée pédagogique. Les dix candidats, leurs CV, les fréquences d'offres et les gains de
+      score sont fictifs. Les codes ROME et ISCO-08 sont réels et vérifiables. Les URI ESCO ne sont
+      volontairement pas écrites : elles se résolvent par import du dataset officiel. La codification NAME est
+      marquée « à sourcer » — sa structure est publique (16 secteurs, 87 domaines, 422 fiches) mais sa
+      disponibilité machine reste à confirmer auprès de l'ANEM.
+    </p>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ════════════════ RÉFÉRENTIEL ════════════════ */
+
+const SK = {
+  // dev
+  "OO.DEV.PY":   ["Python","بايثون","Python (programmation informatique)","dev"],
+  "OO.DEV.SQL":  ["SQL","إس كيو إل","SQL","dev"],
+  "OO.DEV.GIT":  ["Git","غيت","utiliser des systèmes de gestion de versions","dev"],
+  "OO.DEV.ALGO": ["Algorithmique","الخوارزميات","algorithmes","dev"],
+  "OO.DEV.TEST": ["Tests unitaires","اختبارات الوحدة","tests de logiciels","dev"],
+  "OO.DEV.CICD": ["CI/CD","التكامل والنشر المستمران","intégration continue","dev"],
+  "OO.DEV.CONT": ["Conteneurisation","الحاويات","virtualisation applicative","dev"],
+  "OO.DEV.SECA": ["Sécurité applicative","أمن التطبيقات","sécurité des applications","dev"],
+  // gestion / management
+  "OO.MGT.AGILE":["Méthodes agiles","المنهجيات الرشيقة","gestion de projet agile","mgt"],
+  "OO.MGT.PROJ": ["Gestion de projet","تسيير المشاريع","gestion de projet","mgt"],
+  "OO.MGT.PLAN": ["Planification","التخطيط","planification de projet","mgt"],
+  "OO.MGT.MSP":  ["MS Project","مايكروسوفت بروجكت","logiciels de gestion de projet","mgt"],
+  "OO.MGT.TEAM": ["Management d'équipe","تسيير الفريق","encadrer du personnel","mgt"],
+  "OO.MGT.CONT": ["Gestion de contrats","تسيير العقود","gestion des contrats","mgt"],
+  // bureautique
+  "OO.BUR.XL":   ["Excel — bases","إكسل (أساسيات)","utiliser des tableurs","bur"],
+  "OO.BUR.XL2":  ["Excel avancé","إكسل المتقدم","fonctions avancées de tableur","bur"],
+  "OO.BUR.WORD": ["Traitement de texte","معالجة النصوص","utiliser un traitement de texte","bur"],
+  "OO.BUR.DATA": ["Analyse de données bureautique","تحليل البيانات","analyser des données","bur"],
+  "OO.BUR.REDA": ["Rédaction professionnelle","التحرير المهني","rédiger des documents professionnels","bur"],
+  "OO.BUR.ORG":  ["Organisation administrative","التنظيم الإداري","gérer des tâches administratives","bur"],
+  // finance
+  "OO.FIN.CPT":  ["Comptabilité générale","المحاسبة العامة","comptabilité","fin"],
+  "OO.FIN.FISC": ["Fiscalité algérienne","الجباية الجزائرية","législation fiscale","fin"],
+  "OO.FIN.ERP":  ["ERP comptable","برمجيات تسيير المؤسسة","utiliser un logiciel comptable","fin"],
+  "OO.FIN.PAIE": ["Gestion de la paie","تسيير الأجور","établir la paie","fin"],
+  // commerce
+  "OO.COM.VENT": ["Techniques de vente","تقنيات البيع","techniques de vente","com"],
+  "OO.COM.NEGO": ["Négociation commerciale","التفاوض التجاري","négocier des accords commerciaux","com"],
+  "OO.COM.PROS": ["Prospection","استقطاب الزبائن","prospecter de nouveaux clients","com"],
+  "OO.COM.CRM":  ["CRM","إدارة علاقات الزبائن","logiciels de relation client","com"],
+  // marketing
+  "OO.MKT.DIGI": ["Marketing digital","التسويق الرقمي","marketing numérique","mkt"],
+  "OO.MKT.SEO":  ["SEO","تحسين محركات البحث","référencement naturel","mkt"],
+  "OO.MKT.ANAL": ["Web analytics","تحليلات الويب","analyse d'audience web","mkt"],
+  // industrie
+  "OO.IND.AUTO": ["Automatisme industriel","الأتمتة الصناعية","automatisation industrielle","ind"],
+  "OO.IND.GMAO": ["GMAO","الصيانة بمساعدة الحاسوب","gestion de la maintenance","ind"],
+  "OO.IND.PLAN": ["Lecture de plans","قراءة المخططات","lire des plans techniques","ind"],
+  "OO.IND.HSE":  ["Sécurité industrielle HSE","الصحة والسلامة والبيئة","santé et sécurité au travail","ind"],
+  "OO.IND.QUAL": ["Contrôle qualité","مراقبة الجودة","contrôle qualité","ind"],
+  "OO.IND.TIG":  ["Soudage TIG","اللحام بالتنغستن","techniques de soudage","ind"],
+  "OO.IND.ARC":  ["Soudage à l'arc","اللحام بالقوس الكهربائي","soudage à l'arc","ind"],
+  "OO.IND.INJ":  ["Injection plastique","حقن البلاستيك","transformation des matières plastiques","ind"],
+  "OO.IND.PETR": ["Vocabulaire technique pétrolier","المصطلحات البترولية","terminologie pétrolière","ind"],
+  // logistique
+  "OO.LOG.STK":  ["Gestion de stock","تسيير المخزون","gestion des stocks","log"],
+  "OO.LOG.WMS":  ["WMS","نظام تسيير المستودعات","systèmes de gestion d'entrepôt","log"],
+  "OO.LOG.PREP": ["Préparation de commandes","تحضير الطلبيات","préparer des commandes","log"],
+  // langues
+  "OO.LNG.EN":   ["Anglais professionnel","الإنجليزية المهنية","anglais","lng"],
+  "OO.LNG.ENM":  ["Anglais médical","الإنجليزية الطبية","terminologie médicale en anglais","lng"],
+  // soft
+  "OO.SOF.COMM": ["Communication professionnelle","التواصل المهني","communiquer efficacement","sof"],
+  "OO.SOF.TEAM": ["Travail en équipe","العمل الجماعي","travailler en équipe","sof"],
+  "OO.SOF.STRS": ["Gestion du stress","تسيير الضغط","gérer le stress","sof"],
+  "OO.SOF.POST": ["Posture professionnelle","السلوك المهني","professionnalisme","sof"],
+  // santé
+  "OO.SAN.SOIN": ["Soins infirmiers","التمريض","soins infirmiers","san"],
+  "OO.SAN.URG":  ["Prise en charge des urgences","التكفل بالحالات المستعجلة","soins d'urgence","san"],
+  "OO.SAN.DOSS": ["Dossier patient","الملف الطبي","tenue du dossier patient","san"]
+};
+const CATLBL = {dev:"Développement",mgt:"Gestion",bur:"Bureautique",fin:"Finance",com:"Commerce",
+  mkt:"Marketing",ind:"Industrie",log:"Logistique",lng:"Langues",sof:"Soft skills",san:"Santé"};
+
+const MET = {
+  "M.DEV": {fr:"Développeur d'applications", rome:"M1805", romeLbl:"Études et développement informatique", isco:"2512", iscoLbl:"Développeurs de logiciels",
+    req:[["OO.DEV.PY",1],["OO.DEV.SQL",1],["OO.DEV.GIT",1],["OO.DEV.ALGO",1],["OO.LNG.EN",0],
+         ["OO.DEV.TEST",1],["OO.DEV.CICD",0],["OO.DEV.CONT",0],["OO.MGT.AGILE",1],["OO.DEV.SECA",1]]},
+  "M.CPT": {fr:"Comptable", rome:"M1203", romeLbl:"Comptabilité", isco:"2411", iscoLbl:"Comptables",
+    req:[["OO.FIN.CPT",1],["OO.FIN.FISC",1],["OO.FIN.ERP",1],["OO.BUR.XL2",1],["OO.FIN.PAIE",0],
+         ["OO.BUR.ORG",0],["OO.LNG.EN",0]]},
+  "M.MNT": {fr:"Technicien de maintenance industrielle", rome:"I1304", romeLbl:"Installation et maintenance d'équipements industriels", isco:"3115", iscoLbl:"Techniciens en génie mécanique",
+    req:[["OO.IND.PLAN",1],["OO.IND.AUTO",1],["OO.IND.GMAO",1],["OO.IND.HSE",1],["OO.IND.QUAL",0],
+         ["OO.BUR.XL",0],["OO.IND.PETR",0]]},
+  "M.ASS": {fr:"Assistant administratif", rome:"M1607", romeLbl:"Secrétariat", isco:"4110", iscoLbl:"Employés de bureau",
+    req:[["OO.BUR.WORD",1],["OO.BUR.XL",1],["OO.BUR.ORG",1],["OO.BUR.REDA",1],["OO.SOF.COMM",1],["OO.LNG.EN",0]]},
+  "M.COM": {fr:"Commercial terrain", rome:"D1407", romeLbl:"Relation technico-commerciale", isco:"2433", iscoLbl:"Spécialistes de la vente technique",
+    req:[["OO.COM.VENT",1],["OO.COM.NEGO",1],["OO.COM.PROS",1],["OO.COM.CRM",1],["OO.SOF.COMM",1],["OO.BUR.XL",0]]},
+  "M.SOU": {fr:"Soudeur qualifié", rome:"H2913", romeLbl:"Soudage manuel", isco:"7212", iscoLbl:"Soudeurs et oxycoupeurs",
+    req:[["OO.IND.ARC",1],["OO.IND.TIG",1],["OO.IND.PLAN",1],["OO.IND.HSE",1],["OO.IND.QUAL",1]]},
+  "M.MKT": {fr:"Chargé de marketing", rome:"M1705", romeLbl:"Marketing", isco:"2431", iscoLbl:"Spécialistes de la publicité et du marketing",
+    req:[["OO.MKT.DIGI",1],["OO.MKT.SEO",1],["OO.MKT.ANAL",1],["OO.BUR.XL2",1],["OO.SOF.COMM",1],["OO.LNG.EN",0]]},
+  "M.BTP": {fr:"Conducteur de travaux BTP", rome:"F1201", romeLbl:"Conduite de travaux du BTP", isco:"3123", iscoLbl:"Chefs de chantier",
+    req:[["OO.MGT.PROJ",1],["OO.MGT.PLAN",1],["OO.MGT.MSP",1],["OO.MGT.TEAM",1],["OO.MGT.CONT",1],["OO.IND.HSE",1],["OO.IND.PLAN",1]]},
+  "M.INF": {fr:"Infirmier diplômé d'État", rome:"J1506", romeLbl:"Soins infirmiers généralistes", isco:"2221", iscoLbl:"Infirmiers",
+    req:[["OO.SAN.SOIN",1],["OO.SAN.URG",1],["OO.SAN.DOSS",1],["OO.LNG.ENM",0],["OO.SOF.STRS",0]]},
+  "M.LOG": {fr:"Magasinier — gestionnaire de stock", rome:"N1103", romeLbl:"Magasinage et préparation de commandes", isco:"4321", iscoLbl:"Employés du service des stocks",
+    req:[["OO.LOG.STK",1],["OO.LOG.PREP",1],["OO.LOG.WMS",1],["OO.BUR.XL",1],["OO.IND.HSE",1]]}
+};
+
+const FORM = [
+  {id:"F01",t:"Excel Avancé pour le Monde Professionnel",st:"publie",niv:"Approfondissement",sk:["OO.BUR.XL","OO.BUR.XL2","OO.BUR.DATA"]},
+  {id:"F02",t:"Gestion de Projet — Du Besoin à la Livraison",st:"publie",niv:"Initialisation",sk:["OO.MGT.PROJ","OO.MGT.PLAN","OO.MGT.AGILE"]},
+  {id:"F03",t:"Travail en Équipe et Collaboration",st:"publie",niv:"Initialisation",sk:["OO.SOF.TEAM","OO.SOF.COMM"]},
+  {id:"F04",t:"Intelligence Émotionnelle et Gestion du Stress",st:"publie",niv:"Initialisation",sk:["OO.SOF.STRS","OO.SOF.POST"]},
+  {id:"F05",t:"The Soft Skills That Set You Apart",st:"publie",niv:"Initialisation",sk:["OO.SOF.COMM","OO.SOF.POST"]},
+  {id:"F06",t:"Comptabilité générale et fiscalité DZ",st:"produit",niv:"Approfondissement",sk:["OO.FIN.CPT","OO.FIN.FISC","OO.FIN.PAIE"]},
+  {id:"F07",t:"Injection plastique — procédés et réglages",st:"produit",niv:"Approfondissement",sk:["OO.IND.INJ"]},
+  {id:"F16",t:"Contrôle qualité et métrologie industrielle",st:"produit",niv:"Approfondissement",sk:["OO.IND.QUAL"]},
+  {id:"F08",t:"Anglais professionnel",st:"produit",niv:"Initialisation",sk:["OO.LNG.EN"]},
+  {id:"F09",t:"Vocabulaire technique pétrolier",st:"produit",niv:"Approfondissement",sk:["OO.IND.PETR"]},
+  {id:"F10",t:"Techniques de vente et négociation",st:"produit",niv:"Approfondissement",sk:["OO.COM.VENT","OO.COM.NEGO","OO.COM.PROS"]},
+  {id:"F11",t:"Bureautique — Word et rédaction professionnelle",st:"produit",niv:"Initialisation",sk:["OO.BUR.WORD","OO.BUR.REDA","OO.BUR.ORG"]},
+  {id:"F12",t:"Management d'équipe",st:"produit",niv:"Approfondissement",sk:["OO.MGT.TEAM"]},
+  {id:"F13",t:"Sécurité industrielle HSE",st:"produit",niv:"Initialisation",sk:["OO.IND.HSE"]},
+  {id:"F14",t:"Logistique et gestion de stock",st:"produit",niv:"Approfondissement",sk:["OO.LOG.STK","OO.LOG.PREP","OO.LOG.WMS"]},
+  {id:"F15",t:"Marketing digital",st:"produit",niv:"Approfondissement",sk:["OO.MKT.DIGI","OO.MKT.SEO","OO.MKT.ANAL"]}
+];
+
+const FREQ = {
+  "OO.DEV.TEST":70,"OO.MGT.AGILE":55,"OO.DEV.SECA":40,"OO.DEV.CICD":48,"OO.DEV.CONT":33,
+  "OO.BUR.XL2":81,"OO.FIN.FISC":74,"OO.FIN.ERP":62,"OO.LNG.EN":58,"OO.FIN.PAIE":44,
+  "OO.IND.AUTO":66,"OO.IND.GMAO":52,"OO.IND.HSE":79,"OO.IND.QUAL":41,"OO.IND.PLAN":68,
+  "OO.BUR.WORD":72,"OO.BUR.REDA":49,"OO.BUR.ORG":57,"OO.BUR.XL":76,"OO.SOF.COMM":35,
+  "OO.COM.NEGO":71,"OO.COM.CRM":53,"OO.COM.PROS":64,"OO.COM.VENT":69,
+  "OO.IND.TIG":77,"OO.IND.ARC":60,
+  "OO.MKT.DIGI":83,"OO.MKT.SEO":61,"OO.MKT.ANAL":47,
+  "OO.MGT.MSP":59,"OO.MGT.CONT":45,"OO.MGT.TEAM":67,"OO.MGT.PROJ":72,"OO.MGT.PLAN":58,
+  "OO.SAN.URG":75,"OO.SAN.DOSS":54,"OO.LNG.ENM":38,"OO.SOF.STRS":30,
+  "OO.LOG.STK":73,"OO.LOG.WMS":56,"OO.LOG.PREP":63,"OO.DEV.PY":80,"OO.DEV.SQL":78,
+  "OO.DEV.GIT":74,"OO.DEV.ALGO":65,"OO.FIN.CPT":85,"OO.SOF.TEAM":28,"OO.SOF.POST":25,
+  "OO.SAN.SOIN":90,"OO.IND.INJ":36,"OO.IND.PETR":42,"OO.BUR.DATA":51
+};
+
+/* ════════════════ DIX PROFILS ════════════════ */
+const CVS = [
+{ id:"cv01", nom:"Amine Rahmani", ville:"Alger", lang:"fr", flag:null,
+  titre:"Ingénieur d'État en informatique", exp:"2 ans",
+  cv:{titre:"Ingénieur d'État en informatique", experiences:[{poste:"Développeur junior",duree:"2 ans",desc:"API REST en Python, requêtes SQL, versionnement Git, participation aux revues de code"}],
+      diplomes:[{i:"Ingénieur d'État en informatique",e:"USTHB",a:2023}], competences:["Python","SQL","Git"], langues:["Arabe","Français","Anglais technique"]},
+  cible:"M.DEV", conf:.91,
+  alt:[["M.DEV",.91],["M.MKT",.14],["M.ASS",.08]],
+  det:[["OO.DEV.PY","competences"],["OO.DEV.SQL","competences"],["OO.DEV.GIT","competences"],["OO.DEV.ALGO","diplome (présumé)"],["OO.LNG.EN","langues"]],
+  hist:"Cas nominal. Le CV est riche, structuré, le métier est évident. C'est le profil sur lequel tout pipeline marche — d'où l'intérêt limité de ne tester que celui-là." },
+
+{ id:"cv02", nom:"Fatima Zohra Belkacem", ville:"Oran", lang:"fr", flag:null,
+  titre:"Comptable", exp:"6 ans",
+  cv:{titre:"Comptable", experiences:[{poste:"Comptable",duree:"6 ans",desc:"Tenue des livres, déclarations G50, rapprochements bancaires, préparation du bilan, saisie sur PC Compta"}],
+      diplomes:[{i:"Licence LMD Sciences financières et comptabilité",e:"Université d'Oran",a:2018}], competences:["Comptabilité","Excel"], langues:["Arabe","Français"]},
+  cible:"M.CPT", conf:.96,
+  alt:[["M.CPT",.96],["M.ASS",.22],["M.LOG",.05]],
+  det:[["OO.FIN.CPT","experience.desc"],["OO.BUR.XL","competences"],["OO.FIN.ERP","experience.desc (PC Compta)"]],
+  hist:"« Excel » déclaré sans niveau. Le métier exige Excel avancé. Absent ou partiel ? C'est là que la calibration de niveau se joue — et qu'un score 0–100 inventerait une précision qui n'existe pas." },
+
+{ id:"cv03", nom:"Mourad Aït Ouali", ville:"Hassi Messaoud", lang:"ar", flag:"CV en arabe",
+  titre:"تقني سامي في الصيانة الصناعية", exp:"9 ans",
+  cv:{"العنوان":"تقني سامي في الصيانة الصناعية", "الخبرة":[{"المنصب":"تقني صيانة","المدة":"9 سنوات","الوصف":"صيانة المضخات والمحركات، قراءة المخططات الكهربائية، تدخلات ميدانية"}],
+      "الشهادات":[{"الشهادة":"تقني سامي في الصيانة الصناعية","المؤسسة":"معهد التكوين المهني","السنة":2016}], "المهارات":["الصيانة الميكانيكية","قراءة المخططات"]},
+  cible:"M.MNT", conf:.88,
+  alt:[["M.MNT",.88],["M.SOU",.19],["M.LOG",.06]],
+  det:[["OO.IND.PLAN","المهارات"],["OO.IND.QUAL","الخبرة (présumé)"]],
+  hist:"CV rédigé en arabe. L'extraction ne peut pas être une traduction d'étiquettes : « قراءة المخططات » doit atterrir sur le même identifiant que « lecture de plans ». Il faut un dictionnaire de synonymes arabe à part entière, pas un champ label.ar." },
+
+{ id:"cv04", nom:"Amira Cherif", ville:"Alger", lang:"fr", flag:null,
+  titre:"Assistante administrative", exp:"3 ans",
+  cv:{titre:"Assistante administrative", experiences:[{poste:"Assistante de direction",duree:"3 ans",desc:"Accueil, gestion du courrier, prise de rendez-vous, saisie de documents, classement"}],
+      diplomes:[{i:"Licence LMD Langue et littérature françaises",e:"Université d'Alger 2",a:2021}], competences:["Word","Organisation"], langues:["Arabe","Français","Anglais"]},
+  cible:"M.ASS", conf:.93,
+  alt:[["M.ASS",.93],["M.CPT",.11],["M.COM",.09]],
+  det:[["OO.BUR.WORD","competences"],["OO.BUR.ORG","competences"],["OO.SOF.COMM","experience.desc"],["OO.LNG.EN","langues"]],
+  hist:"Diplôme de lettres, métier administratif : le classement par diplôme aurait échoué. C'est l'expérience qui porte le signal, pas la formation initiale — cas très fréquent en Algérie." },
+
+{ id:"cv05", nom:"Khaled Bensaïd", ville:"Annaba", lang:"fr", flag:null,
+  titre:"Commercial terrain", exp:"5 ans",
+  cv:{titre:"Commercial", experiences:[{poste:"Commercial terrain",duree:"5 ans",desc:"Développement du portefeuille clients sur l'Est, visites terrain, suivi des règlements, reporting hebdomadaire"}],
+      diplomes:[{i:"BTS Commerce international",e:"INSFP Annaba",a:2019}], competences:["Vente","Relationnel"], langues:["Arabe","Français"]},
+  cible:"M.COM", conf:.94,
+  alt:[["M.COM",.94],["M.MKT",.31],["M.LOG",.07]],
+  det:[["OO.COM.VENT","competences"],["OO.COM.PROS","experience.desc"],["OO.SOF.COMM","competences (relationnel)"]],
+  hist:"« Relationnel » est du bruit auto-déclaré. Le mapper vers une compétence normalisée est déjà une décision discutable — à documenter, sinon chaque dev tranchera différemment." },
+
+{ id:"cv06", nom:"Nassim Boudiaf", ville:"Skikda", lang:"fr", flag:"Catalogue vide",
+  titre:"Soudeur qualifié", exp:"12 ans",
+  cv:{titre:"Soudeur qualifié", experiences:[{poste:"Soudeur",duree:"12 ans",desc:"Soudage à l'arc sur structures métalliques et tuyauterie, chantiers pétrochimiques, respect des consignes de sécurité"}],
+      diplomes:[{i:"CAP Soudage",e:"CFPA Skikda",a:2012},{i:"Certification soudage arc niveau 2",e:"organisme agréé",a:2019}], competences:["Soudage à l'arc","Lecture de plans"], langues:["Arabe","Français"]},
+  cible:"M.SOU", conf:.97,
+  alt:[["M.SOU",.97],["M.MNT",.24],["M.BTP",.05]],
+  det:[["OO.IND.ARC","competences"],["OO.IND.PLAN","competences"],["OO.IND.HSE","experience.desc"]],
+  hist:"Douze ans d'expérience, profil solide, manques réels et identifiés — et rien au catalogue publié. Le pipeline fonctionne parfaitement et ne produit rien. C'est le cas qui doit décider du séquencement." },
+
+{ id:"cv07", nom:"Yasmine Hamdi", ville:"Constantine", lang:"fr", flag:"CV quasi vide",
+  titre:"Master Marketing — fraîche diplômée", exp:"stage 2 mois",
+  cv:{titre:"Master Marketing", experiences:[{poste:"Stagiaire marketing",duree:"2 mois",desc:"Participation à la préparation d'un salon, aide à la rédaction de contenus"}],
+      diplomes:[{i:"Master Marketing et management",e:"Université Constantine 2",a:2026}], competences:[], langues:["Arabe","Français","Anglais"]},
+  cible:"M.MKT", conf:.72,
+  alt:[["M.MKT",.72],["M.COM",.44],["M.ASS",.26]],
+  det:[["OO.SOF.COMM","experience.desc (faible)"],["OO.LNG.EN","langues"]],
+  hist:"Section compétences vide, deux mois d'expérience. L'extraction ne rend presque rien, donc le manque est énorme et le classement peu sûr (0,72). Afficher dix formations serait honnête mathématiquement et catastrophique en UX." },
+
+{ id:"cv08", nom:"Rachid Meziane", ville:"Sétif", lang:"fr", flag:null,
+  titre:"Ingénieur génie civil", exp:"11 ans",
+  cv:{titre:"Ingénieur génie civil", experiences:[{poste:"Conducteur de travaux",duree:"7 ans",desc:"Suivi de chantiers bâtiment, coordination des corps d'état, contrôle des métrés, sécurité du chantier"},{poste:"Ingénieur études",duree:"4 ans",desc:"Notes de calcul, plans d'exécution"}],
+      diplomes:[{i:"Ingénieur d'État en génie civil",e:"Université de Sétif",a:2015}], competences:["AutoCAD","Suivi de chantier","Lecture de plans"], langues:["Arabe","Français"]},
+  cible:"M.BTP", conf:.95,
+  alt:[["M.BTP",.95],["M.MNT",.18],["M.MGT",.12]],
+  det:[["OO.IND.PLAN","competences"],["OO.IND.HSE","experience.desc"],["OO.MGT.PROJ","experience.desc"],["OO.MGT.TEAM","experience.desc (coordination)"]],
+  hist:"Deux expériences, la plus ancienne étant la plus qualifiante. Un classement sur le dernier intitulé de poste seul se tromperait — il faut pondérer par la durée, pas par la récence." },
+
+{ id:"cv09", nom:"Sara Benali", ville:"Blida", lang:"fr", flag:"Profession réglementée",
+  titre:"Infirmière diplômée d'État", exp:"4 ans",
+  cv:{titre:"Infirmière diplômée d'État", experiences:[{poste:"Infirmière — service de médecine interne",duree:"4 ans",desc:"Soins courants, surveillance des constantes, tenue du dossier patient, accompagnement des familles"}],
+      diplomes:[{i:"Diplôme d'État d'infirmier",e:"INFSPM Blida",a:2022}], competences:["Soins infirmiers","Dossier patient"], langues:["Arabe","Français"]},
+  cible:"M.INF", conf:.98,
+  alt:[["M.INF",.98],["M.ASS",.06],["M.CPT",.02]],
+  det:[["OO.SAN.SOIN","competences"],["OO.SAN.DOSS","competences"],["OO.SOF.STRS","experience.desc (présumé)"]],
+  bloc:"Profession réglementée — aucune formation OoSkills ne peut délivrer une qualification opposable en soins. Le pipeline doit s'arrêter à l'étape 05 avec un message honnête, pas recommander « Gestion du stress » comme lot de consolation.",
+  hist:"Le pipeline calcule un manque valide (urgences, anglais médical) mais n'a pas le droit d'y répondre. Il faut un drapeau `reglemente` sur la fiche métier, testé avant le filtre catalogue." },
+
+{ id:"cv10", nom:"Toufik Larbi", ville:"Alger", lang:"fr", flag:"Reconversion",
+  titre:"Chauffeur-livreur → magasinier", exp:"7 ans",
+  cv:{titre:"Chauffeur-livreur", poste_vise:"Magasinier / gestionnaire de stock",
+      experiences:[{poste:"Chauffeur-livreur",duree:"7 ans",desc:"Livraisons sur Alger et environs, chargement et déchargement, contrôle des bons de livraison, relation client"}],
+      diplomes:[{i:"Niveau secondaire",e:"—",a:2016}], competences:["Permis B et C","Ponctualité"], langues:["Arabe","Français"]},
+  cible:"M.LOG", conf:.58,
+  alt:[["M.LOG",.58],["M.COM",.21],["M.ASS",.11]],
+  det:[["OO.LOG.PREP","experience.desc (bons de livraison)"]],
+  hist:"Le métier visé n'est PAS le métier exercé. Un classement fondé sur le dernier intitulé donnerait « chauffeur-livreur » et le manque serait nul — donc aucune recommandation, donc aucun revenu, sur le profil qui en a le plus besoin. C'est le cas qui justifie à lui seul le champ `poste_visé` facultatif et l'écran de confirmation." }
+];
+
+/* ════════════════ MOTEUR ════════════════ */
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const jh = o => esc(JSON.stringify(o,null,2))
+  .replace(/&quot;([^&"]+)&quot;:/g,'<span class="k">"$1"</span>:')
+  .replace(/: (&quot;[^&]*&quot;)/g,': <span class="s">$1</span>');
+const lbl = id => SK[id] ? SK[id][0] : id;
+
+function analyse(cv, mode){
+  const m = MET[cv.cible];
+  const detIds = cv.det.map(d=>d[0]);
+  const req = m.req.map(([id,ess])=>({id,ess,n:lbl(id)}));
+  const manque = req.filter(r=>!detIds.includes(r.id));
+  const cat = FORM.filter(f=>mode==='produit' ? true : f.st==='publie');
+  const couvre = id => cat.find(f=>f.sk.includes(id));
+  const retenu = manque.filter(r=>couvre(r.id));
+  const ecarte = manque.filter(r=>!couvre(r.id));
+  const seen=new Set();
+  const reco = retenu.map(r=>({sk:r.id, n:r.n, f:couvre(r.id), fr:FREQ[r.id]||30,
+      niv: cv.det.some(d=>d[0]===r.id) ? "Approfondissement" : couvre(r.id).niv}))
+    .sort((a,b)=>b.fr-a.fr)
+    .filter(r=>{ if(seen.has(r.f.id)) return false; seen.add(r.f.id); return true; })
+    .slice(0,3);
+  return {m,detIds,req,manque,retenu,ecarte,reco,bloque:!!cv.bloc};
+}
+
+/* ════════════════ ÉTAPES ════════════════ */
+const STEPS = [
+{n:"00",c:"CV entrant",tag:"SOURCE",tc:"r",
+ t:cv=>"Le CV arrive déjà structuré",
+ s:cv=>`Neuf CV sur dix sont créés dans le builder Oosira : on reçoit du JSON avec des champs nommés. Pas d'OCR, pas de parsing de PDF. ${cv.lang==='ar'?'Ici le CV est rédigé en arabe — mêmes champs, autre alphabet, autre dictionnaire d\'extraction.':'C\'est l\'avantage structurel du pipeline.'}`,
+ b:(cv,a)=>`<div class="io"><div><h3>Entrée</h3><pre><span class="c">// builder Oosira → JSON natif (90 %)</span>
+<span class="c">// import PDF → OCR → JSON  (10 %)</span>
+<span class="c">// langue détectée : ${cv.lang.toUpperCase()}</span></pre></div>
+ <div><h3>Sortie</h3><pre style="${cv.lang==='ar'?'direction:rtl;font-family:var(--ar);font-size:13px':''}">${jh(cv.cv)}</pre></div></div>`,
+ m:()=>mt("Lecture","Oosira","PDF illisible → OCR dégradé"),
+ st:cv=>({cv_id:cv.id, source:"builder", langue:cv.lang})},
+
+{n:"01",c:"Classer le poste",tag:"CLASSEMENT",tc:"",
+ t:cv=>"Quel métier cette personne vise-t-elle ?",
+ s:cv=>"Une seule réponse à trouver parmi les 422 fiches NAME. C'est un problème de classement, pas d'extraction. Sans poste cible, il n'existe aucun « manque » à calculer : « il manque Excel avancé » n'a de sens que rapporté à un métier.",
+ b:(cv,a)=>{
+   const rows = cv.alt.map(([k,c],i)=>`<tr><td class="m">${i===0?'▸':'&nbsp;'}</td><td>${esc(MET[k].fr)}</td>
+     <td class="m">ROME ${MET[k].rome}</td><td class="m">ISCO ${MET[k].isco}</td>
+     <td class="m" style="color:${i===0?'var(--petrol)':'var(--off)'}">${c.toFixed(2)}</td></tr>`).join('');
+   return `<div class="scroll" style="margin-bottom:16px"><table class="tbl">
+     <thead><tr><th></th><th>Métier candidat</th><th>ROME</th><th>ISCO-08</th><th>Confiance</th></tr></thead><tbody>${rows}</tbody></table></div>
+   ${cv.cv.poste_vise?`<div class="note p"><b>Signal fort dans le CV</b>Le champ <code>poste_visé</code> est renseigné : « ${esc(cv.cv.poste_vise)} ». Il écrase toute déduction faite à partir de l'intitulé de poste.</div>`:''}`;
+ },
+ m:cv=>mt("1 parmi 422","bridge",cv.conf<.8?"Confiance "+cv.conf+" → confirmation obligatoire":"Fiche fausse → tout le reste est faux"),
+ note:cv=>cv.conf<.8?{k:"",b:"Confiance faible — ne jamais trancher seul",
+   c:"Sous 0,80 on n'affiche pas un résultat, on pose une question. Trois propositions, l'utilisateur clique. C'est l'erreur la plus visible du pipeline et la moins chère à corriger."}
+   :{k:"p",b:"L'utilisateur confirme quand même",c:"Même à 0,95 on affiche « ce n'est pas votre métier ? changer ». Demander avant de donner, c'est de la friction ; corriger après avoir donné, c'est du service."},
+ st:cv=>({poste:{name:"à sourcer", rome:MET[cv.cible].rome, isco:MET[cv.cible].isco, libelle:MET[cv.cible].fr, confiance:cv.conf, confirme:true}})},
+
+{n:"02",c:"Extraire",tag:"EXTRACTION",tc:"",
+ t:cv=>"Que sait faire cette personne ?",
+ s:cv=>"Réponses multiples, liste ouverte. Quatre sources balayées, tout normalisé vers des identifiants. « compta », « comptabilité générale » et « tenue des livres » doivent atterrir sur le même identifiant, sinon la soustraction de l'étape 04 ne veut rien dire.",
+ b:(cv,a)=>{
+   const rows = cv.det.map(([id,src])=>`<tr><td class="m" style="color:var(--held)">${id}</td>
+     <td>${esc(SK[id][0])}</td><td class="arv">${esc(SK[id][1])}</td><td class="m" style="color:var(--off)">${esc(src)}</td></tr>`).join('');
+   return `<div class="scroll" style="margin-bottom:14px"><table class="tbl">
+     <thead><tr><th>Identifiant local</th><th>Libellé FR</th><th>AR</th><th>Source dans le CV</th></tr></thead><tbody>${rows}</tbody></table></div>
+     <div class="chips">${cv.det.map(([id])=>`<span class="chip held"><span class="id">${id}</span>${esc(lbl(id))}</span>`).join('')}</div>`;
+ },
+ m:cv=>mt("Normalisation N→N","bridge","Silencieux — compétence ratée = fausse reco"),
+ note:cv=>({k:"",b:"Les erreurs ici ne remontent jamais",
+   c:"Si une compétence reste enfouie dans une description d'expérience, vous recommandez une formation inutile. La personne ne le signalera pas, elle partira. Prévoyez dès la v0 un écran « voici ce que j'ai compris de votre profil », modifiable — il corrige et il collecte du signal d'entraînement."}),
+ st:cv=>({detenu:cv.det.map(d=>d[0])})},
+
+{n:"03",c:"Charger le requis",tag:"LECTURE",tc:"r",
+ t:cv=>"Que réclame ce métier ?",
+ s:cv=>"Aucun calcul ici. On lit une table. La chaîne NAME → ROME → ISCO-08 → ESCO donne la liste des compétences attendues, avec la distinction essentiel / optionnel déjà faite par le référentiel — c'est exactement ce qu'on ne veut pas écrire à la main.",
+ b:(cv,a)=>`<div class="io">
+   <div><h3>Résolution de la chaîne</h3><pre>NAME  <span class="c">à sourcer (name.anem.dz)</span>
+  ↓ table maison — 422 lignes
+ROME  <span class="s">${MET[cv.cible].rome}</span>  <span class="c">${esc(MET[cv.cible].romeLbl)}</span>
+  ↓ crosswalk ROME→ESCO (2021)
+ISCO  <span class="s">${MET[cv.cible].isco}</span>  <span class="c">${esc(MET[cv.cible].iscoLbl)}</span>
+  ↓ occupationSkillRelations
+<span class="k">${a.req.length} compétences</span> <span class="c">(${a.req.filter(r=>r.ess).length} essentielles)</span></pre></div>
+   <div><h3>Sortie</h3><pre>${jh({requis:a.req.map(r=>r.id)})}</pre></div></div>
+   <div class="chips" style="margin-bottom:8px">${a.req.map(r=>`<span class="chip ${r.ess?'ess':''}"><span class="id">${r.id}</span>${esc(r.n)}</span>`).join('')}</div>
+   <p class="hint">Le <span style="color:var(--gap)">!</span> marque les compétences essentielles.</p>`,
+ m:()=>mt("Lecture, 0 calcul","ESCO importé","Fiche non mappée → repli sur le domaine"),
+ st:(cv,a)=>({requis:a.req.map(r=>r.id)})},
+
+{n:"04",c:"Soustraire",tag:"L'OPÉRATION",tc:"x",
+ t:cv=>"requis − détenu = manque",
+ s:cv=>"Voilà tout le produit. Une différence d'ensembles, une ligne de code. C'est précisément pour rendre cette ligne possible que la taxonomie compte : quand les deux côtés parlent le même vocabulaire, il n'y a rien à calculer. Sinon on compare des chaînes de caractères jusqu'à la fin des temps.",
+ b:(cv,a)=>`<div class="subtract">
+   <div class="row"><div class="lbl"><span>Requis par le métier</span><span>${a.req.length}</span></div>
+     <div class="chips" id="rowTop">${a.req.map(r=>`<span class="chip" data-id="${r.id}"><span class="id">${r.id}</span>${esc(r.n)}</span>`).join('')}</div></div>
+   <div class="row"><div class="lbl"><span>Détenu par le candidat</span><span>${a.detIds.length}</span></div>
+     <div class="chips">${a.detIds.map(id=>`<span class="chip held"><span class="id">${id}</span>${esc(lbl(id))}</span>`).join('')}</div></div>
+   <div class="row"><div class="lbl"><span style="color:var(--gap)">Manque</span><span id="gapCount">—</span></div><div id="gapOut" class="chips"></div></div>
+   <div class="formula">manque = requis.filter(r =&gt; !detenu.has(r.id))  <b>// ${a.manque.length} résultat${a.manque.length>1?'s':''}</b></div></div>`,
+ m:()=>mt("Différence d'ensembles","bridge","Aucun — si 02 et 03 sont justes"),
+ anim:true,
+ st:(cv,a)=>({manque:a.manque.map(r=>r.id)})},
+
+{n:"05",c:"Filtrer",tag:"FILTRE",tc:"",
+ t:cv=>cv.bloc?"Arrêt — profession réglementée":"On ne montre pas un trou qu'on ne sait pas boucher",
+ s:cv=>cv.bloc?"Un drapeau sur la fiche métier, testé AVANT le filtre catalogue. Le manque est réel et correctement calculé, mais y répondre serait au mieux inutile, au pire trompeur."
+   :"Jointure entre les manques et le catalogue OoSkills. Ce qui n'a pas de formation correspondante est écarté — sans quoi vous faites un bilan de carrière gratuit qui envoie vos utilisateurs se former ailleurs.",
+ b:(cv,a)=>{
+   if(cv.bloc) return `<div class="empty"><h4>Pipeline interrompu — <code>metier.reglemente = true</code></h4><p>${esc(cv.bloc)}</p></div>
+     <div style="margin-top:16px" class="chips">${a.manque.map(r=>`<span class="chip dropped"><span class="id">${r.id}</span>${esc(r.n)}</span>`).join('')}</div>`;
+   return `<div class="chips" style="margin-bottom:16px">${a.manque.map(r=>{
+     const f=FORM.find(x=>x.sk.includes(r.id));
+     const cls = a.retenu.includes(r) ? 'kept' : (f && f.st==='produit' ? 'soon' : 'dropped');
+     return `<span class="chip ${cls}"><span class="id">${r.id}</span>${esc(r.n)}</span>`;}).join('')}</div>
+   ${io(jh({manque:a.manque.map(r=>r.id)}),jh({retenu:a.retenu.map(r=>r.id),ecarte:a.ecarte.map(r=>r.id)}))}
+   <p class="hint">Trait plein = formation disponible · pointillé ambre = produite non publiée · pointillé gris = rien au catalogue.</p>`;
+ },
+ m:cv=>mt(cv.bloc?"Garde-fou":"Jointure interne","bridge","Catalogue trop mince → 0 reco"),
+ note:cv=>cv.bloc?null:{k:"",b:"Le déchet est un actif",
+   c:"Les manques écartés faute de formation sont la donnée la plus précieuse du système : ils disent quelle formation produire ensuite, au lieu de la deviner. À journaliser dès le premier jour."},
+ st:(cv,a)=>({retenu:a.retenu.map(r=>r.id), ecarte:a.ecarte.map(r=>r.id)})},
+
+{n:"06",c:"Ordonner",tag:"CLASSEMENT",tc:"",
+ t:cv=>cv.bloc?"Message honnête, zéro recommandation":"Trois recommandations, pas trente",
+ s:cv=>cv.bloc?"Un utilisateur sans réponse possible reçoit une réponse utile : ce que dit le diagnostic, et pourquoi on ne propose rien."
+   :"Tri par fréquence de la compétence dans les offres algériennes du secteur. Le gain de score projeté est affiché parce que c'est lui qui déclenche l'inscription — pas l'argumentaire pédagogique.",
+ b:(cv,a)=>{
+   if(cv.bloc) return `<div class="empty"><h4>« Votre profil est cohérent avec le métier d'infirmier »</h4>
+     <p>Deux axes de progression identifiés (prise en charge des urgences, anglais médical). OoSkills ne délivre
+     pas de qualification en soins — ces compétences relèvent de la formation continue hospitalière.
+     Nous ne vous proposons rien plutôt que de vous proposer n'importe quoi.</p></div>
+     <div class="note p" style="margin-top:18px"><b>Pourquoi ça compte</b>Une recommandation absurde sur un profil
+     réglementé détruit la crédibilité du diagnostic pour tous les autres profils. Le coût d'un refus est nul,
+     le coût d'une bêtise est la confiance.</div>`;
+   if(!a.reco.length) return `<div class="empty"><h4>Aucune formation ne couvre les manques détectés</h4>
+     <p>${a.manque.length} compétence${a.manque.length>1?'s':''} manquante${a.manque.length>1?'s':''}, zéro au catalogue publié.
+     Affichage « à développer » + capture d'email : <em>« Formation bientôt disponible — soyez notifié »</em>.
+     L'échec de recommandation devient un signal de demande.</p></div>
+     <div class="note"><b>Ce profil ne rapporte rien aujourd'hui</b>Et il n'est pas seul — voir l'onglet Couverture.</div>`;
+   return `<div class="reco">${a.reco.map((r,i)=>`<div class="r">
+     <div class="rk">${i+1}</div>
+     <div><div class="nm">${esc(r.f.t)}${r.f.st==='produit'?' <span style="font-family:var(--mono);font-size:9.5px;color:var(--amber);border:1px solid var(--amber);padding:1px 5px;letter-spacing:.08em">NON PUBLIÉE</span>':''}</div>
+     <div class="why">${r.sk} · ${esc(r.n)} · présente dans ${r.fr} % des offres « ${esc(MET[cv.cible].fr)} » en Algérie · niveau ${esc(r.f.niv)}</div></div>
+     <div class="pc">+${[6,5,4][i]}<small>pts de score</small></div></div>`).join('')}</div>
+     <div class="note p" style="margin-top:20px"><b>Puis la boucle se referme</b>
+     Formation suivie → certificat vérifiable sur <code>/verify/{uuid}</code> → réinjecté dans le CV Oosira →
+     le score remonte, visiblement, et le recruteur peut contrôler par QR. C'est ce retour qui fait racheter,
+     pas le diagnostic.</div>`;
+ },
+ m:cv=>mt("Tri pondéré","bridge","Pondération obsolète → reco hors marché"),
+ st:(cv,a)=>({recommandations:a.reco.map((r,i)=>({formation:r.f.id,rang:i+1}))})}
+];
+
+const mt=(o,w,f)=>`<dl class="meta"><div><dt>Opération</dt><dd>${o}</dd></div>
+  <div><dt>Où ça tourne</dt><dd>${w}</dd></div><div><dt>Mode d'échec</dt><dd>${f}</dd></div></dl>`;
+const io=(a,b)=>`<div class="io"><div><h3>Entrée</h3><pre>${a}</pre></div><div><h3>Sortie</h3><pre>${b}</pre></div></div>`;
+
+/* ════════════════ RENDU BANC ════════════════ */
+let cvI=0, cur=0, timer=null;
+const $=id=>document.getElementById(id);
+
+$('cvbar').innerHTML = CVS.map((c,i)=>`<button data-i="${i}" aria-pressed="${i===0}">
+  <div class="cn">${String(i+1).padStart(2,'0')}</div><div class="cnom">${esc(c.nom)}</div>
+  <div class="cmet">${esc(MET[c.cible].fr)} · ${esc(c.ville)}</div>
+  ${c.flag?`<span class="cflag">${esc(c.flag)}</span>`:''}</button>`).join('');
+$('cvbar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  stop(); cvI=+b.dataset.i; [...$('cvbar').children].forEach((x,k)=>x.setAttribute('aria-pressed',k===cvI));
+  go(0);});
+
+$('rail').innerHTML = STEPS.map((s,i)=>`<li data-i="${i}"><button type="button"><span class="n">${s.n}</span>${s.c}</button></li>`).join('');
+$('rail').addEventListener('click',e=>{const li=e.target.closest('li');if(li){stop();go(+li.dataset.i);}});
+
+function render(i){
+  const cv=CVS[cvI], a=analyse(cv,'publie'), s=STEPS[i];
+  const note = s.note ? s.note(cv) : null;
+  $('stepCard').innerHTML=`<span class="tag ${s.tc}">${s.tag}</span>
+    <h2><span class="idx">${s.n}</span>${esc(s.t(cv))}</h2>
+    <p class="sub">${esc(s.s(cv))}</p>
+    ${s.b(cv,a)}${(s.m?s.m(cv):'')}
+    ${note?`<div class="note ${note.k||''}"><b>${esc(note.b)}</b>${esc(note.c)}</div>`:''}
+    ${i===STEPS.length-1?`<div class="note a" style="margin-top:18px"><b>Ce que ce profil apprend</b>${esc(cv.hist)}</div>`:''}`;
+  if(s.anim) anim(a);
+  [...$('rail').children].forEach((li,k)=>{li.className=(k===i?'on':'')+(k<i?' done':'')});
+  let acc={}; for(let k=0;k<=i;k++) Object.assign(acc, STEPS[k].st(cv,a));
+  $('stateOut').innerHTML=jh(acc);
+}
+function anim(a){
+  const top=$('rowTop').querySelectorAll('.chip'), out=$('gapOut'), cnt=$('gapCount');
+  top.forEach((c,i)=>{const id=c.dataset.id;
+    setTimeout(()=>c.classList.add(a.detIds.includes(id)?'matched':'gap'),110*i+200);});
+  setTimeout(()=>{out.innerHTML=a.manque.map(r=>`<span class="chip gap"><span class="id">${r.id}</span>${esc(r.n)}</span>`).join('');
+    cnt.textContent=a.manque.length;},110*a.req.length+380);
+}
+function go(i){cur=Math.max(0,Math.min(STEPS.length-1,i));render(cur);}
+function stop(){clearInterval(timer);timer=null;$('play').textContent='Dérouler';}
+$('play').onclick=()=>{if(timer){stop();return;} if(cur>=STEPS.length-1)cur=-1;
+  $('play').textContent='Stop'; go(cur+1);
+  timer=setInterval(()=>{if(cur>=STEPS.length-1){stop();return;} go(cur+1);},4000);};
+$('reset').onclick=()=>{stop();go(0);};
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='BUTTON')return;
+  if(e.key==='ArrowRight'){stop();go(cur+1);} if(e.key==='ArrowLeft'){stop();go(cur-1);}});
+
+/* ════════════════ ONGLETS ════════════════ */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.p));
+  window.scrollTo({top:0,behavior:'instant'});});
+
+/* ════════════════ TABLES RÉFÉRENTIEL ════════════════ */
+const pv=(c,t)=>`<span class="prov ${c}"><span class="dot ${c}"></span>${t}</span>`;
+
+$('tMetiers').innerHTML=`<thead><tr><th>Clé locale</th><th>Métier</th><th>name_code</th><th>ROME</th><th>ISCO-08</th><th>esco_occupation</th><th>Compétences requises</th></tr></thead><tbody>`+
+Object.entries(MET).map(([k,m])=>`<tr>
+  <td class="m" style="color:var(--petrol)">${k}</td>
+  <td><b>${esc(m.fr)}</b><div style="font-size:11px;color:var(--off)">${esc(m.iscoLbl)}</div></td>
+  <td>${pv('bad','à sourcer')}</td>
+  <td class="m">${m.rome} ${pv('ok','réel')}<div style="font-size:10.5px;color:var(--off);margin-top:2px">${esc(m.romeLbl)}</div></td>
+  <td class="m">${m.isco} ${pv('ok','réel')}</td>
+  <td>${pv('warn','à résoudre')}<div style="font-size:10px;color:var(--off);margin-top:2px">via ISCO ${m.isco}</div></td>
+  <td class="m" style="text-align:center">${m.req.length}<div style="font-size:10px;color:var(--off)">dont ${m.req.filter(r=>r[1]).length} essent.</div></td></tr>`).join('')+`</tbody>`;
+
+const byCat={}; Object.entries(SK).forEach(([k,v])=>{(byCat[v[3]]=byCat[v[3]]||[]).push([k,v]);});
+$('tSkills').innerHTML=`<thead><tr><th>id (clé primaire)</th><th>esco_id</th><th>Libellé ESCO présumé</th><th>fr</th><th>ar</th><th>Domaine</th><th>Fréq. offres DZ</th></tr></thead><tbody>`+
+Object.entries(byCat).map(([c,arr])=>arr.map(([k,v],j)=>`<tr>
+  <td class="m" style="color:var(--petrol)">${k}</td>
+  <td>${pv('warn','null')}</td>
+  <td class="m" style="color:var(--ink-soft);font-size:11px">${esc(v[2])}</td>
+  <td>${esc(v[0])}</td>
+  <td class="arv">${esc(v[1])}</td>
+  <td class="m" style="color:var(--off)">${j===0?esc(CATLBL[c]):''}</td>
+  <td class="m" style="text-align:right">${FREQ[k]?FREQ[k]+' %':'—'}</td></tr>`).join('')).join('')+`</tbody>`;
+
+$('tForm').innerHTML=`<thead><tr><th>id</th><th>Formation</th><th>Statut</th><th>Niveau</th><th>Compétences couvertes</th></tr></thead><tbody>`+
+FORM.map(f=>`<tr>
+  <td class="m" style="color:var(--petrol)">${f.id}</td>
+  <td><b>${esc(f.t)}</b></td>
+  <td>${f.st==='publie'?pv('ok','en ligne'):pv('warn','produite, non publiée')}</td>
+  <td class="m">${esc(f.niv)}</td>
+  <td class="m" style="font-size:11px">${f.sk.map(s=>esc(lbl(s))).join(' · ')}</td></tr>`).join('')+`</tbody>`;
+
+/* ════════════════ MATRICE ════════════════ */
+let mxMode='publie';
+function mx(){
+  const rows=CVS.map((cv,i)=>{
+    const a=analyse(cv,mxMode);
+    const n=cv.bloc?0:a.reco.length;
+    return {i,cv,a,n};
+  });
+  const zero=rows.filter(r=>r.n===0).length;
+  const xlOnly=rows.filter(r=>r.n===1&&r.a.reco[0]&&r.a.reco[0].f.id==='F01').length;
+  $('mxTable').innerHTML=`<thead><tr>
+    <th class="l">Profil</th><th class="l">Métier cible</th><th>Requis</th><th>Détenu</th><th>Manque</th>
+    <th>Couvert</th><th>Reco</th><th class="l">Première recommandation</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr style="cursor:pointer" data-i="${r.i}">
+      <td class="l"><span class="nm">${esc(r.cv.nom)}</span>${r.cv.flag?`<div class="mt" style="color:var(--gap)">${esc(r.cv.flag)}</div>`:''}</td>
+      <td class="l"><span class="mt">${esc(MET[r.cv.cible].fr)}</span></td>
+      <td>${r.a.req.length}</td><td>${r.a.detIds.length}</td><td>${r.a.manque.length}</td>
+      <td>${r.cv.bloc?'—':r.a.retenu.length}</td>
+      <td class="${r.n===0?'zero':(r.n===1?'one':'many')}">${r.n}</td>
+      <td class="l"><span class="mt">${r.cv.bloc?'<i style="color:var(--gap)">bloqué — profession réglementée</i>':(r.n?esc(r.a.reco[0].f.t):'<i style="color:var(--gap)">rien à proposer</i>')}</span></td>
+    </tr>`).join('')+`</tbody><tfoot><tr>
+      <td class="l">Total</td><td></td>
+      <td>${rows.reduce((s,r)=>s+r.a.req.length,0)}</td>
+      <td>${rows.reduce((s,r)=>s+r.a.detIds.length,0)}</td>
+      <td>${rows.reduce((s,r)=>s+r.a.manque.length,0)}</td>
+      <td>${rows.reduce((s,r)=>s+(r.cv.bloc?0:r.a.retenu.length),0)}</td>
+      <td class="${zero>4?'zero':'many'}">${rows.reduce((s,r)=>s+r.n,0)}</td><td></td></tr></tfoot>`;
+  $('mxTable').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>{
+    cvI=+tr.dataset.i; [...$('cvbar').children].forEach((x,k)=>x.setAttribute('aria-pressed',k===cvI));
+    document.querySelector('.tabs button[data-p="bench"]').click(); go(0);});
+
+  const tot=rows.reduce((s,r)=>s+r.n,0);
+  const catN=FORM.filter(f=>mxMode==='produit'||f.st==='publie').length;
+  const used=new Set(); rows.forEach(r=>r.a.reco.forEach(x=>used.add(x.f.id)));
+  const f01=rows.reduce((s,r)=>s+r.a.reco.filter(x=>x.f.id==='F01').length,0);
+  $('mxStats').innerHTML=`
+    <div><div class="big" style="color:${used.size/catN<.5?'var(--gap)':'var(--held)'}">${used.size}<span style="font-size:17px;color:var(--off)">/${catN}</span></div>
+      <div class="lb">formations réellement mobilisées</div>
+      <div class="cm">${used.size/catN<.5
+        ?'Le catalogue ne répond qu\'à une fraction des besoins. Produire ne suffit pas — il faut produire ce qui manque.'
+        :'Le catalogue couvre une part significative des besoins détectés.'}</div></div>
+    <div><div class="big" style="color:${f01>3?'var(--amber)':'var(--ink)'}">${Math.round(f01/Math.max(tot,1)*100)} %</div>
+      <div class="lb">des recommandations = Excel</div>
+      <div class="cm">${f01>3
+        ?'Excel devient la réponse à tout : au technicien de maintenance, au chauffeur-livreur, à la diplômée en marketing. Un utilisateur qui compare deux diagnostics voit la ficelle.'
+        :'Répartition saine. Chaque profil reçoit une réponse spécifique à son métier.'}</div></div>
+    <div><div class="big" style="color:${zero>1?'var(--gap)':'var(--held)'}">${zero}<span style="font-size:17px;color:var(--off)">/10</span></div>
+      <div class="lb">profils sans aucune reco</div>
+      <div class="cm">${mxMode==='publie'
+        ?'Nassim (soudeur, 12 ans) : manques réels, rien au catalogue. Sara : profession réglementée, arrêt volontaire.'
+        :'Reste le seul cas structurel : profession réglementée. Le refus est ici la bonne réponse.'}</div></div>`;
+
+  $('mxNote').innerHTML = mxMode==='publie'
+    ? `<b>Le problème n'est pas le taux de couverture, c'est la concentration</b>
+       Huit profils sur dix reçoivent bien une recommandation — mais seulement <strong>${used.size} formations
+       distinctes sur ${catN}</strong> sont mobilisées, et ${f01} des ${tot} recommandations pointent vers Excel.
+       La comptable, le technicien de maintenance, l'assistante, le commercial, la diplômée en marketing et le
+       chauffeur-livreur reçoivent tous la même réponse. Le moteur fonctionne ; c'est le catalogue qui n'a
+       rien à dire.
+       Trois formations sur cinq sont des soft skills, que la règle « pas de soft skills seules si des manques
+       techniques existent » écarte systématiquement.
+       <br><br><b style="color:var(--petrol)">La question à trancher avant d'écrire une ligne</b>
+       Ces cinq formations, c'est ce qui est <em>publié</em> ou ce qui <em>existe</em> ? Si le blocage est la
+       publication et non la production, la priorité n'est pas le pont — c'est de mettre le catalogue en ligne.
+       Bascule sur « catalogue produit » pour voir ce que ça change.`
+    : `<b>Même moteur, même code, même référentiel — seul le catalogue a changé</b>
+       ${used.size} formations mobilisées au lieu de deux, ${tot} recommandations au lieu de huit, Excel retombe
+       à ${Math.round(f01/Math.max(tot,1)*100)} %. Chaque profil reçoit une réponse spécifique à son métier.
+       C'est la démonstration que <em>le goulot d'étranglement n'est pas technique</em> : aucune ligne de code
+       du pipeline n'a bougé entre les deux vues.
+       <br><br><b style="color:var(--petrol)">Conséquence sur le séquencement</b>
+       Publier le catalogue produit passe devant P1. Et le diagnostic peut être livré <em>avant</em> le moteur
+       de recommandation : il collecte les manques réels et hiérarchise ce qu'il reste à produire, ce qui est
+       déjà la moitié de la valeur du pont.`;
+}
+$('tgPub').onclick=()=>{mxMode='publie';$('tgPub').setAttribute('aria-pressed','true');$('tgPro').setAttribute('aria-pressed','false');mx();};
+$('tgPro').onclick=()=>{mxMode='produit';$('tgPro').setAttribute('aria-pressed','true');$('tgPub').setAttribute('aria-pressed','false');mx();};
+
+render(0); mx();
+</script>
+</body>
+</html>
