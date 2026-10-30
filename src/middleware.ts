@@ -21,14 +21,25 @@ export function middleware(request: Request) {
     ? `script-src 'self' 'unsafe-eval' 'unsafe-inline'${devOrigins}`
     : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`;
 
+  // The API this build talks to (NEXT_PUBLIC_API_URL is inlined at build time).
+  // Production's api.ooskills.com is already hardcoded below; this adds the
+  // configured origin only when it differs, so staging's api-staging host works.
+  let apiOrigin = '';
+  try {
+    apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || '').origin;
+  } catch {
+    apiOrigin = '';
+  }
+  const extraApi = apiOrigin && apiOrigin !== 'https://api.ooskills.com' ? ` ${apiOrigin}` : '';
+
   const csp = [
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,
+    `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${extraApi}${devOrigins}`,
     `media-src 'self' blob: https://*.r2.dev https://*.r2.cloudflarestorage.com${devOrigins}`,
-    `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com${devOrigins}`,
+    `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com${extraApi}${devOrigins}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
