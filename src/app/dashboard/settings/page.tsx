@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import StudentHeader from "@/components/student/StudentHeader";
+import ChangePasswordCard from "@/components/student/ChangePasswordCard";
 import {
   submitDeletionRequest,
   cancelDeletionRequest,
@@ -398,6 +399,9 @@ export default function StudentSettingsPage() {
             {profileSaving ? "Enregistrement..." : ts("saveProfile")}
           </button>
         </motion.div>
+
+        {/* Password Section */}
+        <ChangePasswordCard hasPassword={authUser?.has_password !== false} />
 
         {/* Notifications Section */}
         <motion.div

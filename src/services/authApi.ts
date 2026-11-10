@@ -184,8 +184,15 @@ export const updateProfile = async (data: ProfileUpdateRequest): Promise<User> =
  * Change user password
  */
 export const changePassword = async (data: ChangePasswordRequest): Promise<MessageResponse> => {
-    const response = await axiosClient.post<MessageResponse>(ENDPOINTS.changePassword, data);
-    return response.data;
+    const response = await axiosClient.put<MessageResponse & { tokens?: { access?: string } }>(
+        ENDPOINTS.changePassword,
+        data,
+    );
+    // Every older token is revoked by the change (other browsers are logged
+    // out); this browser receives a fresh access token and refresh cookie.
+    const access = response.data.tokens?.access;
+    if (access) setTokens(access);
+    return { message: response.data.message };
 };
 
 /**

@@ -976,7 +976,29 @@
       "languageSection": "Language",
       "languageDesc": "Choose your preferred language",
       "saveLanguage": "Save Language",
-      "languageSaved": "Language preference saved!"
+      "languageSaved": "Language preference saved!",
+      "password": {
+        "title": "Password",
+        "desc": "Change your account password.",
+        "current": "Current password",
+        "new": "New password",
+        "confirm": "Confirm new password",
+        "hint": "At least 8 characters, not only numbers. Your other devices will be signed out.",
+        "submit": "Change password",
+        "saving": "Saving...",
+        "success": "Password changed. Your other devices have been signed out.",
+        "required": "This field is required.",
+        "tooShort": "The password must be at least 8 characters long.",
+        "sameAsOld": "The new password must be different from the current one.",
+        "mismatch": "The passwords do not match.",
+        "wrongCurrent": "The current password is incorrect.",
+        "tooMany": "Too many attempts. Try again in a minute.",
+        "error": "Something went wrong. Please try again later.",
+        "show": "Show passwords",
+        "hide": "Hide passwords",
+        "noPassword": "You signed up with Google or Facebook, so your account has no password yet.",
+        "createOne": "Create a password"
+      }
     }
   },
   "gamification": {

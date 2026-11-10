@@ -38,6 +38,8 @@ export interface User {
     last_login?: string;
     referral_code?: string | null;
     referral_balance?: number | string;
+    /** False for Google/Facebook accounts that never set a password. */
+    has_password?: boolean;
 }
 
 /** Compact user data returned in login response */
