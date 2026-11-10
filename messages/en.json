@@ -16,7 +16,7 @@
     "adminPanel": "Admin Panel"
   },
   "hero": {
-    "badge": "#1 E-Learning Platform in Algeria",
+    "badge": "E-learning platform in Algeria",
     "title": "Develop your skills with",
     "titleHighlight": "OOSkills",
     "subtitle": "Access quality training in IT, office tools, and personal development. Learn at your own pace with experts.",
@@ -27,9 +27,9 @@
     "illustrationTitle": "Learn. Practice. Succeed.",
     "illustrationSubtitle": "Your journey to excellence starts here",
     "progressLabel": "Learning Progress",
-    "trustIndicator1": "Verified Certificates",
-    "trustIndicator2": "Expert Instructors",
-    "trustIndicator3": "24/7 Support",
+    "trustIndicator1": "Verifiable certificates",
+    "trustIndicator2": "French, Arabic and English",
+    "trustIndicator3": "At your own pace",
     "launchBadge": "Just Launched!",
     "launchBadgeDesc": "Join early learners",
     "stats": {
@@ -38,6 +38,12 @@
       "certificates": "Certificates Issued",
       "rating": "Average Rating"
     }
+  },
+  "countdown": {
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds"
   },
   "features": {
     "title": "Why Choose OOSkills?",
@@ -52,7 +58,7 @@
         "description": "Learn at your own pace, wherever you want, whenever you want."
       },
       "certificate": {
-        "title": "Recognized Certificates",
+        "title": "Verifiable certificates",
         "description": "Get verifiable certificates upon completion of each course."
       },
       "support": {
@@ -114,43 +120,9 @@
     },
     "step3": {
       "title": "Get Your Certificate",
-      "description": "Complete the course and receive a verified certificate"
+      "description": "Complete the course and receive a verifiable certificate of completion"
     },
     "cta": "Start Now"
-  },
-  "countdown": {
-    "title": "Platform Launch Coming Soon",
-    "subtitle": "Get ready for an exceptional learning experience",
-    "days": "Days",
-    "hours": "Hours",
-    "minutes": "Minutes",
-    "seconds": "Seconds",
-    "cta": "Notify me at launch",
-    "launchDate": "May 1, 2026"
-  },
-  "testimonials": {
-    "title": "What Our Students Say",
-    "subtitle": "Join thousands of satisfied learners",
-    "items": {
-      "testimonial1": {
-        "name": "Ahmed Benali",
-        "role": "Web Developer",
-        "location": "Algiers",
-        "text": "Thanks to OOSkills, I was able to learn web development at my own pace. The courses are comprehensive and the instructors are very competent."
-      },
-      "testimonial2": {
-        "name": "Fatima Zohra",
-        "role": "Accountant",
-        "location": "Oran",
-        "text": "The Excel courses helped me automate many tasks at work. I highly recommend this platform!"
-      },
-      "testimonial3": {
-        "name": "Karim Messaoudi",
-        "role": "Student",
-        "location": "Constantine",
-        "text": "An accessible and quality platform. The certificates are recognized and helped me land my internship."
-      }
-    }
   },
   "faq": {
     "title": "Frequently Asked Questions",
@@ -163,12 +135,12 @@
         "answer": "After registration and payment, you have lifetime access to your courses. Simply log in to your account to start learning."
       },
       "q2": {
-        "question": "Are the certificates recognized?",
-        "answer": "Yes, each certificate has a QR code for verification and is digitally signed. They are recognized by many companies in Algeria."
+        "question": "What is the certificate worth?",
+        "answer": "Each certificate has a QR code that lets anyone check that it is genuine. It attests that you completed a course on OOSkills and passed its final quiz; it is not a state-recognized diploma."
       },
       "q3": {
         "question": "What payment methods do you accept?",
-        "answer": "We accept CCP, BaridiMob, and bank transfers. Payment is 100% secure."
+        "answer": "You pay online with an EDAHABIA or CIB card, through the Chargily payment platform."
       },
       "q4": {
         "question": "Can I take courses on mobile?",
@@ -184,9 +156,7 @@
     "title": "Contact Us",
     "subtitle": "Have a question? Don't hesitate to write to us, we'll respond quickly.",
     "info": {
-      "email": "contact@ooskills.com",
-      "phone": "+213 555 123 456",
-      "address": "Algiers, Algeria"
+      "email": "contact@ooskills.com"
     },
     "form": {
       "name": "Full Name",
@@ -196,25 +166,22 @@
       "submit": "Send Message",
       "sending": "Sending...",
       "success": "Message Sent!",
-      "error": "Error, try again"
+      "successDetail": "Thank you, your message has been sent. We will reply by e-mail.",
+      "error": "Error, try again",
+      "errorDetail": "Your message could not be sent. Check your connection and try again."
     }
   },
   "footer": {
     "description": "Your partner for skill development in Algeria. Quality courses accessible to everyone.",
     "links": {
       "company": "Company",
-      "about": "About",
-      "careers": "Careers",
-      "blog": "Blog",
+      "catalog": "Courses",
+      "faq": "Frequently asked questions",
+      "contact": "Contact",
+      "backToTop": "Back to top",
       "resources": "Resources",
-      "help": "Help Center",
       "terms": "Terms of Service",
       "privacy": "Privacy Policy"
-    },
-    "newsletter": {
-      "title": "Newsletter",
-      "description": "Receive our latest news and exclusive offers.",
-      "placeholder": "Your email"
     },
     "copyright": "© 2026 OOSkills. All rights reserved."
   },
@@ -1095,7 +1062,9 @@
       "subtitle": "Top learners by XP",
       "weekly": "This Week",
       "alltime": "All Time",
-      "you": "You"
+      "you": "You",
+      "emptyWeekly": "No XP earned this week yet. Start a lesson!",
+      "emptyAlltime": "No learners on the leaderboard yet."
     },
     "levelUp": {
       "title": "Level Up!",
@@ -1204,5 +1173,11 @@
       "description": "If you have any questions about these terms of service, please don't hesitate to contact us.",
       "emailButton": "Send an email"
     }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has moved.",
+    "home": "Back to home",
+    "catalog": "Browse courses"
   }
 }

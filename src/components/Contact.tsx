@@ -59,33 +59,41 @@ export default function Contact({ settings }: ContactProps) {
 
     try {
       await axiosClient.post("/public/contact/", formData);
+      // The confirmation stays on screen until the visitor types again:
+      // a message that disappears after 3 seconds is easy to miss.
       setFormState("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
-      setTimeout(() => setFormState("idle"), 3000);
     } catch (error) {
       setFormState("error");
-      setTimeout(() => setFormState("idle"), 3000);
     }
   };
 
-  // Use API data if available, otherwise fall back to i18n
-  const contactEmail = settings?.contact_email || t("info.email");
-  const contactPhone = settings?.contact_phone || t("info.phone");
-  const contactAddress = settings?.contact_address || t("info.address");
+  const updateField = (field: keyof typeof formData, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    if (formState === "success" || formState === "error") setFormState("idle");
+  };
 
-  const contactInfo = [
+  // Only real contact details are shown: the phone number and the address come
+  // from the site settings (admin panel) and stay hidden while they are empty.
+  const contactEmail = settings?.contact_email || t("info.email");
+
+  const contactInfo: { icon: typeof Mail; label: string; isPhone?: boolean }[] = [
     { icon: Mail, label: contactEmail },
-    { icon: Phone, label: contactPhone, isPhone: true },
-    { icon: MapPin, label: contactAddress },
+    ...(settings?.contact_phone
+      ? [{ icon: Phone, label: settings.contact_phone, isPhone: true }]
+      : []),
+    ...(settings?.contact_address
+      ? [{ icon: MapPin, label: settings.contact_address }]
+      : []),
   ];
 
-  // Build social links from API or use static defaults
+  // Social networks: only the ones configured in the site settings.
   const socialLinks = [
-    { icon: Facebook, href: settings?.facebook_url || "#", label: "Facebook" },
-    { icon: Instagram, href: settings?.instagram_url || "#", label: "Instagram" },
-    { icon: Linkedin, href: settings?.linkedin_url || "#", label: "LinkedIn" },
-    { icon: Twitter, href: settings?.twitter_url || "#", label: "Twitter" },
-  ].filter(social => social.href && social.href !== "#" || !settings);
+    { icon: Facebook, href: settings?.facebook_url, label: "Facebook" },
+    { icon: Instagram, href: settings?.instagram_url, label: "Instagram" },
+    { icon: Linkedin, href: settings?.linkedin_url, label: "LinkedIn" },
+    { icon: Twitter, href: settings?.twitter_url, label: "Twitter" },
+  ].filter((social) => Boolean(social.href) && social.href !== "#");
 
 
   return (
@@ -154,64 +162,62 @@ export default function Contact({ settings }: ContactProps) {
               <div className="space-y-5">
                 {/* Name */}
                 <div>
-                  <label className="block text-xs font-medium text-oxford dark:text-white mb-2">
+                  <label htmlFor="contact-name" className="block text-xs font-medium text-oxford dark:text-white mb-2">
                     {t("form.name")}
                   </label>
                   <input
+                    id="contact-name"
                     type="text"
+                    autoComplete="name"
                     required
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => updateField("name", e.target.value)}
                     className="w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-silver focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs font-medium text-oxford dark:text-white mb-2">
+                  <label htmlFor="contact-email" className="block text-xs font-medium text-oxford dark:text-white mb-2">
                     {t("form.email")}
                   </label>
                   <input
+                    id="contact-email"
                     type="email"
+                    autoComplete="email"
                     required
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    onChange={(e) => updateField("email", e.target.value)}
                     className="w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-silver focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                   />
                 </div>
 
                 {/* Subject */}
                 <div>
-                  <label className="block text-xs font-medium text-oxford dark:text-white mb-2">
+                  <label htmlFor="contact-subject" className="block text-xs font-medium text-oxford dark:text-white mb-2">
                     {t("form.subject")}
                   </label>
                   <input
+                    id="contact-subject"
                     type="text"
                     required
                     value={formData.subject}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subject: e.target.value })
-                    }
+                    onChange={(e) => updateField("subject", e.target.value)}
                     className="w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-silver focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all"
                   />
                 </div>
 
                 {/* Message */}
                 <div>
-                  <label className="block text-xs font-medium text-oxford dark:text-white mb-2">
+                  <label htmlFor="contact-message" className="block text-xs font-medium text-oxford dark:text-white mb-2">
                     {t("form.message")}
                   </label>
                   <textarea
+                    id="contact-message"
                     required
                     rows={4}
                     value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
+                    onChange={(e) => updateField("message", e.target.value)}
                     className="w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-oxford rounded-lg border border-gray-200 dark:border-white/10 text-oxford dark:text-white placeholder:text-silver focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold transition-all resize-none"
                   />
                 </div>
@@ -251,6 +257,22 @@ export default function Contact({ settings }: ContactProps) {
                     </>
                   )}
                 </button>
+
+                {/* Persistent result, announced to screen readers */}
+                <div role="status" aria-live="polite">
+                  {formState === "success" && (
+                    <p className="flex items-start gap-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 px-4 py-3 text-sm text-green-800 dark:text-green-300">
+                      <CheckCircle className="w-5 h-5 shrink-0" />
+                      {t("form.successDetail")}
+                    </p>
+                  )}
+                  {formState === "error" && (
+                    <p className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 px-4 py-3 text-sm text-red-800 dark:text-red-300">
+                      <AlertCircle className="w-5 h-5 shrink-0" />
+                      {t("form.errorDetail")}
+                    </p>
+                  )}
+                </div>
               </div>
             </form>
           </motion.div>

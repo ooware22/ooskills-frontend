@@ -111,7 +111,7 @@ const defaultContent: Record<Locale, FeaturesContent> = {
     features: [
       { id: "1", icon: "monitor", title: "Quality Courses", description: "Professionally designed content by industry experts" },
       { id: "2", icon: "users", title: "Expert Instructors", description: "Learn from professionals with real experience" },
-      { id: "3", icon: "award", title: "Certificates", description: "Get recognized certificates upon completion" },
+      { id: "3", icon: "award", title: "Certificates", description: "Get a verifiable certificate upon completion" },
       { id: "4", icon: "zap", title: "Learn at Your Pace", description: "Flexible schedules to fit your lifestyle" },
       { id: "5", icon: "clock", title: "24/7 Access", description: "Access your courses anytime, anywhere" },
       { id: "6", icon: "shield", title: "Lifetime Access", description: "Once enrolled, access content forever" },
@@ -123,7 +123,7 @@ const defaultContent: Record<Locale, FeaturesContent> = {
     features: [
       { id: "1", icon: "monitor", title: "Cours de qualité", description: "Contenu conçu professionnellement par des experts du secteur" },
       { id: "2", icon: "users", title: "Instructeurs experts", description: "Apprenez avec des professionnels expérimentés" },
-      { id: "3", icon: "award", title: "Certificats", description: "Obtenez des certificats reconnus à la fin de chaque cours" },
+      { id: "3", icon: "award", title: "Certificats", description: "Obtenez un certificat vérifiable à la fin de chaque cours" },
       { id: "4", icon: "zap", title: "Apprenez à votre rythme", description: "Des horaires flexibles adaptés à votre style de vie" },
       { id: "5", icon: "clock", title: "Accès 24/7", description: "Accédez à vos cours à tout moment, n'importe où" },
       { id: "6", icon: "shield", title: "Accès à vie", description: "Une fois inscrit, accédez au contenu pour toujours" },
@@ -135,7 +135,7 @@ const defaultContent: Record<Locale, FeaturesContent> = {
     features: [
       { id: "1", icon: "monitor", title: "دورات عالية الجودة", description: "محتوى مصمم باحترافية من قبل خبراء الصناعة" },
       { id: "2", icon: "users", title: "مدربون خبراء", description: "تعلم من محترفين ذوي خبرة حقيقية" },
-      { id: "3", icon: "award", title: "شهادات", description: "احصل على شهادات معترف بها عند الانتهاء" },
+      { id: "3", icon: "award", title: "شهادات", description: "احصل على شهادة قابلة للتحقق عند الانتهاء" },
       { id: "4", icon: "zap", title: "تعلم بالسرعة التي تناسبك", description: "جداول مرنة تتناسب مع نمط حياتك" },
       { id: "5", icon: "clock", title: "وصول على مدار الساعة", description: "الوصول إلى دوراتك في أي وقت ومن أي مكان" },
       { id: "6", icon: "shield", title: "وصول مدى الحياة", description: "بمجرد التسجيل، الوصول إلى المحتوى للأبد" },

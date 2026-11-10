@@ -1,16 +1,31 @@
 // Simple i18n context for multilingual support
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  ReactNode,
+} from "react";
+import {
+  LOCALE_STORAGE_KEY,
+  dirOf,
+  isLocale,
+  type Locale,
+} from "@/lib/locale";
 
-// Type definitions
-export type Locale = "fr" | "en" | "ar";
+export type { Locale } from "@/lib/locale";
 
-const translations = {
-  fr: () => import("../../messages/fr.json").then((m) => m.default),
-  en: () => import("../../messages/en.json").then((m) => m.default),
-  ar: () => import("../../messages/ar.json").then((m) => m.default),
+type Messages = Record<string, unknown>;
+
+const translations: Record<Locale, () => Promise<Messages>> = {
+  fr: () => import("../../messages/fr.json").then((m) => m.default as Messages),
+  en: () => import("../../messages/en.json").then((m) => m.default as Messages),
+  ar: () => import("../../messages/ar.json").then((m) => m.default as Messages),
 };
 
 interface I18nContextType {
@@ -18,20 +33,20 @@ interface I18nContextType {
   setLocale: (locale: Locale) => void;
   t: (key: string) => string;
   dir: "ltr" | "rtl";
-  messages: Record<string, unknown>;
+  messages: Messages;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
-const LOCALE_STORAGE_KEY = "ooskills-locale";
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
-function getNestedValue(obj: Record<string, unknown>, path: string): string {
+function getNestedValue(obj: Messages, path: string): string {
   const keys = path.split(".");
   let current: unknown = obj;
 
   for (const key of keys) {
     if (current && typeof current === "object" && key in current) {
-      current = (current as Record<string, unknown>)[key];
+      current = (current as Messages)[key];
     } else {
       return path; // Return the key if not found
     }
@@ -40,73 +55,91 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
   return typeof current === "string" ? current : path;
 }
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("fr");
-  const [messages, setMessages] = useState<Record<string, unknown>>({});
-  const [isLoading, setIsLoading] = useState(true);
+/** Remember an explicit language choice for the next visit (server + client). */
+function persistLocale(locale: Locale) {
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    // Storage can be unavailable (private mode): the cookie below is enough.
+  }
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${LOCALE_STORAGE_KEY}=${locale}; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax${secure}`;
+}
 
-  useEffect(() => {
-    // Get saved locale from localStorage or detect system/browser language
-    const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null;
-    if (savedLocale && ["fr", "en", "ar"].includes(savedLocale)) {
-      setLocaleState(savedLocale);
-    } else if (typeof window !== "undefined") {
-      const systemLangs = navigator.languages && navigator.languages.length
-        ? navigator.languages
-        : [navigator.language || ""];
+interface I18nProviderProps {
+  children: ReactNode;
+  /** Locale chosen on the server from the cookie / Accept-Language. */
+  initialLocale: Locale;
+  /** Messages of that locale, so the first render (server and client) has text. */
+  initialMessages: Messages;
+}
 
-      for (const lang of systemLangs) {
-        const primary = lang ? lang.toLowerCase().split("-")[0] : "";
-        if (primary === "ar") {
-          setLocaleState("ar");
-          break;
-        } else if (primary === "en") {
-          setLocaleState("en");
-          break;
-        } else if (primary === "fr") {
-          setLocaleState("fr");
-          break;
-        }
-      }
-    }
+export function I18nProvider({
+  children,
+  initialLocale,
+  initialMessages,
+}: I18nProviderProps) {
+  // Locale and messages live in ONE state value: they always change together,
+  // so the page can never show the menu in one language and the body in another.
+  const [state, setState] = useState<{ locale: Locale; messages: Messages }>({
+    locale: initialLocale,
+    messages: initialMessages,
+  });
+
+  // Each switch gets a number; a slow download that finishes after a newer
+  // switch is ignored. (Without this, the last file to arrive won, whatever
+  // language had been asked for.)
+  const latestRequest = useRef(0);
+  const requestedLocale = useRef<Locale>(initialLocale);
+
+  const switchTo = useCallback((next: Locale) => {
+    const request = ++latestRequest.current;
+    requestedLocale.current = next;
+    persistLocale(next);
+    translations[next]().then((messages) => {
+      if (request !== latestRequest.current) return;
+      setState({ locale: next, messages });
+    });
   }, []);
 
+  // Visitors who picked a language before the cookie existed only have it in
+  // localStorage: honour it once, which also writes the cookie for next time.
   useEffect(() => {
-    // Load messages when locale changes
-    setIsLoading(true);
-    translations[locale]().then((msgs) => {
-      setMessages(msgs);
-      setIsLoading(false);
-      // Update HTML attributes
-      document.documentElement.lang = locale;
-      document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
-    });
-  }, [locale]);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(LOCALE_STORAGE_KEY);
+    } catch {
+      saved = null;
+    }
+    if (isLocale(saved) && saved !== initialLocale) {
+      switchTo(saved);
+    }
+    // Runs once on mount by design.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const setLocale = (newLocale: Locale) => {
-    setLocaleState(newLocale);
-    localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
-  };
+  // Keep <html lang dir> in step with the language shown.
+  useEffect(() => {
+    document.documentElement.lang = state.locale;
+    document.documentElement.dir = dirOf(state.locale);
+  }, [state.locale]);
 
-  const t = (key: string): string => {
-    return getNestedValue(messages, key);
-  };
-
-  const dir = locale === "ar" ? "rtl" : "ltr";
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-oxford">
-        <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  return (
-    <I18nContext.Provider value={{ locale, setLocale, t, dir, messages }}>
-      {children}
-    </I18nContext.Provider>
+  const value = useMemo<I18nContextType>(
+    () => ({
+      locale: state.locale,
+      messages: state.messages,
+      dir: dirOf(state.locale),
+      setLocale: (next: Locale) => {
+        // Compare with the last language ASKED for, not the one displayed: a
+        // click back to the current language must cancel a pending switch.
+        if (next !== requestedLocale.current) switchTo(next);
+      },
+      t: (key: string) => getNestedValue(state.messages, key),
+    }),
+    [state, switchTo],
   );
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
 export function useI18n() {
@@ -118,7 +151,7 @@ export function useI18n() {
 }
 
 export function useTranslations(namespace?: string) {
-  const { t, messages } = useI18n();
+  const { t } = useI18n();
 
   return (key: string) => {
     const fullKey = namespace ? `${namespace}.${key}` : key;

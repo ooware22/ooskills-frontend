@@ -61,7 +61,11 @@ export default function Countdown() {
     { key: "seconds", value: timeLeft.seconds, labelKey: "seconds" },
   ];
 
-  if (!mounted || !config || !config.is_active) {
+  // Hidden when switched off in the admin, and also once the launch date has
+  // passed: a countdown stuck at 00:00:00:00 tells visitors the site is stale.
+  // (The timer re-renders every second, so it disappears on the dot.)
+  const launchTime = config ? new Date(config.launch_date).getTime() : NaN;
+  if (!mounted || !config || !config.is_active || !(launchTime > Date.now())) {
     return null;
   }
 

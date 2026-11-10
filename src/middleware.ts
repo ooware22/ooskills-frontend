@@ -21,14 +21,30 @@ export function middleware(request: Request) {
     ? `script-src 'self' 'unsafe-eval' 'unsafe-inline'${devOrigins}`
     : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`;
 
+  // The API this build talks to (NEXT_PUBLIC_API_URL is inlined at build time).
+  // Only THIS environment's API is allowed: a staging build no longer lists
+  // the production hosts, and production does not list staging ones.
+  let apiOrigin = '';
+  try {
+    apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || '').origin;
+  } catch {
+    apiOrigin = '';
+  }
+  if (!apiOrigin || apiOrigin.startsWith('http://localhost') || apiOrigin.startsWith('http://127.0.0.1')) {
+    apiOrigin = isDev ? apiOrigin : 'https://api.ooskills.com';
+  }
+  // The production API also has an upload host for large course imports.
+  const uploadOrigin = apiOrigin === 'https://api.ooskills.com' ? ' https://upload.ooskills.com' : '';
+  const api = apiOrigin ? ` ${apiOrigin}` : '';
+
   const csp = [
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://api.ooskills.com https://randomuser.me https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${devOrigins}`,
+    `img-src 'self' data: blob: https://images.unsplash.com https://cdn.worldvectorlogo.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com https://platform-lookaside.fbsbx.com https://lh3.googleusercontent.com${api}${devOrigins}`,
     `media-src 'self' blob: https://*.r2.dev https://*.r2.cloudflarestorage.com${devOrigins}`,
-    `connect-src 'self' https://api.ooskills.com https://upload.ooskills.com https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com${devOrigins}`,
+    `connect-src 'self' https://pbwxwhkkjkshcsugaubp.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com${api}${uploadOrigin}${devOrigins}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

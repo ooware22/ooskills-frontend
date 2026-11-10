@@ -1,0 +1,80 @@
+name: Deploy Frontend (staging)
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-frontend-staging
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Type-check & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    name: Deploy to staging
+    needs: build
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.ooskills.com
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            chown -R ooskills:ooskills /var/www/ooskills-staging/ooskills-frontend
+
+            su - ooskills -c '
+              set -e
+              cd /var/www/ooskills-staging/ooskills-frontend
+              # NEXT_PUBLIC_API_URL is baked in at build time — make sure it
+              # targets the staging API, never production.
+              grep -q "^NEXT_PUBLIC_API_URL=https://api-staging" .env.production.local \
+                || { echo "Refusing: .env.production.local does not point at the staging API"; exit 1; }
+              git fetch origin
+              git reset --hard origin/staging
+              npm ci
+              npm run build
+            '
+
+            systemctl restart ooskills-frontend-staging
+
+            echo "Waiting for ooskills-frontend-staging..."
+            for i in $(seq 1 30); do
+              if curl -fsS -o /dev/null http://127.0.0.1:3001/; then
+                echo "Staging frontend is up."
+                exit 0
+              fi
+              sleep 1
+            done
+
+            echo "ERROR: staging frontend did not come up."
+            systemctl status ooskills-frontend-staging -l --no-pager
+            journalctl -u ooskills-frontend-staging -n 40 --no-pager
+            exit 1

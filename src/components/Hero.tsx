@@ -7,7 +7,6 @@ import {
   UserGroupIcon as Users,
   BookOpenIcon as BookOpen,
   TrophyIcon as Award,
-  StarIcon as Star,
   CheckCircleIcon as CheckCircle2,
   AcademicCapIcon as GraduationCap,
   ComputerDesktopIcon as Monitor,
@@ -16,7 +15,6 @@ import {
   TrophyIcon as Trophy,
   CursorArrowRaysIcon as Target,
 } from "@heroicons/react/24/outline";
-import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import { useTranslations } from "@/lib/i18n";
 import type { PublicHeroData } from "@/types/content";
 
@@ -105,15 +103,15 @@ export default function Hero({ data }: HeroProps) {
             <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start text-sm text-silver">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-gold" />
-                <span>{t("trustIndicator1") || "شهادات معتمدة"}</span>
+                <span>{t("trustIndicator1")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-gold" />
-                <span>{t("trustIndicator2") || "خبراء محترفون"}</span>
+                <span>{t("trustIndicator2")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-gold" />
-                <span>{t("trustIndicator3") || "دعم مستمر"}</span>
+                <span>{t("trustIndicator3")}</span>
               </div>
             </div>
           </motion.div>
@@ -165,7 +163,7 @@ export default function Hero({ data }: HeroProps) {
                 </div>
               </div>
 
-              {/* Creative Banner - #1 Badge */}
+              {/* Creative Banner - Badge */}
               <motion.div
                 className="relative bg-gradient-to-r from-gold via-gold-light to-gold overflow-hidden"
                 initial={{ height: 0, opacity: 0 }}
@@ -253,12 +251,6 @@ export default function Hero({ data }: HeroProps) {
                         <p className="text-xs text-gray-500 dark:text-white/40">
                           {cardSubtitle}
                         </p>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <Star className="w-3.5 h-3.5 text-gold fill-gold" />
-                        <span className="text-oxford dark:text-white font-medium">
-                          4.9
-                        </span>
                       </div>
                     </div>
                   </motion.div>
@@ -399,38 +391,6 @@ export default function Hero({ data }: HeroProps) {
             >
               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl shadow-lg flex items-center justify-center -rotate-6">
                 <Monitor className="w-7 h-7 text-white" />
-              </div>
-            </motion.div>
-
-            {/* Bubble 3 - Star Rating (Bottom Right) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: [0, -8, 0],
-              }}
-              transition={{
-                opacity: { delay: 1.4, duration: 0.4 },
-                scale: { delay: 1.4, duration: 0.5, type: "spring" },
-                y: {
-                  delay: 1.9,
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-              className="hidden lg:block absolute -bottom-4 end-12 z-20"
-            >
-              <div className="bg-white dark:bg-oxford-light rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-3.5 h-3.5 text-gold fill-gold" />
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-oxford dark:text-white">
-                  4.9
-                </span>
               </div>
             </motion.div>
 
