@@ -40,9 +40,9 @@ const defaultContent: Record<AdminLocale, CountdownFormData> = {
 };
 
 const defaultSharedSettings: SharedSettings = {
-  launchDate: "2026-05-01",
+  launchDate: "",
   launchTime: "09:00",
-  isActive: true,
+  isActive: false,
 };
 
 export default function CountdownAdmin() {

@@ -6,7 +6,6 @@ import Hero from "@/components/Hero";
 import { useLandingPage } from "@/hooks/useLandingPage";
 
 // Lazy load below-fold components to reduce initial JS bundle (~60% reduction)
-const Countdown = dynamic(() => import("@/components/Countdown"));
 const Features = dynamic(() => import("@/components/Features"));
 const Categories = dynamic(() => import("@/components/Categories"));
 const Courses = dynamic(() => import("@/components/Courses"));
@@ -23,7 +22,6 @@ export default function Home() {
       <Header />
       <main>
         <Hero data={data?.hero} />
-        <Countdown />
         <Features data={data?.features} />
         <Categories />
         <Courses />

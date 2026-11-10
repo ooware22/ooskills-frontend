@@ -1,5 +1,7 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { I18nProvider } from "@/lib/i18n";
+import { LOCALE_STORAGE_KEY, dirOf, resolveLocale } from "@/lib/locale";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { ReduxProvider } from "@/store/provider";
 import PromotionalBanner from "@/components/PromotionalBanner";
 import dynamic from "next/dynamic";
@@ -10,80 +12,45 @@ const AnimatedBackground = dynamic(() => import("@/components/AnimatedBackground
 const ServerWakeUp = dynamic(() => import("@/components/ServerWakeUp"));
 const GamificationOverlays = dynamic(() => import("@/components/GamificationOverlays"));
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { Metadata } from "next";
 
+const DEFAULT_TITLE = "OOSkills – Formations en ligne en Algérie";
+const DEFAULT_DESCRIPTION =
+  "OOSkills est une plateforme algérienne de formation en ligne, en français, en arabe et en anglais : cours, quiz et certificats de réussite vérifiables, accessibles depuis votre téléphone ou votre ordinateur.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ooskills.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "OOSkills – Plateforme E-Learning N°1 en Algérie | Développez vos Compétences",
-    template: "%s | OOSkills",
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "OOSkills est la plateforme e-learning de référence en Algérie. Développez vos compétences en informatique, business, design et plus. Cours en ligne, certificats reconnus, formation professionnelle accessible à tous les Algériens.",
-  keywords: [
-    // Primary - Arabic/French Algeria keywords
-    "e-learning Algérie",
-    "formation en ligne Algérie",
-    "plateforme e-learning algérienne",
-    "cours en ligne Algérie",
-    "compétences Algérie",
-    "skills Algeria",
-    "تعلم عن بعد الجزائر",
-    "تكوين عن بعد",
-    // Skills & Training
-    "développement compétences",
-    "formation professionnelle Algérie",
-    "formation à distance",
-    "apprentissage en ligne",
-    "certificat en ligne",
-    "cours certifiants",
-    // Domains
-    "informatique Algérie",
-    "programmation Algérie",
-    "développement web Algérie",
-    "marketing digital Algérie",
-    "design graphique Algérie",
-    "business Algérie",
-    // English keywords
-    "online courses Algeria",
-    "e-learning platform Algeria",
-    "learn skills online Algeria",
-    "professional training Algeria",
-    "OOSkills",
-    "ooskills.com",
-  ],
-  authors: [{ name: "OOSkills", url: "https://ooskills.com" }],
-  creator: "OOSkills",
-  publisher: "OOSkills",
+  description: DEFAULT_DESCRIPTION,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
   icons: {
-    icon: "/images/logo/favicon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/images/logo/favicon.png", type: "image/png" },
+    ],
     apple: "/images/logo/favicon.png",
   },
   openGraph: {
     type: "website",
     locale: "fr_DZ",
     alternateLocale: ["ar_DZ", "en_US"],
-    url: "https://ooskills.com",
-    siteName: "OOSkills",
-    title: "OOSkills – Plateforme E-Learning N°1 en Algérie",
-    description:
-      "Développez vos compétences avec OOSkills. Cours en ligne, certificats reconnus, et formation professionnelle accessible à tous en Algérie.",
-    images: [
-      {
-        url: "/images/logo/logo_LightMood2.png",
-        width: 1200,
-        height: 630,
-        alt: "OOSkills - Plateforme E-Learning Algérie",
-      },
-    ],
+    // "./" = the address of the page being rendered, not always the homepage.
+    url: "./",
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    // The image itself comes from app/opengraph-image.tsx (1200x630).
   },
   twitter: {
     card: "summary_large_image",
-    title: "OOSkills – Plateforme E-Learning N°1 en Algérie",
-    description:
-      "Développez vos compétences avec OOSkills. Cours en ligne et certificats reconnus en Algérie.",
-    images: ["/images/logo/logo_LightMood2.png"],
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
   },
   robots: {
     index: true,
@@ -97,12 +64,13 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://ooskills.com",
+    // Self-referencing canonical on every page. (It used to be the homepage
+    // URL for the whole site, which asked search engines to drop every other
+    // page.)
+    canonical: "./",
   },
   verification: {
-    // Add your Google Search Console verification code here
-    // google: "YOUR_GOOGLE_VERIFICATION_CODE",
-    google: '7BStn3aHavKARXTVciGMScdn7u8b_v0AH8_2Zfzv_Ds'
+    google: "7BStn3aHavKARXTVciGMScdn7u8b_v0AH8_2Zfzv_Ds",
   },
   category: "education",
 };
@@ -113,10 +81,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
-  const nonce = headersList.get("x-nonce") || undefined;
+  const cookieStore = await cookies();
+
+  // The language is decided on the server, so the very first HTML already
+  // carries the right text, <html lang> and direction (no client-side flash).
+  const locale = resolveLocale(
+    cookieStore.get(LOCALE_STORAGE_KEY)?.value,
+    headersList.get("accept-language"),
+  );
+  const messages = (await import(`../../messages/${locale}.json`)).default;
 
   return (
-    <html lang="fr" dir="ltr" suppressHydrationWarning>
+    <html lang={locale} dir={dirOf(locale)} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -127,48 +103,26 @@ export default async function RootLayout({
               "@graph": [
                 {
                   "@type": ["Organization", "EducationalOrganization"],
-                  "@id": "https://ooskills.com/#organization",
-                  name: "OOSkills",
-                  url: "https://ooskills.com",
+                  "@id": `${SITE_URL}/#organization`,
+                  name: SITE_NAME,
+                  url: SITE_URL,
                   logo: {
                     "@type": "ImageObject",
-                    url: "https://ooskills.com/images/logo/logo_LightMood2.png",
+                    url: `${SITE_URL}/images/logo/logo_LightMood2.png`,
                   },
-                  description:
-                    "Plateforme e-learning N°1 en Algérie. Cours en ligne, certificats reconnus, formation professionnelle.",
+                  description: DEFAULT_DESCRIPTION,
                   areaServed: {
                     "@type": "Country",
                     name: "Algeria",
                   },
-                  sameAs: [],
                 },
                 {
                   "@type": "WebSite",
-                  "@id": "https://ooskills.com/#website",
-                  url: "https://ooskills.com",
-                  name: "OOSkills",
-                  publisher: { "@id": "https://ooskills.com/#organization" },
+                  "@id": `${SITE_URL}/#website`,
+                  url: SITE_URL,
+                  name: SITE_NAME,
+                  publisher: { "@id": `${SITE_URL}/#organization` },
                   inLanguage: ["fr", "ar", "en"],
-                  potentialAction: {
-                    "@type": "SearchAction",
-                    target: {
-                      "@type": "EntryPoint",
-                      urlTemplate:
-                        "https://ooskills.com/courses?search={search_term_string}",
-                    },
-                    "query-input": "required name=search_term_string",
-                  },
-                },
-                {
-                  "@type": "WebPage",
-                  "@id": "https://ooskills.com/#webpage",
-                  url: "https://ooskills.com",
-                  name: "OOSkills – Plateforme E-Learning N°1 en Algérie",
-                  isPartOf: { "@id": "https://ooskills.com/#website" },
-                  about: { "@id": "https://ooskills.com/#organization" },
-                  description:
-                    "Développez vos compétences en informatique, business, design et plus avec OOSkills. La plateforme e-learning de référence en Algérie.",
-                  inLanguage: "fr",
                 },
               ],
             }),
@@ -185,8 +139,9 @@ export default async function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
+            nonce={headersList.get("x-nonce") || undefined}
           >
-            <I18nProvider>
+            <I18nProvider initialLocale={locale} initialMessages={messages}>
               <PromotionalBanner />
               <ServerWakeUp />
               <AnimatedBackground />
@@ -199,4 +154,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

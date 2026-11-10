@@ -117,7 +117,7 @@ const transformContentToPayload = (
 
 const defaultContent: Record<Locale, HeroContent> = {
   en: {
-    badge: "#1 E-Learning Platform in Algeria",
+    badge: "E-learning platform in Algeria",
     title: "Develop your skills with",
     titleHighlight: "OOSkills",
     subtitle: "Access quality training in IT, office tools, and personal development. Learn at your own pace with experts.",
@@ -127,7 +127,7 @@ const defaultContent: Record<Locale, HeroContent> = {
     illustrationSubtitle: "Your journey to excellence starts here",
   },
   fr: {
-    badge: "#1 Plateforme E-Learning en Algérie",
+    badge: "Plateforme e-learning en Algérie",
     title: "Développez vos compétences avec",
     titleHighlight: "OOSkills",
     subtitle: "Accédez à des formations de qualité en informatique, bureautique et développement personnel. Apprenez à votre rythme avec des experts.",
@@ -137,7 +137,7 @@ const defaultContent: Record<Locale, HeroContent> = {
     illustrationSubtitle: "Votre parcours vers l'excellence commence ici",
   },
   ar: {
-    badge: "#1 منصة التعليم الإلكتروني في الجزائر",
+    badge: "منصة للتعليم الإلكتروني في الجزائر",
     title: "طوّر مهاراتك مع",
     titleHighlight: "OOSkills",
     subtitle: "احصل على تدريب عالي الجودة في تكنولوجيا المعلومات وأدوات المكتب والتنمية الشخصية. تعلم بالسرعة التي تناسبك مع الخبراء.",

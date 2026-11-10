@@ -110,7 +110,7 @@ const defaultContent: Record<Locale, FAQContent> = {
     sectionSubtitle: "Find answers to common questions about our platform",
     faqs: [
       { id: "1", question: "How does OOSkills work?", answer: "OOSkills is an online learning platform that offers courses in various fields. After registration, you can browse our catalog, enroll in courses, and learn at your own pace.", isOpen: true },
-      { id: "2", question: "Are certificates recognized?", answer: "Yes, our certificates are recognized by employers and can be added to your CV and LinkedIn profile to showcase your skills.", isOpen: false },
+      { id: "2", question: "What is the certificate worth?", answer: "Each certificate can be verified online with its QR code and can be added to your CV and LinkedIn profile. It attests that you completed a course on OOSkills; it is not a state-recognized diploma.", isOpen: false },
       { id: "3", question: "Can I access courses on mobile?", answer: "Absolutely! Our platform is fully responsive and works on all devices - smartphones, tablets, and computers.", isOpen: false },
       { id: "4", question: "What is the refund policy?", answer: "We offer a 30-day money-back guarantee. If you're not satisfied with a course, you can request a full refund within 30 days of purchase.", isOpen: false },
       { id: "5", question: "How do I contact support?", answer: "You can reach our support team via email at support@ooskills.com or through the contact form on our website. We respond within 24 hours.", isOpen: false },
@@ -121,7 +121,7 @@ const defaultContent: Record<Locale, FAQContent> = {
     sectionSubtitle: "Trouvez des réponses aux questions courantes sur notre plateforme",
     faqs: [
       { id: "1", question: "Comment fonctionne OOSkills ?", answer: "OOSkills est une plateforme d'apprentissage en ligne qui propose des cours dans divers domaines. Après inscription, vous pouvez parcourir notre catalogue, vous inscrire à des cours et apprendre à votre rythme.", isOpen: true },
-      { id: "2", question: "Les certificats sont-ils reconnus ?", answer: "Oui, nos certificats sont reconnus par les employeurs et peuvent être ajoutés à votre CV et profil LinkedIn pour mettre en valeur vos compétences.", isOpen: false },
+      { id: "2", question: "Que vaut le certificat ?", answer: "Chaque certificat est vérifiable en ligne grâce à son QR code et peut être ajouté à votre CV et à votre profil LinkedIn. Il atteste que vous avez terminé une formation sur OOSkills ; ce n'est pas un diplôme d'État.", isOpen: false },
       { id: "3", question: "Puis-je accéder aux cours sur mobile ?", answer: "Absolument ! Notre plateforme est entièrement responsive et fonctionne sur tous les appareils - smartphones, tablettes et ordinateurs.", isOpen: false },
       { id: "4", question: "Quelle est la politique de remboursement ?", answer: "Nous offrons une garantie de remboursement de 30 jours. Si vous n'êtes pas satisfait d'un cours, vous pouvez demander un remboursement complet dans les 30 jours suivant l'achat.", isOpen: false },
       { id: "5", question: "Comment contacter le support ?", answer: "Vous pouvez joindre notre équipe de support par email à support@ooskills.com ou via le formulaire de contact sur notre site web. Nous répondons sous 24 heures.", isOpen: false },
@@ -132,7 +132,7 @@ const defaultContent: Record<Locale, FAQContent> = {
     sectionSubtitle: "اعثر على إجابات للأسئلة الشائعة حول منصتنا",
     faqs: [
       { id: "1", question: "كيف يعمل OOSkills؟", answer: "OOSkills هي منصة تعليم إلكتروني تقدم دورات في مجالات متعددة. بعد التسجيل، يمكنك تصفح الكتالوج الخاص بنا والتسجيل في الدورات والتعلم بالسرعة التي تناسبك.", isOpen: true },
-      { id: "2", question: "هل الشهادات معترف بها؟", answer: "نعم، شهاداتنا معترف بها من قبل أرباب العمل ويمكن إضافتها إلى سيرتك الذاتية وملفك الشخصي على LinkedIn لإظهار مهاراتك.", isOpen: false },
+      { id: "2", question: "ما قيمة الشهادة؟", answer: "يمكن التحقق من كل شهادة عبر الإنترنت بواسطة رمز QR، ويمكن إضافتها إلى سيرتك الذاتية وملفك على LinkedIn. تشهد بأنك أتممت دورة على OOSkills، ولا تشكل شهادة معترفاً بها من الدولة.", isOpen: false },
       { id: "3", question: "هل يمكنني الوصول إلى الدورات من الجوال؟", answer: "بالتأكيد! منصتنا متجاوبة تمامًا وتعمل على جميع الأجهزة - الهواتف الذكية والأجهزة اللوحية وأجهزة الكمبيوتر.", isOpen: false },
       { id: "4", question: "ما هي سياسة الاسترداد؟", answer: "نقدم ضمان استرداد الأموال لمدة 30 يومًا. إذا لم تكن راضيًا عن دورة ما، يمكنك طلب استرداد كامل خلال 30 يومًا من الشراء.", isOpen: false },
       { id: "5", question: "كيف أتواصل مع الدعم؟", answer: "يمكنك الوصول إلى فريق الدعم لدينا عبر البريد الإلكتروني على support@ooskills.com أو من خلال نموذج الاتصال على موقعنا. نرد خلال 24 ساعة.", isOpen: false },
