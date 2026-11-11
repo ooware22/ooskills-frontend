@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchMyEnrollments, saveProgress, fetchMyProgress } from '@/store/slices/enrollmentSlice';
+import { initializeAuth, selectIsInitialized } from '@/store/slices/authSlice';
 import {
   fetchCourseContentBySlug,
   fetchQuizAttempts,
@@ -922,6 +923,14 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const [audioTime, setAudioTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [audioMuted, setAudioMuted] = useState(false);
+
+  // The player has no site header, which is what restores the session after
+  // a page load elsewhere. Without this, reloading the player (or opening it
+  // from a link) left the learner signed out: no progress shown or saved.
+  const authInitialized = useAppSelector(selectIsInitialized);
+  useEffect(() => {
+    if (!authInitialized) dispatch(initializeAuth());
+  }, [dispatch, authInitialized]);
 
   // Fetch enrollments from API
   useEffect(() => {
