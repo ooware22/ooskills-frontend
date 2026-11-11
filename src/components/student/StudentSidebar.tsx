@@ -18,6 +18,7 @@ import {
   SparklesIcon,
   ChartBarIcon,
   HeartIcon,
+  ReceiptPercentIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -29,6 +30,7 @@ const navItems = [
   { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/dashboard/my-courses", labelKey: "myCourses", icon: BookOpen },
   { href: "/dashboard/wishlist", labelKey: "wishlist", icon: HeartIcon },
+  { href: "/dashboard/orders", labelKey: "orders", icon: ReceiptPercentIcon },
   {
     href: "/dashboard/certificates",
     labelKey: "certificates",

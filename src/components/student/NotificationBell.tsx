@@ -11,6 +11,7 @@ import {
   type AppNotification,
 } from "@/store/slices/notificationSlice";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import {
   BellIcon,
@@ -80,12 +81,14 @@ const TYPE_META: Record<
   },
 };
 
-function timeAgo(dateStr: string): string {
+/** "2 hours ago" in the visitor's language (was always French). */
+function timeAgo(dateStr: string, locale: string): string {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (diff < 60) return "à l'instant";
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
-  return `il y a ${Math.floor(diff / 86400)} j`;
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  if (diff < 60) return rtf.format(0, "second");
+  if (diff < 3600) return rtf.format(-Math.floor(diff / 60), "minute");
+  if (diff < 86400) return rtf.format(-Math.floor(diff / 3600), "hour");
+  return rtf.format(-Math.floor(diff / 86400), "day");
 }
 
 function normalizeNotificationLink(link: string): string {
@@ -118,6 +121,7 @@ function NotifRow({
     bg: "bg-gray-50 dark:bg-white/5",
   };
   const IconComponent = meta.icon;
+  const { locale } = useI18n();
 
   const handleClick = () => {
     if (!notif.is_read) dispatch(markOneRead(notif.id));
@@ -162,7 +166,7 @@ function NotifRow({
           </p>
         )}
         <p className="text-xs text-gray-400 dark:text-white/30 mt-1">
-          {timeAgo(notif.created_at)}
+          {timeAgo(notif.created_at, locale)}
         </p>
       </div>
 

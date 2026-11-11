@@ -27,6 +27,7 @@ import {
   updateProfile as updateProfileApi,
 } from "@/services/authApi";
 import { useRouter } from "next/navigation";
+import { WILAYAS } from "@/constants/wilayas";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { updateUser } from "@/store/slices/authSlice";
 import {
@@ -35,7 +36,7 @@ import {
 } from "@/store/slices/userDataSlice";
 
 export default function StudentSettingsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const ts = (key: string) => t(`student.settings.${key}`);
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -86,7 +87,7 @@ export default function StudentSettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        showToast("L'image ne doit pas dépasser 5 Mo.");
+        showToast(ts("avatarTooBig"));
         return;
       }
       setAvatarFile(file);
@@ -134,7 +135,7 @@ export default function StudentSettingsPage() {
       setAvatarFile(null);
       showToast(ts("profileSaved"));
     } catch {
-      showToast("Erreur lors de la mise à jour du profil.");
+      showToast(ts("profileError"));
     } finally {
       setProfileSaving(false);
     }
@@ -151,7 +152,7 @@ export default function StudentSettingsPage() {
       dispatch(updateUser(updatedUser));
       showToast(ts("languageSaved"));
     } catch {
-      showToast("Erreur lors de la mise à jour de la langue.");
+      showToast(ts("languageError"));
     } finally {
       setProfileSaving(false);
     }
@@ -160,7 +161,7 @@ export default function StudentSettingsPage() {
   // Deletion handlers
   const handleSubmitDeletion = async () => {
     if (!deletionReason.trim()) {
-      setDeletionError("Veuillez indiquer la raison de votre demande.");
+      setDeletionError(ts("deletion.reasonRequired"));
       return;
     }
     setDeletionLoading(true);
@@ -169,11 +170,11 @@ export default function StudentSettingsPage() {
       const req = await submitDeletionRequest(deletionReason.trim());
       dispatch(setDeletionRequest(req));
       setDeletionReason("");
-      showToast("Demande de suppression soumise avec succès.");
+      showToast(ts("deletion.submitted"));
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Erreur lors de la soumission.";
+          ?.error || ts("deletion.submitError");
       setDeletionError(errorMsg);
     } finally {
       setDeletionLoading(false);
@@ -185,9 +186,9 @@ export default function StudentSettingsPage() {
     try {
       await cancelDeletionRequest();
       dispatch(setDeletionRequest(null));
-      showToast("Demande de suppression annulée.");
+      showToast(ts("deletion.cancelled"));
     } catch {
-      setDeletionError("Erreur lors de l'annulation.");
+      setDeletionError(ts("deletion.cancelError"));
     } finally {
       setDeletionLoading(false);
     }
@@ -195,7 +196,7 @@ export default function StudentSettingsPage() {
 
   const handleConfirmDeletion = async () => {
     if (!confirmPassword) {
-      setConfirmError("Le mot de passe est requis.");
+      setConfirmError(ts("deletion.passwordRequired"));
       return;
     }
     setConfirmLoading(true);
@@ -203,11 +204,11 @@ export default function StudentSettingsPage() {
     try {
       await confirmAccountDeletion(confirmPassword);
       clearTokens();
-      router.push("/auth/login");
+      router.push("/auth/signin");
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Erreur lors de la suppression.";
+          ?.error || ts("deletion.deleteError");
       setConfirmError(errorMsg);
     } finally {
       setConfirmLoading(false);
@@ -228,10 +229,11 @@ export default function StudentSettingsPage() {
   };
 
   const statusLabels: Record<string, string> = {
-    PENDING: "En attente de traitement",
-    APPROVED: "Approuvée — Vous pouvez confirmer la suppression",
-    REJECTED: "Rejetée",
+    PENDING: ts("deletion.statusPending"),
+    APPROVED: ts("deletion.statusApproved"),
+    REJECTED: ts("deletion.statusRejected"),
   };
+  const dateLocale = locale === "ar" ? "ar-DZ" : locale === "en" ? "en-GB" : "fr-FR";
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -279,7 +281,8 @@ export default function StudentSettingsPage() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute -bottom-1 -end-1 w-6 h-6 bg-gold rounded-full flex items-center justify-center shadow-lg hover:bg-gold-light transition-colors"
+                aria-label={ts("changePhoto")}
+                className="absolute -bottom-1 -end-1 w-7 h-7 bg-goldrounded-full flex items-center justify-center shadow-lg hover:bg-gold-light transition-colors"
               >
                 <CameraIcon className="w-3.5 h-3.5 text-oxford" />
               </button>
@@ -300,7 +303,7 @@ export default function StudentSettingsPage() {
               </p>
               {avatarFile && (
                 <p className="text-xs text-gold mt-0.5">
-                  Nouvelle photo sélectionnée
+                  {ts("newPhoto")}
                 </p>
               )}
             </div>
@@ -308,8 +311,9 @@ export default function StudentSettingsPage() {
 
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className={LabelClass}>{ts("firstName")}</label>
+              <label htmlFor="st-first-name" className={LabelClass}>{ts("firstName")}</label>
               <input
+                id="st-first-name"
                 type="text"
                 value={profile.firstName}
                 onChange={(e) =>
@@ -319,8 +323,9 @@ export default function StudentSettingsPage() {
               />
             </div>
             <div>
-              <label className={LabelClass}>{ts("lastName")}</label>
+              <label htmlFor="st-last-name" className={LabelClass}>{ts("lastName")}</label>
               <input
+                id="st-last-name"
                 type="text"
                 value={profile.lastName}
                 onChange={(e) =>
@@ -330,8 +335,9 @@ export default function StudentSettingsPage() {
               />
             </div>
             <div>
-              <label className={LabelClass}>{ts("email")}</label>
+              <label htmlFor="st-email" className={LabelClass}>{ts("email")}</label>
               <input
+                id="st-email"
                 type="email"
                 value={profile.email}
                 readOnly
@@ -340,9 +346,10 @@ export default function StudentSettingsPage() {
               />
             </div>
             <div>
-              <label className={LabelClass}>{ts("phone")}</label>
+              <label htmlFor="st-phone" className={LabelClass}>{ts("phone")}</label>
               <input
-                type="text"
+                id="st-phone"
+                type="tel"
                 value={profile.phone}
                 onChange={(e) =>
                   setProfile({ ...profile, phone: e.target.value })
@@ -352,30 +359,38 @@ export default function StudentSettingsPage() {
               />
             </div>
             <div>
-              <label className={LabelClass}>Wilaya</label>
-              <input
-                type="text"
+              <label htmlFor="st-wilaya" className={LabelClass}>{ts("wilaya")}</label>
+              {/* A list of names instead of a free "16" code (audit FN-30). */}
+              <select
+                id="st-wilaya"
                 value={profile.wilaya}
                 onChange={(e) =>
                   setProfile({ ...profile, wilaya: e.target.value })
                 }
-                placeholder="Ex: 16 - Alger"
                 className={InputClass}
-              />
+              >
+                <option value="">{ts("wilayaPlaceholder")}</option>
+                {WILAYAS.map((w) => (
+                  <option key={w.code} value={w.code}>
+                    {w.code} - {locale === "ar" ? w.nameAr : w.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           {/* Newsletter toggle */}
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-oxford rounded-lg mb-4">
             <div>
-              <p className="text-sm font-medium text-oxford dark:text-white">
-                Newsletter
+              <p id="st-newsletter-label" className="text-sm font-medium text-oxford dark:text-white">
+                {ts("newsletter")}
               </p>
               <p className="text-xs text-silver dark:text-white/50">
-                Recevoir les offres et actualités par email
+                {ts("newsletterDesc")}
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
+              <span className="sr-only">{ts("newsletter")}</span>
               <input
                 type="checkbox"
                 checked={profile.newsletterSubscribed}
@@ -396,7 +411,7 @@ export default function StudentSettingsPage() {
             disabled={profileSaving}
             className="px-5 py-2.5 bg-gold hover:bg-gold-light text-oxford rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {profileSaving ? "Enregistrement..." : ts("saveProfile")}
+            {profileSaving ? ts("saving") : ts("saveProfile")}
           </button>
         </motion.div>
 
@@ -553,10 +568,10 @@ export default function StudentSettingsPage() {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-red-600 dark:text-red-400">
-                Zone dangereuse
+                {ts("deletion.title")}
               </h3>
               <p className="text-xs text-silver dark:text-white/50">
-                Suppression définitive de votre compte et de toutes vos données
+                {ts("deletion.desc")}
               </p>
             </div>
           </div>
@@ -568,38 +583,39 @@ export default function StudentSettingsPage() {
               {deletionRequest?.status === "REJECTED" && (
                 <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
                   <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-1">
-                    Votre demande précédente a été rejetée
+                    {ts("deletion.rejectedTitle")}
                   </p>
                   {deletionRequest.admin_notes && (
                     <p className="text-xs text-red-600 dark:text-red-400">
-                      Note de l&apos;administrateur :{" "}
+                      {ts("deletion.adminNote")}{" "}
                       {deletionRequest.admin_notes}
                     </p>
                   )}
-                  <p className="text-xs text-silver dark:text-white/40 mt-2">
-                    Vous pouvez soumettre une nouvelle demande ci-dessous.
+                  <p className="text-xs text-silver dark:text-white/60 mt-2">
+                    {ts("deletion.resubmit")}
                   </p>
                 </div>
               )}
 
               <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  ⚠️ La suppression de votre compte est irréversible. Toutes vos
-                  formations, progressions, certificats, commandes et données
-                  associées seront définitivement supprimés. Votre demande sera
-                  examinée par un administrateur.
+                <p className="text-xs text-amber-800 dark:text-amber-300">
+                  ⚠️ {ts("deletion.warning")}
+                </p>
+                <p className="text-xs text-amber-800 dark:text-amber-300 mt-2 font-medium">
+                  {ts("deletion.delay")}
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1.5">
-                  Raison de la suppression *
+                <label htmlFor="st-deletion-reason" className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1.5">
+                  {ts("deletion.reasonLabel")} *
                 </label>
                 <textarea
+                  id="st-deletion-reason"
                   rows={3}
                   value={deletionReason}
                   onChange={(e) => setDeletionReason(e.target.value)}
-                  placeholder="Expliquez pourquoi vous souhaitez supprimer votre compte..."
+                  placeholder={ts("deletion.reasonPlaceholder")}
                   className={cn(
                     InputClass,
                     "resize-none border-red-200 dark:border-red-500/20 focus:ring-red-500/50",
@@ -618,8 +634,8 @@ export default function StudentSettingsPage() {
               >
                 <TrashIcon className="w-4 h-4" />
                 {deletionLoading
-                  ? "Envoi en cours..."
-                  : "Demander la suppression du compte"}
+                  ? ts("deletion.submitting")
+                  : ts("deletion.submit")}
               </button>
             </div>
           )}
@@ -637,9 +653,9 @@ export default function StudentSettingsPage() {
                   </p>
                 </div>
                 <p className="text-xs opacity-80">
-                  Soumise le{" "}
+                  {ts("deletion.submittedOn")}{" "}
                   {new Date(deletionRequest.created_at).toLocaleDateString(
-                    "fr-FR",
+                    dateLocale,
                     {
                       day: "numeric",
                       month: "long",
@@ -649,9 +665,10 @@ export default function StudentSettingsPage() {
                     },
                   )}
                 </p>
-                <p className="text-xs mt-2 opacity-70">
-                  Raison : {deletionRequest.reason}
+                <p className="text-xs mt-2 opacity-80">
+                  {ts("deletion.reason")} {deletionRequest.reason}
                 </p>
+                <p className="text-xs mt-2 opacity-80">{ts("deletion.delay")}</p>
               </div>
 
               <button
@@ -659,7 +676,7 @@ export default function StudentSettingsPage() {
                 disabled={deletionLoading}
                 className="px-5 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
               >
-                {deletionLoading ? "Annulation..." : "Annuler la demande"}
+                {deletionLoading ? ts("deletion.cancelling") : ts("deletion.cancel")}
               </button>
             </div>
           )}
@@ -681,15 +698,15 @@ export default function StudentSettingsPage() {
                 </div>
                 {deletionRequest.admin_notes && (
                   <p className="text-xs opacity-80 mt-1">
-                    Note de l&apos;administrateur :{" "}
+                    {ts("deletion.adminNote")}{" "}
                     {deletionRequest.admin_notes}
                   </p>
                 )}
-                <p className="text-xs mt-2 opacity-70">
-                  Approuvée le{" "}
+                <p className="text-xs mt-2 opacity-80">
+                  {ts("deletion.approvedOn")}{" "}
                   {deletionRequest.reviewed_at &&
                     new Date(deletionRequest.reviewed_at).toLocaleDateString(
-                      "fr-FR",
+                      dateLocale,
                       {
                         day: "numeric",
                         month: "long",
@@ -701,8 +718,7 @@ export default function StudentSettingsPage() {
 
               <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
                 <p className="text-xs text-red-700 dark:text-red-300 font-medium">
-                  🚨 Attention : cette action est IRRÉVERSIBLE. Toutes vos
-                  données seront supprimées définitivement.
+                  🚨 {ts("deletion.irreversible")}
                 </p>
               </div>
 
@@ -711,7 +727,7 @@ export default function StudentSettingsPage() {
                 className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors"
               >
                 <TrashIcon className="w-4 h-4" />
-                Confirmer la suppression définitive
+                {ts("deletion.confirm")}
               </button>
             </div>
           )}
@@ -742,7 +758,7 @@ export default function StudentSettingsPage() {
                 <div className="flex items-center gap-2">
                   <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
                   <h3 className="text-lg font-semibold text-red-700 dark:text-red-300">
-                    Suppression définitive
+                    {ts("deletion.modalTitle")}
                   </h3>
                 </div>
                 <button
@@ -751,31 +767,29 @@ export default function StudentSettingsPage() {
                     setConfirmError("");
                     setConfirmPassword("");
                   }}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-lg transition-colors"
+                  aria-label={ts("deletion.close")}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-white rounded-lg transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5" />
+                  <XMarkIcon className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
 
               <div className="p-6 space-y-4">
-                <p className="text-sm text-gray-600 dark:text-white/60">
-                  Pour confirmer la suppression de votre compte, veuillez entrer
-                  votre mot de passe. Cette action est{" "}
-                  <strong className="text-red-600 dark:text-red-400">
-                    irréversible
-                  </strong>
-                  .
+                <p className="text-sm text-gray-700 dark:text-white/70">
+                  {ts("deletion.modalText")}
                 </p>
 
                 <div>
-                  <label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1.5">
-                    Mot de passe
+                  <label htmlFor="st-delete-password" className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1.5">
+                    {ts("deletion.password")}
                   </label>
                   <input
+                    id="st-delete-password"
                     type="password"
+                    autoComplete="current-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Entrez votre mot de passe"
+                    placeholder={ts("deletion.passwordPlaceholder")}
                     className={cn(
                       InputClass,
                       "border-red-200 dark:border-red-500/20 focus:ring-red-500/50",
@@ -796,7 +810,7 @@ export default function StudentSettingsPage() {
                     }}
                     className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-white/10 text-oxford dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                   >
-                    Annuler
+                    {ts("deletion.cancelModal")}
                   </button>
                   <button
                     onClick={handleConfirmDeletion}
@@ -804,8 +818,8 @@ export default function StudentSettingsPage() {
                     className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
                     {confirmLoading
-                      ? "Suppression..."
-                      : "Supprimer définitivement"}
+                      ? ts("deletion.deleting")
+                      : ts("deletion.deleteForever")}
                   </button>
                 </div>
               </div>
