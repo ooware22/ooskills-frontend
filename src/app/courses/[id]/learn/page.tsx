@@ -1104,13 +1104,21 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   // Audio handling — prefer API audio URL (Supabase), fall back to static audio
   const currentFlat = flatSlides[currentSlideIdx];
   const audioUrl = currentFlat
-    ? (currentFlat.slide.apiAudioUrl || getAudioUrl(currentFlat.audioIndex))
+    ? (currentFlat.slide.apiAudioUrl
+        // A lesson from the API without audio has none: don't fall back to the
+        // bundled sample file (it belongs to the static demo course).
+        || (currentFlat.slide.apiLessonId ? '' : getAudioUrl(currentFlat.audioIndex)))
     : '';
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.src = audioUrl;
+    if (audioUrl) {
+      audio.src = audioUrl;
+    } else {
+      // src = '' would make the browser request the page itself as audio.
+      audio.removeAttribute('src');
+    }
     audio.load();
     setIsPlaying(false);
     setAudioTime(0);
