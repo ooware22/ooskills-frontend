@@ -18,6 +18,8 @@ const config: Config = {
         gold: {
           DEFAULT: "#CFB53B",
           light: "#E8D48A",
+          // Gold readable as TEXT on white / cream (5.7:1, WCAG AA).
+          dark: "#7C6400",
         },
         // Neutrals
         cream: "#FAF9F6",

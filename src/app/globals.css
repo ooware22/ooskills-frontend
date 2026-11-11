@@ -98,3 +98,22 @@ html {
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-full hover:bg-gray-400 dark:bg-white/20 dark:hover:bg-white/30;
 }
+
+/* Contrast (audit UX-17): gold #CFB53B and silver #8A9AA9 are too light for
+   text on white (2:1 and 2.9:1). In light mode they use darker shades that
+   pass WCAG AA (4.5:1); on dark surfaces (footer, sidebars: class "on-dark")
+   and in dark mode the original colours stay. */
+@layer utilities {
+  html:not(.dark) .text-gold {
+    color: #7c6400;
+  }
+  html:not(.dark) .text-silver {
+    color: #5f6e7c;
+  }
+  html:not(.dark) .on-dark .text-gold {
+    color: #cfb53b;
+  }
+  html:not(.dark) .on-dark .text-silver {
+    color: #8a9aa9;
+  }
+}

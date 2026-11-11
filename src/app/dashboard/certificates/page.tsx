@@ -514,7 +514,7 @@ export default function CertificatesPage() {
                   )}
 
                   {/* ── Banner ────────────────────────────── */}
-                  <div className="relative h-28 bg-gradient-to-br from-oxford via-oxford-light to-oxford overflow-hidden">
+                  <div className="on-dark relative h-28 bg-gradient-to-br from-oxford via-oxford-light to-oxford overflow-hidden">
                     <div className="absolute -top-6 -end-6 w-28 h-28 rounded-full bg-gold/10" />
                     <div className="absolute -bottom-4 -start-4 w-20 h-20 rounded-full bg-gold/5" />
                     <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent" />
@@ -703,7 +703,7 @@ export default function CertificatesPage() {
                       transition-all duration-300"
                   >
                     {/* Banner */}
-                    <div className="relative h-28 bg-gradient-to-br from-oxford via-oxford-light to-oxford overflow-hidden">
+                    <div className="on-dark relative h-28 bg-gradient-to-br from-oxford via-oxford-light to-oxford overflow-hidden">
                       <div className="absolute -top-6 -end-6 w-28 h-28 rounded-full bg-gold/10" />
                       <div className="absolute -bottom-4 -start-4 w-20 h-20 rounded-full bg-gold/5" />
                       <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent" />

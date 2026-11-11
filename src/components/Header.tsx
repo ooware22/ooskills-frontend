@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -20,18 +20,14 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { initializeAuth, selectIsAdmin } from "@/store/slices/authSlice";
 import { selectLevel, selectLevelProgress } from "@/store/slices/gamificationSlice";
 import LevelAvatar from "@/components/student/LevelAvatar";
+import { LOCALE_LABELS } from "@/components/LanguageSwitcher";
 
-const localeLabels: Record<Locale, string> = {
-  fr: "Français",
-  en: "English",
-  ar: "العربية",
-};
+const localeLabels = LOCALE_LABELS;
 
 export default function Header() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { locale, setLocale, dir } = useI18n();
   const t = useTranslations("nav");
-  const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
 
@@ -112,28 +108,21 @@ export default function Header() {
     { href: "#contact", label: t("contact") },
   ];
 
+  // On the home page "#faq" scrolls; elsewhere the link is "/#faq", so it
+  // also works in a new tab and without JavaScript (audit UX-12).
+  const sectionHref = (hash: string) => (pathname === "/" ? hash : `/${hash}`);
+
   const handleNavClick = useCallback(
     (e: React.MouseEvent, hash: string) => {
-      e.preventDefault();
-      const sectionId = hash.replace("#", "");
-
-      if (pathname === "/") {
-        // Already on home — just smooth scroll
-        document
-          .getElementById(sectionId)
-          ?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        // Navigate to home first, then scroll
-        router.push("/");
-        setTimeout(() => {
-          document
-            .getElementById(sectionId)
-            ?.scrollIntoView({ behavior: "smooth" });
-        }, 400);
-      }
       setIsOpen(false);
+      if (pathname !== "/") return; // let the browser follow "/#section"
+      e.preventDefault();
+      document
+        .getElementById(hash.replace("#", ""))
+        ?.scrollIntoView({ behavior: "smooth" });
+      history.replaceState(null, "", hash);
     },
-    [pathname, router],
+    [pathname],
   );
 
   return (
@@ -186,7 +175,7 @@ export default function Header() {
             {navLinks.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
+                href={sectionHref(link.href)}
                 onClick={(e) => handleNavClick(e, link.href)}
                 className="px-3 py-2 text-sm text-oxford/70 dark:text-white/70 hover:text-oxford dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
               >
@@ -205,17 +194,23 @@ export default function Header() {
                   setLangOpen(!langOpen);
                   setThemeOpen(false);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm text-oxford/70 dark:text-white/70 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                aria-label={t("language")}
+                aria-haspopup="menu"
+                aria-expanded={langOpen}
+                className="flex items-center gap-1.5 px-3 py-2 text-smtext-oxford/70 dark:text-white/70 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
               >
-                <Globe className="w-4 h-4" />
-                <span>{locale.toUpperCase()}</span>
-                <ChevronDown className="w-3 h-3" />
+                <Globe className="w-4 h-4" aria-hidden="true" />
+                <span lang={locale}>{localeLabels[locale]}</span>
+                <ChevronDown className="w-3 h-3" aria-hidden="true" />
               </button>
               {langOpen && (
-                <div className="absolute top-full end-0 mt-1 bg-white dark:bg-oxford-light rounded-lg shadow-lg border border-gray-200 dark:border-white/10 overflow-hidden min-w-[140px] py-1">
+                <div role="menu" className="absolute top-full end-0 mt-1 bg-white dark:bg-oxford-light rounded-lg shadow-lg border border-gray-200 dark:border-white/10 overflow-hidden min-w-[140px] py-1">
                   {(["fr", "en", "ar"] as Locale[]).map((lang) => (
                     <button
                       key={lang}
+                      role="menuitemradio"
+                      aria-checked={locale === lang}
+                      lang={lang}
                       onClick={(e) => {
                         e.stopPropagation();
                         setLocale(lang);
@@ -241,7 +236,10 @@ export default function Header() {
                   setThemeOpen(!themeOpen);
                   setLangOpen(false);
                 }}
-                className="p-2 text-oxford/70 dark:text-white/70 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                aria-label={t("theme")}
+                aria-haspopup="menu"
+                aria-expanded={themeOpen}
+                className="p-2 text-oxford/70dark:text-white/70 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
               >
                 {mounted ? (
                   theme === "dark" ? (
@@ -326,21 +324,25 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2 text-oxford dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
+            aria-label={isOpen ? t("closeMenu") : t("openMenu")}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
+            className="lg:hidden p-2.5 text-oxford dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
           >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-100 dark:border-white/5">
+          <div id="mobile-menu" className="lg:hidden py-4 border-t border-gray-100 dark:border-white/5">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
-                  href={link.href}
+                  href={sectionHref(link.href)}
                   onClick={(e) => handleNavClick(e, link.href)}
                   className="px-3 py-2.5 text-sm font-medium text-oxford dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
                 >
@@ -353,21 +355,25 @@ export default function Header() {
                   {(["fr", "en", "ar"] as Locale[]).map((lang) => (
                     <button
                       key={lang}
+                      lang={lang}
                       onClick={() => setLocale(lang)}
+                      aria-pressed={locale === lang}
                       className={cn(
-                        "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                        "min-h-[36px] px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                         locale === lang
                           ? "bg-gold text-oxford"
                           : "bg-gray-100 dark:bg-white/5 text-oxford dark:text-white",
                       )}
                     >
-                      {lang.toUpperCase()}
+                      {localeLabels[lang]}
                     </button>
                   ))}
                 </div>
                 <button
+                  type="button"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="p-2 rounded-md bg-gray-100 dark:bg-white/5 text-oxford dark:text-white"
+                  aria-label={t("toggleTheme")}
+                  className="p-2.5 rounded-md bg-gray-100dark:bg-white/5 text-oxford dark:text-white"
                 >
                   {mounted && theme === "dark" ? (
                     <Sun className="w-4 h-4" />

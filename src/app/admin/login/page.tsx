@@ -84,7 +84,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-oxford flex flex-col items-center p-4 py-8">
+    <div className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto on-dark bg-oxford flex flex-col items-center p-4 py-8">
       {/* Background Pattern */}
       <div
         className="absolute inset-0 opacity-[0.03]"

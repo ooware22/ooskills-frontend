@@ -151,7 +151,7 @@ export default function StreakCounter() {
             className="absolute right-0 top-full mt-2 z-50 pointer-events-none"
           >
             <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[5px] border-l-transparent border-r-transparent border-b-oxford dark:border-b-[#1a2744] absolute right-3 -top-[5px]" />
-            <div className="bg-oxford dark:bg-[#1a2744] text-white rounded-lg shadow-xl border border-white/10 px-3 py-2 min-w-[120px]">
+            <div className="on-dark bg-oxford dark:bg-[#1a2744] text-white rounded-lg shadow-xl border border-white/10 px-3 py-2 min-w-[120px]">
               <div className="flex items-center gap-1.5 mb-1">
                 <FireIcon className="w-3.5 h-3.5 text-orange-400" />
                 <span className="text-[11px] font-semibold">

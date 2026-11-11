@@ -13,7 +13,12 @@
     "system": "Système",
     "myCourses": "Mes formations",
     "myDashboard": "Mon Tableau de bord",
-    "adminPanel": "Panneau Admin"
+    "adminPanel": "Panneau Admin",
+    "language": "Changer de langue",
+    "theme": "Changer de thème",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "toggleTheme": "Basculer le thème clair / sombre"
   },
   "hero": {
     "badge": "Plateforme e-learning en Algérie",
@@ -664,9 +669,9 @@
       "subtitle": "Rejoignez OOSkills et commencez votre parcours d'apprentissage",
       "avatar": "Photo",
       "firstName": "Prénom",
-      "firstNamePlaceholder": "Jean",
+      "firstNamePlaceholder": "Amine",
       "lastName": "Nom",
-      "lastNamePlaceholder": "Dupont",
+      "lastNamePlaceholder": "Benali",
       "email": "Adresse email",
       "emailPlaceholder": "vous@exemple.com",
       "phone": "Numéro de téléphone",
@@ -730,7 +735,29 @@
       "invalidTokenMessage": "Ce lien de réinitialisation est invalide ou a expiré. Veuillez faire une nouvelle demande.",
       "requestNew": "Faire une nouvelle demande"
     },
-    "copyright": "© 2026 OOSkills. Tous droits réservés."
+    "copyright": "© 2026 OOSkills. Tous droits réservés.",
+    "ui": {
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
+      "ageConfirm": "J'ai au moins 16 ans",
+      "checkInboxTitle": "Vérifiez votre boîte e-mail",
+      "checkInboxText": "Si l'adresse est valide, nous venons d'envoyer un lien d'activation à :",
+      "checkInboxHelp": "Cliquez sur le lien pour activer votre compte, puis connectez-vous. Pensez à regarder dans les spams.",
+      "resend": "Renvoyer l'e-mail",
+      "resending": "Envoi...",
+      "resendSent": "E-mail renvoyé. Vérifiez votre boîte de réception.",
+      "resendError": "Impossible de renvoyer l'e-mail pour le moment. Réessayez dans une minute.",
+      "goToSignin": "Aller à la connexion",
+      "needName": "Indiquez votre prénom et votre nom pour continuer.",
+      "needEmail": "Indiquez une adresse e-mail valide pour continuer.",
+      "needPasswordLength": "Le mot de passe doit contenir au moins 8 caractères.",
+      "needPasswordMatch": "Les deux mots de passe doivent être identiques.",
+      "needTerms": "Acceptez les conditions d'utilisation et la politique de confidentialité.",
+      "needAge": "Confirmez que vous avez au moins 16 ans.",
+      "referralInvalid": "Ce code de parrainage n'est pas valide. Corrigez-le ou laissez le champ vide.",
+      "notVerified": "Votre adresse e-mail n'est pas encore vérifiée. Cliquez sur le lien reçu par e-mail, ou demandez-en un nouveau.",
+      "language": "Langue"
+    }
   },
   "coursesPage": {
     "title": "Toutes les formations",

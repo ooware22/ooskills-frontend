@@ -90,7 +90,9 @@ export default function FAQ({ data }: FAQProps) {
                   )}
                 >
                   <button
+                    type="button"
                     onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                    aria-expanded={openIndex === index}
                     className="w-full flex items-center gap-4 p-5 text-start group"
                   >
                     <div 
@@ -156,7 +158,9 @@ export default function FAQ({ data }: FAQProps) {
                   )}
                 >
                   <button
+                    type="button"
                     onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                    aria-expanded={openIndex === index}
                     className="w-full flex items-center gap-4 p-5 text-start group"
                   >
                     <div 

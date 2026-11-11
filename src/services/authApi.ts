@@ -12,6 +12,7 @@ import type {
     LoginResponse,
     RegisterRequest,
     RegisterResponse,
+    SocialLoginResponse,
     SocialLoginRequest,
     TokenRefreshResponse,
     User,
@@ -32,6 +33,7 @@ const ENDPOINTS = {
     verify: '/auth/token/verify/',
     profile: '/auth/me/',
     changePassword: '/auth/change-password/',
+    resendVerification: '/auth/resend-verification/',
     logout: '/auth/logout/',
     referralCode: '/auth/my-referral-code/',
     referrals: '/auth/my-referrals/',
@@ -90,7 +92,7 @@ export const register = async (data: RegisterRequest): Promise<RegisterResponse>
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-            if (key === 'newsletter_subscribed') {
+            if (typeof value === 'boolean') {
                 formData.append(key, value ? 'true' : 'false');
             } else {
                 formData.append(key, value as string | Blob);
@@ -98,15 +100,17 @@ export const register = async (data: RegisterRequest): Promise<RegisterResponse>
         }
     });
 
+    // No session is opened at sign-up: the user logs in after clicking the
+    // activation link sent by e-mail.
     const response = await axiosClient.post<RegisterResponse>(ENDPOINTS.register, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return response.data;
+};
 
-    const { tokens } = response.data;
-
-    // Store access token in memory; refresh token arrives as an HttpOnly cookie.
-    setTokens(tokens.access);
-
+/** Send the activation e-mail again (same answer whatever the address). */
+export const resendVerification = async (email: string): Promise<MessageResponse> => {
+    const response = await axiosClient.post<MessageResponse>(ENDPOINTS.resendVerification, { email });
     return response.data;
 };
 
@@ -114,8 +118,8 @@ export const register = async (data: RegisterRequest): Promise<RegisterResponse>
  * Social login with Google or Facebook
  * Exchanges authorization code for tokens
  */
-export const socialLogin = async (data: SocialLoginRequest): Promise<RegisterResponse> => {
-    const response = await axiosClient.post<RegisterResponse>(ENDPOINTS.socialLogin, data);
+export const socialLogin = async (data: SocialLoginRequest): Promise<SocialLoginResponse> => {
+    const response = await axiosClient.post<SocialLoginResponse>(ENDPOINTS.socialLogin, data);
     const { tokens } = response.data;
 
     // Store access token in memory; refresh token arrives as an HttpOnly cookie.
@@ -222,7 +226,8 @@ export const authApi = {
     getProfile,
     updateProfile,
     changePassword,
-    logout,
+    resendVerification,
+logout,
     // Token helpers
     getAccessToken,
     setTokens,

@@ -85,6 +85,12 @@ export interface RegisterRequest {
     referral_code?: string;
     newsletter_subscribed?: boolean;
     avatar?: File | null;
+    /** Interface language at sign-up (fr / en / ar). */
+    language?: string;
+    /** Required: terms of service and privacy policy accepted. */
+    accept_terms: boolean;
+    /** Required: user declares the minimum age set by the terms. */
+    age_confirmed: boolean;
 }
 
 /** Social login request payload */
@@ -125,9 +131,15 @@ export interface LoginResponse {
 
 /** Registration response from /api/auth/register/ */
 export interface RegisterResponse {
+    message: string;
+    email: string;
+}
+
+/** Social login response: the user is logged in straight away. */
+export interface SocialLoginResponse {
     user: User;
     tokens: AuthTokens;
-    message: string;
+    message?: string;
 }
 
 /** Token refresh response from /api/auth/token/refresh/ */

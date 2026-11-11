@@ -79,7 +79,7 @@ export default function PrivacyPolicyPage() {
       </header>
 
       {/* Hero / Title Section */}
-      <section className="relative overflow-hidden">
+      <section className="on-dark relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-oxford via-oxford/95 to-oxford/90" />
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-72 h-72 bg-gold rounded-full blur-3xl" />

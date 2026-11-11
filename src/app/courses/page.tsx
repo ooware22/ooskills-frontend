@@ -138,7 +138,7 @@ export default function CoursesPage() {
       <Header />
       <main className="min-h-screen bg-gray-50 dark:bg-oxford pt-20">
         {/* Hero Banner */}
-        <section className="bg-gradient-to-br from-oxford via-oxford-light to-oxford dark:from-oxford dark:via-oxford-light/50 dark:to-oxford py-16 lg:py-20">
+        <section className="on-dark bg-gradient-to-br from-oxford via-oxford-light to-oxford dark:from-oxford dark:via-oxford-light/50 dark:to-oxford py-16 lg:py-20">
           <div className="container mx-auto px-4 lg:px-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
