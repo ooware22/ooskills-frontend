@@ -173,7 +173,9 @@
       "success": "Message Sent!",
       "successDetail": "Thank you, your message has been sent. We will reply by e-mail.",
       "error": "Error, try again",
-      "errorDetail": "Your message could not be sent. Check your connection and try again."
+      "errorDetail": "Your message could not be sent. Check your connection and try again.",
+      "privacyNotice": "Your name, email and message are only used to answer you. They are never sold or shared.",
+      "privacyLink": "Privacy policy"
     }
   },
   "footer": {
@@ -774,8 +776,8 @@
     "allLevels": "All Levels",
     "beginner": "Beginner",
     "intermediate": "Intermediate",
-    "initialisation": "Initialisation",
-    "approfondissement": "Approfondissement",
+    "initialisation": "Beginner",
+    "approfondissement": "Intermediate",
     "advanced": "Advanced",
     "sortBy": "Sort by",
     "popular": "Most Popular",
@@ -788,7 +790,11 @@
     "students": "students",
     "hours": "hours",
     "enrolled": "Enrolled",
-    "enrollNow": "Enroll Now"
+    "enrollNow": "Enroll Now",
+    "levelFilter": "Filter by level",
+    "sortFilter": "Sort courses",
+    "searchLabel": "Search for a course",
+    "clearSearch": "Clear the search"
   },
   "courseDetail": {
     "backToCourses": "Back to Courses",
@@ -1330,5 +1336,12 @@
     "description": "The page you are looking for does not exist or has moved.",
     "home": "Back to home",
     "catalog": "Browse courses"
+  },
+  "verifyCertificate": {
+    "loading": "Verifying certificate…",
+    "notFoundTitle": "Certificate not found",
+    "notFoundBefore": "The certificate",
+    "notFoundAfter": "could not be verified. It does not exist or the link is incorrect.",
+    "back": "← Back to home"
   }
 }

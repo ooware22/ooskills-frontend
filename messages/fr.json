@@ -166,7 +166,9 @@
       "success": "Message envoyé !",
       "successDetail": "Merci, votre message a bien été envoyé. Nous vous répondrons par e-mail.",
       "error": "Erreur, réessayez",
-      "errorDetail": "Votre message n'a pas pu être envoyé. Vérifiez votre connexion puis réessayez."
+      "errorDetail": "Votre message n'a pas pu être envoyé. Vérifiez votre connexion puis réessayez.",
+      "privacyNotice": "Vos nom, e-mail et message servent uniquement à vous répondre. Ils ne sont ni vendus ni partagés.",
+      "privacyLink": "Politique de confidentialité"
     }
   },
   "footer": {
@@ -781,7 +783,11 @@
     "students": "étudiants",
     "hours": "heures",
     "enrolled": "Inscrit",
-    "enrollNow": "S'inscrire"
+    "enrollNow": "S'inscrire",
+    "levelFilter": "Filtrer par niveau",
+    "sortFilter": "Trier les formations",
+    "searchLabel": "Rechercher une formation",
+    "clearSearch": "Effacer la recherche"
   },
   "courseDetail": {
     "backToCourses": "Retour aux formations",
@@ -1323,5 +1329,12 @@
     "description": "La page que vous cherchez n'existe pas ou a été déplacée.",
     "home": "Retour à l'accueil",
     "catalog": "Voir les formations"
+  },
+  "verifyCertificate": {
+    "loading": "Vérification du certificat…",
+    "notFoundTitle": "Certificat introuvable",
+    "notFoundBefore": "Le certificat",
+    "notFoundAfter": "n'a pas pu être vérifié. Il n'existe pas ou le lien est incorrect.",
+    "back": "← Retour à l'accueil"
   }
 }

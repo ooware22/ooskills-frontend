@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { API_URL } from "@/lib/site";
+import { API_URL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 interface CourseSummary {
   title?: string | Record<string, string>;
   description?: string | Record<string, string>;
   image?: string;
+  price?: number | string;
 }
 
 type Lookup =
@@ -77,7 +78,40 @@ export default async function CourseLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const lookup = await lookupCourse(id);
   // An unknown course answers HTTP 404 (it used to be a 200 "soft 404").
-  if ((await lookupCourse(id)).status === "missing") notFound();
-  return children;
+  if (lookup.status === "missing") notFound();
+  if (lookup.status !== "found") return children;
+
+  // schema.org Course, so search engines can show the course (audit LAN-08).
+  const course = lookup.course;
+  const url = `${SITE_URL}/courses/${encodeURIComponent(id)}`;
+  const price = Number(course.price ?? 0);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: plain(course.title),
+    description: plain(course.description).replace(/\s+/g, " ").trim().slice(0, 500),
+    url,
+    ...(course.image ? { image: course.image } : {}),
+    provider: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    offers: {
+      "@type": "Offer",
+      category: price > 0 ? "Paid" : "Free",
+      price: Number.isFinite(price) ? price : 0,
+      priceCurrency: "DZD",
+      url,
+    },
+    hasCourseInstance: { "@type": "CourseInstance", courseMode: "Online" },
+  };
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // Escape "<" so course text can never close the script element.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      {children}
+    </>
+  );
 }

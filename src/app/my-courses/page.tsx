@@ -76,7 +76,7 @@ export default function MyCoursesPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gold hover:bg-gold/90 text-oxford font-semibold rounded-xl transition-colors mt-4"
               >
                 {t('browseCatalog')}
-                <ArrowRightIcon className="w-4 h-4" />
+                <ArrowRightIcon className="rtl:rotate-180 w-4 h-4" />
               </Link>
             </motion.div>
           ) : (

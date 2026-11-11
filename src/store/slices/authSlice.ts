@@ -52,6 +52,10 @@ export const initializeAuth = createAsyncThunk(
             // because the HttpOnly refresh cookie may still be valid (including
             // after payment-provider redirects or opening a new tab).
             if (!authApi.getAccessToken()) {
+                // Never signed in on this browser: no refresh cookie to try.
+                if (!authApi.hasStoredTokens()) {
+                    return { user: null, tokens: null };
+                }
                 await authApi.refreshAccessToken();
             }
 

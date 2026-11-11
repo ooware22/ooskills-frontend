@@ -17,7 +17,7 @@ export function useSoundEffects() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const files = ["level-up.mp3", "achievement.mp3", "xp-gain.mp3"];
+    const files = ["level-up.wav", "achievement.wav", "xp-gain.wav"];
     files.forEach((file) => {
       if (!audioCache.current.has(file)) {
         const audio = new Audio(`/sounds/${file}`);
@@ -50,9 +50,9 @@ export function useSoundEffects() {
     [soundEnabled],
   );
 
-  const playLevelUp = useCallback(() => play("level-up.mp3", 0.6), [play]);
-  const playAchievement = useCallback(() => play("achievement.mp3", 0.5), [play]);
-  const playXPGain = useCallback(() => play("xp-gain.mp3", 0.3), [play]);
+  const playLevelUp = useCallback(() => play("level-up.wav", 0.6), [play]);
+  const playAchievement = useCallback(() => play("achievement.wav", 0.5), [play]);
+  const playXPGain = useCallback(() => play("xp-gain.wav", 0.3), [play]);
 
   return { playLevelUp, playAchievement, playXPGain, soundEnabled };
 }

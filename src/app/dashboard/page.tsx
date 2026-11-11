@@ -682,7 +682,7 @@ export default function StudentDashboard() {
                 className="text-xs text-gold hover:text-gold-light transition-colors flex items-center gap-1"
               >
                 {td("viewAll")}
-                <ArrowRightIcon className="w-3 h-3" />
+                <ArrowRightIcon className="rtl:rotate-180 w-3 h-3" />
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -719,7 +719,7 @@ export default function StudentDashboard() {
               className="text-sm text-gold hover:text-gold-light transition-colors flex items-center gap-1"
             >
               {td("viewAll")}
-              <ArrowRightIcon className="w-3.5 h-3.5" />
+              <ArrowRightIcon className="rtl:rotate-180 w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -734,7 +734,7 @@ export default function StudentDashboard() {
                 className="inline-flex items-center gap-1 text-sm text-gold hover:text-gold-light mt-3"
               >
                 {td("browseCatalog") || "Browse catalog"}
-                <ArrowRightIcon className="w-3.5 h-3.5" />
+                <ArrowRightIcon className="rtl:rotate-180 w-3.5 h-3.5" />
               </Link>
             </div>
           ) : (

@@ -192,7 +192,7 @@ export default function ForgotPassword() {
                 ) : (
                   <>
                     {t("submit")}
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <ArrowRight className="rtl:rotate-180 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </>
                 )}
               </button>
