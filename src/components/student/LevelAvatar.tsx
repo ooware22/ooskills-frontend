@@ -163,7 +163,7 @@ export default function LevelAvatar({
             ? "border-white dark:border-gold/50 bg-gradient-to-br from-yellow-400 via-gold to-amber-600 shadow-lg shadow-gold/30"
             : isHighTier
               ? "border-white dark:border-gold/40 bg-gradient-to-br from-gold to-gold-light shadow-md shadow-gold/20"
-              : "border-white dark:border-white/20 bg-oxford dark:bg-[#1a2744]"
+              : "on-dark border-white dark:border-white/20 bg-oxford dark:bg-[#1a2744]"
         }`}
         style={{
           width: s.badge,
@@ -193,7 +193,7 @@ export default function LevelAvatar({
       >
         {/* Arrow pointing up */}
         <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-b-[5px] border-l-transparent border-r-transparent border-b-oxford dark:border-b-[#1a2744] absolute end-2 -top-[5px]" />
-        <div className="bg-oxford dark:bg-[#1a2744] text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl border border-white/10 flex flex-col items-center gap-0.5">
+        <div className="on-dark bg-oxford dark:bg-[#1a2744] text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl border border-white/10 flex flex-col items-center gap-0.5">
           <div>
             <span className="text-gold font-bold">Lv.{level}</span>
             <span className="mx-1 text-white/30">·</span>

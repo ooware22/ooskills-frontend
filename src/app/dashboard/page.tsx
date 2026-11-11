@@ -98,7 +98,7 @@ export default function StudentDashboard() {
 
   const shareReferral = (platform: string) => {
     const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
-    const text = `Rejoins-moi sur OOSkills et reçois 100\u00a0DA de bienvenue avec mon code parrainage\u00a0!`;
+    const text = td("shareText");
     if (platform === "native") {
       if (typeof navigator !== "undefined" && navigator.share) {
         navigator.share({ title: "OOSkills", text, url: link }).catch(() => {});
@@ -290,14 +290,14 @@ export default function StudentDashboard() {
             <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center gap-2">
               <GiftIcon className="w-4 h-4 text-gold" />
               <h3 className="text-sm font-semibold text-oxford dark:text-white">
-                Mes Cadeaux
+                {td("myGifts")}
               </h3>
             </div>
             {sentGifts.length === 0 && receivedGifts.length === 0 ? (
               <div className="p-6 text-center">
                 <GiftIcon className="w-8 h-8 text-silver/30 mx-auto mb-2" />
                 <p className="text-xs text-silver dark:text-white/50">
-                  Aucun cadeau pour le moment
+                  {td("noGifts")}
                 </p>
               </div>
             ) : (
@@ -340,10 +340,10 @@ export default function StudentDashboard() {
                         }`}
                       >
                         {g.status === "claimed"
-                          ? "Réclamé"
+                          ? td("giftClaimed")
                           : g.status === "expired"
-                            ? "Expiré"
-                            : "En attente"}
+                            ? td("giftExpired")
+                            : td("giftPending")}
                       </span>
                     </div>
                   ))}
@@ -362,7 +362,7 @@ export default function StudentDashboard() {
               <div className="flex items-center gap-2">
                 <UserPlusIcon className="w-4 h-4 text-gold" />
                 <h3 className="text-sm font-semibold text-oxford dark:text-white">
-                  Inviter des amis
+                  {td("inviteFriends")}
                 </h3>
               </div>
               {/* Referral Balance Badge */}
@@ -386,8 +386,8 @@ export default function StudentDashboard() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-silver dark:text-white/40 mb-1">
-                      Solde parrainage
+                    <p className="text-[10px] uppercase tracking-wider text-silver dark:text-white/60 mb-1">
+                      {td("referralBalance")}
                     </p>
                     <p
                       className={`text-xl font-bold ${
@@ -412,15 +412,13 @@ export default function StudentDashboard() {
                     />
                   </div>
                 </div>
-                <p className="text-[10px] text-silver dark:text-white/40 mt-2">
-                  Gagnez 200 DA par ami invité · Votre ami reçoit 100 DA de
-                  bienvenue
+                <p className="text-[10px] text-silver dark:text-white/60 mt-2">
+                  {td("referralRewards")}
                 </p>
               </div>
 
-              <p className="text-xs text-silver dark:text-white/50 mb-4">
-                Partagez votre lien de parrainage et gagnez des récompenses
-                quand vos amis s&apos;inscrivent.
+              <p className="text-xs text-silver dark:text-white/60 mb-4">
+                {td("referralIntro")}
               </p>
               {referralCode ? (
                 <div className="space-y-3">
@@ -438,24 +436,24 @@ export default function StudentDashboard() {
                       }`}
                     >
                       <ClipboardDocumentIcon className="w-4 h-4" />
-                      {referralCopied ? "Copié !" : "Copier"}
+                      {referralCopied ? td("copied") : td("copy")}
                     </button>
                     <button
                       onClick={() => setShareModalOpen(true)}
                       className="px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-oxford dark:bg-white/10 hover:bg-oxford/80 dark:hover:bg-white/20 text-white"
                     >
                       <ShareIcon className="w-4 h-4" />
-                      Partager
+                      {td("share")}
                     </button>
                   </div>
                 </div>
               ) : !referralLoaded ? (
-                <p className="text-xs text-silver dark:text-white/40 italic">
-                  Chargement...
+                <p className="text-xs text-silver dark:text-white/60 italic">
+                  {td("loading")}
                 </p>
               ) : (
-                <p className="text-xs text-silver dark:text-white/40 italic">
-                  Code indisponible pour le moment.
+                <p className="text-xs text-silver dark:text-white/60 italic">
+                  {td("codeUnavailable")}
                 </p>
               )}
             </div>
@@ -482,10 +480,11 @@ export default function StudentDashboard() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
                 <h3 className="text-base font-bold text-oxford dark:text-white">
-                  Partager vers...
+                  {td("shareTo")}
                 </h3>
                 <button
                   onClick={() => setShareModalOpen(false)}
+                  aria-label={td("close")}
                   className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                 >
                   <svg
@@ -521,7 +520,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Partager via WhatsApp
+                    {td("shareWhatsapp")}
                   </span>
                 </button>
 
@@ -539,7 +538,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Partager via Telegram
+                    {td("shareTelegram")}
                   </span>
                 </button>
 
@@ -557,7 +556,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Partager sur Facebook
+                    {td("shareFacebook")}
                   </span>
                 </button>
 
@@ -575,7 +574,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Envoyer via Messenger
+                    {td("shareMessenger")}
                   </span>
                 </button>
 
@@ -596,7 +595,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Partager sur X (Twitter)
+                    {td("shareX")}
                   </span>
                 </button>
 
@@ -604,7 +603,7 @@ export default function StudentDashboard() {
                 <button
                   onClick={() => {
                     const link = `${window.location.origin}/auth/signup?ref=${referralCode}`;
-                    window.location.href = `mailto:?subject=${encodeURIComponent("Rejoins OOSkills")}&body=${encodeURIComponent(`Rejoins-moi sur OOSkills et reçois 100 DA de bienvenue !\n\n${link}`)}`;
+                    window.location.href = `mailto:?subject=${encodeURIComponent(td("shareSubject"))}&body=${encodeURIComponent(`${td("shareText")}\n\n${link}`)}`;
                     setShareModalOpen(false);
                   }}
                   className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-start"
@@ -625,7 +624,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Partager par e-mail
+                    {td("shareEmail")}
                   </span>
                 </button>
 
@@ -653,7 +652,7 @@ export default function StudentDashboard() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-oxford dark:text-white">
-                    Copier le lien
+                    {td("copyLink")}
                   </span>
                 </button>
               </div>
@@ -683,7 +682,7 @@ export default function StudentDashboard() {
                 className="text-xs text-gold hover:text-gold-light transition-colors flex items-center gap-1"
               >
                 {td("viewAll")}
-                <ArrowRightIcon className="w-3 h-3" />
+                <ArrowRightIcon className="rtl:rotate-180 w-3 h-3" />
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -720,7 +719,7 @@ export default function StudentDashboard() {
               className="text-sm text-gold hover:text-gold-light transition-colors flex items-center gap-1"
             >
               {td("viewAll")}
-              <ArrowRightIcon className="w-3.5 h-3.5" />
+              <ArrowRightIcon className="rtl:rotate-180 w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -735,7 +734,7 @@ export default function StudentDashboard() {
                 className="inline-flex items-center gap-1 text-sm text-gold hover:text-gold-light mt-3"
               >
                 {td("browseCatalog") || "Browse catalog"}
-                <ArrowRightIcon className="w-3.5 h-3.5" />
+                <ArrowRightIcon className="rtl:rotate-180 w-3.5 h-3.5" />
               </Link>
             </div>
           ) : (

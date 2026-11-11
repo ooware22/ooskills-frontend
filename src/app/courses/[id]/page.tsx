@@ -151,7 +151,7 @@ export default function CourseDetailPage({
       <>
         <Header />
         <main className="min-h-screen bg-gray-50 dark:bg-oxford pt-20">
-          <section className="bg-gradient-to-br from-oxford via-oxford-light to-oxford py-12 lg:py-16">
+          <section className="on-dark bg-gradient-to-br from-oxford via-oxford-light to-oxford py-12 lg:py-16">
             <div className="container mx-auto px-4 lg:px-8">
               <div className="animate-pulse space-y-4">
                 <div className="h-6 w-32 bg-white/10 rounded" />
@@ -231,7 +231,7 @@ export default function CourseDetailPage({
       <Header />
       <main className="min-h-screen bg-gray-50 dark:bg-oxford pt-20">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-oxford via-oxford-light to-oxford py-12 lg:py-16">
+        <section className="on-dark bg-gradient-to-br from-oxford via-oxford-light to-oxford py-12 lg:py-16">
           <div className="container mx-auto px-4 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

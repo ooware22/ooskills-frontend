@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useTranslations, useI18n } from "@/lib/i18n";
 import axiosClient from "@/lib/axios";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function ForgotPassword() {
   const { resolvedTheme } = useTheme();
@@ -50,7 +51,7 @@ export default function ForgotPassword() {
 
   return (
     <div
-      className={`auth-page h-screen overflow-hidden flex items-center justify-center p-4 transition-colors duration-300 ${
+      className={`auth-page relative min-h-dvh w-full overflow-x-hidden overflow-y-auto flex items-center justify-center p-4 py-16 transition-colors duration-300 ${
         isDark
           ? "bg-gradient-to-br from-oxford via-oxford to-oxford-light"
           : "bg-gradient-to-br from-cream via-white to-blue-light"
@@ -69,6 +70,8 @@ export default function ForgotPassword() {
       {/* Decorative Blobs */}
       <div className={`absolute top-1/4 -left-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/10" : "bg-gold/20"}`} />
       <div className={`absolute bottom-1/4 -right-32 w-96 h-96 rounded-full blur-3xl ${isDark ? "bg-gold/5" : "bg-oxford/5"}`} />
+
+      <LanguageSwitcher className="absolute z-10 top-3 end-3 sm:top-5 sm:end-6" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -189,7 +192,7 @@ export default function ForgotPassword() {
                 ) : (
                   <>
                     {t("submit")}
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <ArrowRight className="rtl:rotate-180 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </>
                 )}
               </button>

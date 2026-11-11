@@ -33,6 +33,7 @@ const Twitter = ({ className }: { className?: string }) => (
   </svg>
 );
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { useTranslations } from "@/lib/i18n";
 import axiosClient from "@/lib/axios";
 import type { PublicSiteSettingsData } from "@/types/content";
@@ -273,6 +274,14 @@ export default function Contact({ settings }: ContactProps) {
                     </p>
                   )}
                 </div>
+
+                {/* Information at the point of collection (audit LAN-23) */}
+                <p className="text-xs text-gray-600 dark:text-white/60">
+                  {t("form.privacyNotice")}{" "}
+                  <Link href="/privacy-policy" className="underline hover:text-gold">
+                    {t("form.privacyLink")}
+                  </Link>
+                </p>
               </div>
             </form>
           </motion.div>

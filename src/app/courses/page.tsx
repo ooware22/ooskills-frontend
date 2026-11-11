@@ -42,6 +42,12 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = useState<string>("popular");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // The home page links to /courses?category=<slug>.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("category");
+    if (fromUrl) setSelectedCategory(fromUrl);
+  }, []);
+
   // Fetch all courses + categories once on mount
   useEffect(() => {
     dispatch(fetchPublicCategories());
@@ -138,7 +144,7 @@ export default function CoursesPage() {
       <Header />
       <main className="min-h-screen bg-gray-50 dark:bg-oxford pt-20">
         {/* Hero Banner */}
-        <section className="bg-gradient-to-br from-oxford via-oxford-light to-oxford dark:from-oxford dark:via-oxford-light/50 dark:to-oxford py-16 lg:py-20">
+        <section className="on-dark bg-gradient-to-br from-oxford via-oxford-light to-oxford dark:from-oxford dark:via-oxford-light/50 dark:to-oxford py-16 lg:py-20">
           <div className="container mx-auto px-4 lg:px-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -156,7 +162,8 @@ export default function CoursesPage() {
               <div className="max-w-xl mx-auto relative">
                 <MagnifyingGlassIcon className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 z-10" />
                 <input
-                  type="text"
+                  type="search"
+                  aria-label={t("searchLabel")}
                   value={search}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder={t("searchPlaceholder")}
@@ -164,8 +171,10 @@ export default function CoursesPage() {
                 />
                 {search && (
                   <button
+                    type="button"
                     onClick={() => handleSearchChange("")}
-                    className="absolute right-4 rtl:right-auto rtl:left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                    aria-label={t("clearSearch")}
+                    className="absolute right-4rtl:right-auto rtl:left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
                   >
                     <XMarkIcon className="w-5 h-5" />
                   </button>
@@ -270,6 +279,7 @@ export default function CoursesPage() {
                 <div className="flex items-center gap-3">
                   {/* Level Filter */}
                   <select
+                    aria-label={t("levelFilter")}
                     value={selectedLevel}
                     onChange={(e) => setSelectedLevel(e.target.value)}
                     className="px-3 py-2 bg-white dark:bg-oxford-light border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gold/30 appearance-none cursor-pointer pr-8"
@@ -287,6 +297,7 @@ export default function CoursesPage() {
 
                   {/* Sort */}
                   <select
+                    aria-label={t("sortFilter")}
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     className="px-3 py-2 bg-white dark:bg-oxford-light border border-gray-200 dark:border-white/10 rounded-xl text-sm text-oxford dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gold/30 appearance-none cursor-pointer pr-8"

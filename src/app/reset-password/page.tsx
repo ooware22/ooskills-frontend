@@ -137,7 +137,7 @@ function ResetPasswordForm() {
                 className="w-full py-2.5 sm:py-3 text-sm sm:text-base bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-gold/20 hover:shadow-gold/40"
               >
                 {t("requestNew")}
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4" />
               </Link>
             </div>
           ) : success ? (
@@ -161,7 +161,7 @@ function ResetPasswordForm() {
                 className="w-full py-2.5 sm:py-3 text-sm sm:text-base bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-gold/20 hover:shadow-gold/40"
               >
                 {t("goToLogin")}
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4" />
               </Link>
             </motion.div>
           ) : (
@@ -255,7 +255,7 @@ function ResetPasswordForm() {
                 ) : (
                   <>
                     {t("submit")}
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <ArrowRight className="rtl:rotate-180 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </>
                 )}
               </button>

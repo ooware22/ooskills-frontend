@@ -15,6 +15,8 @@ import {
   ExclamationTriangleIcon as AlertIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
+import { resendVerification } from "@/services/authApi";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   login,
@@ -43,6 +45,19 @@ export default function SignIn() {
   const error = useAppSelector(selectAuthError);
 
   const [showPassword, setShowPassword] = useState(false);
+  const tUi = useTranslations("auth.ui");
+  // Account exists but the e-mail is not verified yet: offer a new link.
+  const [unverified, setUnverified] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const handleResend = async () => {
+    setResendState("sending");
+    try {
+      await resendVerification(formData.email);
+      setResendState("sent");
+    } catch {
+      setResendState("error");
+    }
+  };
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -102,8 +117,14 @@ export default function SignIn() {
       })
     );
 
+    if (login.rejected.match(result) && result.meta.code === "email_not_verified") {
+      setUnverified(true);
+      return;
+    }
+    setUnverified(false);
+
     if (login.fulfilled.match(result)) {
-      // Block admin/super-admin from the student portal
+      // Block admin/super-adminfrom the student portal
       const userRole = (result.payload.user as any)?.role;
       const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
@@ -167,6 +188,8 @@ export default function SignIn() {
         {locale === "ar" ? "العودة إلى الصفحة الرئيسية" : locale === "fr" ? "Retour à l'accueil" : "Back to home"}
       </Link>
 
+      <LanguageSwitcher className="absolute z-10 top-3 end-3 sm:top-5 sm:end-6" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -203,8 +226,26 @@ export default function SignIn() {
               : "bg-white/80 border-gray-200"
           }`}
         >
+          {/* Unverified e-mail: explain and offer a new activation link */}
+          {unverified && (
+            <div className="mb-4 sm:mb-5 p-3 sm:p-4 bg-amber-500/10 border border-amber-500/40 rounded-lg">
+              <p className={`text-xs sm:text-sm mb-3 ${isDark ? "text-amber-200" : "text-amber-900"}`}>{tUi("notVerified")}</p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendState === "sending" || resendState === "sent"}
+                className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-gold text-oxford hover:bg-gold-light disabled:opacity-60"
+              >
+                {resendState === "sending" ? tUi("resending") : tUi("resend")}
+              </button>
+              <p role="status" aria-live="polite" className={`mt-2 text-xs ${resendState === "error" ? "text-red-500" : isDark ? "text-white/70" : "text-oxford/70"}`}>
+                {resendState === "sent" ? tUi("resendSent") : resendState === "error" ? tUi("resendError") : ""}
+              </p>
+            </div>
+          )}
+
           {/* Error Alert */}
-          {error && (
+          {error && !unverified && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -217,13 +258,15 @@ export default function SignIn() {
 
           {/* Email */}
           <div className="mb-4 sm:mb-5">
-            <label className={`block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+            <label htmlFor="si-email" className={`block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
               {t("email")}
             </label>
             <div className="relative">
               <Mail className={`absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
               <input
+                id="si-email"
                 type="email"
+                autoComplete="email"
                 required
                 value={formData.email}
                 onChange={(e) =>
@@ -242,13 +285,15 @@ export default function SignIn() {
 
           {/* Password */}
           <div className="mb-4 sm:mb-6">
-            <label className={`block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+            <label htmlFor="si-password" className={`block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
               {t("password")}
             </label>
             <div className="relative">
               <Lock className={`absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
               <input
+                id="si-password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 required
                 value={formData.password}
                 onChange={(e) =>
@@ -265,7 +310,9 @@ export default function SignIn() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className={`absolute end-3 top-1/2 -translate-y-1/2 transition-colors ${
+                aria-label={showPassword ? tUi("hidePassword") : tUi("showPassword")}
+                aria-pressed={showPassword}
+                className={`absolute end-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-md transition-colors ${
                   isDark ? "text-white/30 hover:text-white/60" : "text-oxford/30 hover:text-oxford/60"
                 }`}
               >
@@ -279,19 +326,8 @@ export default function SignIn() {
           </div>
 
           {/* Remember & Forgot */}
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded text-gold focus:ring-gold/50 ${
-                  isDark ? "border-white/20 bg-white/5" : "border-gray-300 bg-white"
-                }`}
-              />
-              <span className={`text-xs sm:text-sm ${isDark ? "text-white/50" : "text-oxford/60"}`}>
-                {t("rememberMe")}
-              </span>
-            </label>
-            <Link href="/auth/forgot-password" className="text-xs sm:text-sm text-gold hover:underline">
+          <div className="flex items-center justify-end mb-4 sm:mb-6">
+            <Link href="/auth/forgot-password" className="inline-block py-1 text-xs sm:text-sm text-gold-dark dark:text-gold hover:underline">
               {t("forgotPassword")}
             </Link>
           </div>
@@ -307,7 +343,7 @@ export default function SignIn() {
             ) : (
               <>
                 {t("submit")}
-                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <ArrowRight className="rtl:rotate-180 w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </>
             )}
           </button>

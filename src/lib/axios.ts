@@ -329,14 +329,46 @@ export const isAxiosError = axios.isAxiosError;
 /**
  * Extract error message from any error type
  */
+function messageFromData(data: unknown): string | undefined {
+    if (typeof data === 'string') {
+        // Ignore HTML error pages (proxy / server errors).
+        return data && !data.trimStart().startsWith('<') ? data : undefined;
+    }
+    if (Array.isArray(data)) {
+        return data.length ? messageFromData(data[0]) : undefined;
+    }
+    if (data && typeof data === 'object') {
+        const obj = data as Record<string, unknown>;
+        for (const key of ['detail', 'error', 'message', 'non_field_errors']) {
+            const found = messageFromData(obj[key]);
+            if (found) return found;
+        }
+        // DRF field errors: {"referral_code": ["Code de parrainage invalide."]}
+        for (const [key, value] of Object.entries(obj)) {
+            if (key === 'code') continue;
+            const found = messageFromData(value);
+            if (found) return found;
+        }
+    }
+    return undefined;
+}
+
 export const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
-        return error.response?.data?.detail || error.message;
+        return messageFromData(error.response?.data) || error.message;
     }
     if (error instanceof Error) {
         return error.message;
     }
     return 'An unexpected error occurred.';
+};
+
+/** Machine-readable error code sent by the API, e.g. "email_not_verified". */
+export const getErrorCode = (error: unknown): string | undefined => {
+    if (!axios.isAxiosError(error)) return undefined;
+    const code = (error.response?.data as Record<string, unknown> | undefined)?.code;
+    if (Array.isArray(code)) return typeof code[0] === 'string' ? code[0] : undefined;
+    return typeof code === 'string' ? code : undefined;
 };
 
 /**

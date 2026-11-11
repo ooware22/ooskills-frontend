@@ -10,7 +10,7 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "@/services/authApi";
-import { getErrorMessage } from "@/lib/axios";
+import { getErrorCode, getErrorMessage } from "@/lib/axios";
 import type { RootState } from "../index";
 import type {
     User,
@@ -52,6 +52,10 @@ export const initializeAuth = createAsyncThunk(
             // because the HttpOnly refresh cookie may still be valid (including
             // after payment-provider redirects or opening a new tab).
             if (!authApi.getAccessToken()) {
+                // Never signed in on this browser: no refresh cookie to try.
+                if (!authApi.hasStoredTokens()) {
+                    return { user: null, tokens: null };
+                }
                 await authApi.refreshAccessToken();
             }
 
@@ -73,9 +77,13 @@ export const initializeAuth = createAsyncThunk(
 /**
  * Login with email and password
  */
-export const login = createAsyncThunk(
+export const login = createAsyncThunk<
+    { user: User; tokens: AuthTokens },
+    LoginRequest,
+    { rejectValue: string; rejectedMeta: { code?: string } }
+>(
     "auth/login",
-    async (credentials: LoginRequest, { rejectWithValue }) => {
+    async (credentials, { rejectWithValue }) => {
         try {
             const response = await authApi.login(credentials);
 
@@ -90,7 +98,8 @@ export const login = createAsyncThunk(
                 },
             };
         } catch (error) {
-            return rejectWithValue(getErrorMessage(error));
+            // The code lets the sign-in page offer "resend the activation e-mail".
+            return rejectWithValue(getErrorMessage(error), { code: getErrorCode(error) });
         }
     }
 );
@@ -102,13 +111,8 @@ export const register = createAsyncThunk(
     "auth/register",
     async (data: RegisterRequest, { rejectWithValue }) => {
         try {
-            const response = await authApi.register(data);
-
-            return {
-                user: response.user,
-                tokens: response.tokens,
-                // Note: response.tokens.refresh is undefined (HttpOnly cookie)
-            };
+            // No session at sign-up: the account must be activated by e-mail.
+            return await authApi.register(data);
         } catch (error) {
             return rejectWithValue(getErrorMessage(error));
         }
@@ -268,10 +272,9 @@ const authSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(register.fulfilled, (state, action) => {
-                state.user = action.payload.user;
-                state.tokens = action.payload.tokens;
-                state.isAuthenticated = false; // Don't auto-authenticate - user must verify email first
+            .addCase(register.fulfilled, (state) => {
+                // No session until the e-mail is verified and the user logs in.
+                state.isAuthenticated = false;
                 state.loading = false;
                 state.error = null;
             })

@@ -14,7 +14,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-oxford text-white">
+    <footer className="on-dark bg-oxford text-white">
       {/* Main Footer */}
       <div className="container mx-auto px-4 lg:px-8 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">

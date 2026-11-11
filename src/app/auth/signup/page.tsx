@@ -24,6 +24,8 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
+import { resendVerification } from "@/services/authApi";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   register,
@@ -76,7 +78,20 @@ export default function SignUp() {
     referral_code: "",
     newsletter_subscribed: false,
     acceptTerms: false,
+    ageConfirmed: false,
   });
+  const tUi = useTranslations("auth.ui");
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const handleResend = async () => {
+    setResendState("sending");
+    try {
+      await resendVerification(formData.email);
+      setResendState("sent");
+    } catch {
+      setResendState("error");
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -205,6 +220,11 @@ export default function SignUp() {
       return;
     }
 
+    if (referralStatus === "invalid") {
+      showToast(tUi("referralInvalid"), "error");
+      return;
+    }
+
     const result = await dispatch(
       register({
         email: formData.email,
@@ -217,6 +237,9 @@ export default function SignUp() {
         referral_code: formData.referral_code || undefined,
         newsletter_subscribed: formData.newsletter_subscribed,
         avatar: avatarFile,
+        language: locale,
+        accept_terms: formData.acceptTerms,
+        age_confirmed: formData.ageConfirmed,
       })
     );
 
@@ -253,9 +276,27 @@ export default function SignUp() {
       case "contact":
         return formData.email.trim() && formData.email.includes("@");
       case "security":
-        return formData.password.length >= 8 && formData.password === formData.password_confirm && formData.acceptTerms;
+        return formData.password.length >= 8 && formData.password === formData.password_confirm && formData.acceptTerms && formData.ageConfirmed;
       default:
         return false;
+    }
+  };
+
+  // Tells the user what is missing instead of a silently disabled button.
+  const missingHint = (): string | null => {
+    switch (currentStep) {
+      case "personal":
+        return formData.first_name.trim() && formData.last_name.trim() ? null : tUi("needName");
+      case "contact":
+        return formData.email.trim() && formData.email.includes("@") ? null : tUi("needEmail");
+      case "security":
+        if (formData.password.length < 8) return tUi("needPasswordLength");
+        if (formData.password !== formData.password_confirm) return tUi("needPasswordMatch");
+        if (!formData.acceptTerms) return tUi("needTerms");
+        if (!formData.ageConfirmed) return tUi("needAge");
+        return null;
+      default:
+        return null;
     }
   };
 
@@ -312,6 +353,8 @@ export default function SignUp() {
         {locale === "ar" ? "العودة إلى الصفحة الرئيسية" : locale === "fr" ? "Retour à l'accueil" : "Back to home"}
       </Link>
 
+      <LanguageSwitcher className="absolute z-10 top-3 end-3 sm:top-5 sm:end-6" />
+
       {/* Registration Success Overlay */}
       {registrationSuccess && (
         <motion.div
@@ -331,27 +374,19 @@ export default function SignUp() {
             </div>
 
             <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDark ? "text-white" : "text-oxford"}`}>
-              {locale === "ar" ? "تم إنشاء حسابك بنجاح!" : locale === "fr" ? "Compte créé avec succès !" : "Account Created Successfully!"}
+              {tUi("checkInboxTitle")}
             </h2>
 
-            <p className={`text-sm sm:text-base mb-2 ${isDark ? "text-white/60" : "text-oxford/60"}`}>
-              {locale === "ar"
-                ? "لقد أرسلنا رابط التفعيل إلى بريدك الإلكتروني"
-                : locale === "fr"
-                  ? "Nous avons envoyé un lien d'activation à votre adresse e-mail"
-                  : "We've sent an activation link to your email"}
+            <p className={`text-sm sm:text-base mb-2 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+              {tUi("checkInboxText")}
             </p>
 
             <p className={`text-sm sm:text-base font-semibold mb-6 ${isDark ? "text-gold" : "text-gold"}`}>
               {formData.email}
             </p>
 
-            <p className={`text-xs sm:text-sm mb-6 ${isDark ? "text-white/40" : "text-oxford/50"}`}>
-              {locale === "ar"
-                ? "يرجى التحقق من بريدك الإلكتروني والنقر على رابط التفعيل لتفعيل حسابك."
-                : locale === "fr"
-                  ? "Veuillez vérifier votre e-mail et cliquer sur le lien d'activation pour activer votre compte."
-                  : "Please check your email and click the activation link to activate your account."}
+            <p className={`text-xs sm:text-sm mb-6 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+              {tUi("checkInboxHelp")}
             </p>
 
             {/* Referral welcome bonus */}
@@ -373,20 +408,28 @@ export default function SignUp() {
               </div>
             )}
 
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-6 py-2.5 text-sm bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg transition-all shadow-md shadow-gold/20"
-            >
-              {locale === "ar" ? "الذهاب إلى الصفحة الرئيسية" : locale === "fr" ? "Aller à la page d'accueil" : "Go to Home Page"}
-              <ArrowRight className={`w-3.5 h-3.5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/auth/signin"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm bg-gold hover:bg-gold-light text-oxford font-semibold rounded-lg transition-all shadow-md shadow-gold/20"
+              >
+                {tUi("goToSignin")}
+                <ArrowRight className={`w-3.5 h-3.5 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
+              </Link>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendState === "sending" || resendState === "sent"}
+                className={`inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-lg border transition-all disabled:opacity-60 ${
+                  isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-oxford hover:bg-gray-50"
+                }`}
+              >
+                {resendState === "sending" ? tUi("resending") : tUi("resend")}
+              </button>
+            </div>
 
-            <p className={`text-[10px] sm:text-xs mt-6 ${isDark ? "text-white/30" : "text-oxford/40"}`}>
-              {locale === "ar"
-                ? "لم تتلقَ البريد الإلكتروني؟ تحقق من مجلد الرسائل غير المرغوب فيها."
-                : locale === "fr"
-                  ? "Vous n'avez pas reçu l'e-mail ? Vérifiez votre dossier spam."
-                  : "Didn't receive the email? Check your spam folder."}
+            <p role="status" aria-live="polite" className={`text-xs sm:text-sm mt-4 min-h-[1.25rem] ${resendState === "error" ? "text-red-500" : isDark ? "text-white/70" : "text-oxford/70"}`}>
+              {resendState === "sent" ? tUi("resendSent") : resendState === "error" ? tUi("resendError") : ""}
             </p>
           </div>
         </motion.div>
@@ -536,15 +579,16 @@ export default function SignUp() {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
                   {/* First Name */}
                   <div>
-                    <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
-                      {t("firstName")} <span className="text-red-400">{t("required")}</span>
+                    <label htmlFor="su-first-name" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                      {t("firstName")}<span className="text-red-400">{t("required")}</span>
                     </label>
                     <div className="relative">
                       <UserIcon className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
                       <input
                         type="text"
                         required
-                        value={formData.first_name}
+                        id="su-first-name"
+                      value={formData.first_name}
                         onChange={(e) =>
                           setFormData({ ...formData, first_name: e.target.value })
                         }
@@ -561,15 +605,16 @@ export default function SignUp() {
 
                   {/* Last Name */}
                   <div>
-                    <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
-                      {t("lastName")} <span className="text-red-400">{t("required")}</span>
+                    <label htmlFor="su-last-name" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                      {t("lastName")}<span className="text-red-400">{t("required")}</span>
                     </label>
                     <div className="relative">
                       <UserIcon className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
                       <input
                         type="text"
                         required
-                        value={formData.last_name}
+                        id="su-last-name"
+                      value={formData.last_name}
                         onChange={(e) =>
                           setFormData({ ...formData, last_name: e.target.value })
                         }
@@ -587,8 +632,8 @@ export default function SignUp() {
 
                 {/* Referral Code */}
                 <div className="mb-4">
-                  <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
-                    {t("referralCode")} <span className={isDark ? "text-white/30" : "text-oxford/40"}>{t("referralCodeOptional")}</span>
+                  <label htmlFor="su-referral" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                    {t("referralCode")}<span className={isDark ? "text-white/30" : "text-oxford/40"}>{t("referralCodeOptional")}</span>
                   </label>
                   <div className="relative">
                     <GiftIcon className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
@@ -596,6 +641,7 @@ export default function SignUp() {
                     }`} />
                     <input
                       type="text"
+                      id="su-referral"
                       value={formData.referral_code}
                       onChange={(e) =>
                         setFormData({ ...formData, referral_code: e.target.value.toUpperCase() })
@@ -659,15 +705,16 @@ export default function SignUp() {
               >
                 {/* Email */}
                 <div className="mb-4">
-                  <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
-                    {t("email")} <span className="text-red-400">{t("required")}</span>
+                  <label htmlFor="su-email" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                    {t("email")}<span className="text-red-400">{t("required")}</span>
                   </label>
                   <div className="relative">
                     <Mail className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
                     <input
                       type="email"
                       required
-                      value={formData.email}
+                      id="su-email"
+                    value={formData.email}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
@@ -684,13 +731,14 @@ export default function SignUp() {
 
                 {/* Phone */}
                 <div className="mb-4">
-                  <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                  <label htmlFor="su-phone" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
                     {t("phone")}
                   </label>
                   <div className="relative">
                     <PhoneIcon className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
                     <input
                       type="tel"
+                      id="su-phone"
                       value={formData.phone}
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
@@ -803,15 +851,16 @@ export default function SignUp() {
               >
                 {/* Password */}
                 <div className="mb-4">
-                  <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
-                    {t("password")} <span className="text-red-400">{t("required")}</span>
+                  <label htmlFor="su-password" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                    {t("password")}<span className="text-red-400">{t("required")}</span>
                   </label>
                   <div className="relative">
                     <Lock className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
                     <input
                       type={showPassword ? "text" : "password"}
                       required
-                      value={formData.password}
+                      id="su-password"
+                    value={formData.password}
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
                       }
@@ -826,7 +875,9 @@ export default function SignUp() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className={`absolute end-2.5 top-1/2 -translate-y-1/2 transition-colors ${
+                      aria-label={showPassword ? tUi("hidePassword") : tUi("showPassword")}
+                      aria-pressed={showPassword}
+                      className={`absolute end-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md transition-colors ${
                         isDark ? "text-white/30 hover:text-white/60" : "text-oxford/30 hover:text-oxford/60"
                       }`}
                     >
@@ -857,15 +908,16 @@ export default function SignUp() {
 
                 {/* Confirm Password */}
                 <div className="mb-4">
-                  <label className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
-                    {t("confirmPassword")} <span className="text-red-400">{t("required")}</span>
+                  <label htmlFor="su-password-confirm" className={`block text-xs sm:text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                    {t("confirmPassword")}<span className="text-red-400">{t("required")}</span>
                   </label>
                   <div className="relative">
                     <Lock className={`absolute start-2.5 sm:start-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-oxford/30"}`} />
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       required
-                      value={formData.password_confirm}
+                      id="su-password-confirm"
+                    value={formData.password_confirm}
                       onChange={(e) =>
                         setFormData({ ...formData, password_confirm: e.target.value })
                       }
@@ -882,7 +934,9 @@ export default function SignUp() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className={`absolute end-2.5 top-1/2 -translate-y-1/2 transition-colors ${
+                      aria-label={showConfirmPassword ? tUi("hidePassword") : tUi("showPassword")}
+                      aria-pressed={showConfirmPassword}
+                      className={`absolute end-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md transition-colors ${
                         isDark ? "text-white/30 hover:text-white/60" : "text-oxford/30 hover:text-oxford/60"
                       }`}
                     >
@@ -983,12 +1037,47 @@ export default function SignUp() {
                     </span>
                   </label>
                 </div>
+
+                {/* Minimum age (terms: 16 years) */}
+                <div className="mb-4">
+                  <label className="flex items-start gap-2.5 cursor-pointer group">
+                    <div className="relative mt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={formData.ageConfirmed}
+                        onChange={(e) =>
+                          setFormData({ ...formData, ageConfirmed: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className={`w-4 h-4 rounded border-2 transition-all flex items-center justify-center peer-focus-visible:ring-2 peer-focus-visible:ring-gold/60 ${
+                        formData.ageConfirmed
+                          ? 'bg-gold border-gold'
+                          : isDark
+                            ? 'border-white/40 group-hover:border-white/60'
+                            : 'border-gray-400 group-hover:border-gray-500'
+                      }`}>
+                        {formData.ageConfirmed && (
+                          <CheckIcon className="w-2.5 h-2.5 text-oxford" strokeWidth={3} />
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-xs sm:text-sm leading-tight ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+                      {tUi("ageConfirm")} <span className="text-red-400">*</span>
+                    </span>
+                  </label>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
+          {/* What is missing before the user can go on */}
+          <p role="status" aria-live="polite" className={`mt-4 text-xs min-h-[1rem] ${isDark ? "text-white/70" : "text-oxford/70"}`}>
+            {missingHint()}
+          </p>
+
           {/* Navigation Buttons */}
-          <div className="flex gap-3 mt-5">
+          <div className="flex gap-3 mt-2">
             {currentStepIndex > 0 && (
               <button
                 type="button"
