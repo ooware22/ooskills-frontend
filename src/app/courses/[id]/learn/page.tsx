@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchMyEnrollments, saveProgress, fetchMyProgress } from '@/store/slices/enrollmentSlice';
+import { initializeAuth, selectIsInitialized } from '@/store/slices/authSlice';
 import {
   fetchCourseContentBySlug,
   fetchQuizAttempts,
@@ -923,6 +924,14 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   const [audioDuration, setAudioDuration] = useState(0);
   const [audioMuted, setAudioMuted] = useState(false);
 
+  // The player has no site header, which is what restores the session after
+  // a page load elsewhere. Without this, reloading the player (or opening it
+  // from a link) left the learner signed out: no progress shown or saved.
+  const authInitialized = useAppSelector(selectIsInitialized);
+  useEffect(() => {
+    if (!authInitialized) dispatch(initializeAuth());
+  }, [dispatch, authInitialized]);
+
   // Fetch enrollments from API
   useEffect(() => {
     if (isAuthenticated) {
@@ -1104,13 +1113,21 @@ export default function CoursePlayerPage({ params }: { params: Promise<{ id: str
   // Audio handling — prefer API audio URL (Supabase), fall back to static audio
   const currentFlat = flatSlides[currentSlideIdx];
   const audioUrl = currentFlat
-    ? (currentFlat.slide.apiAudioUrl || getAudioUrl(currentFlat.audioIndex))
+    ? (currentFlat.slide.apiAudioUrl
+        // A lesson from the API without audio has none: don't fall back to the
+        // bundled sample file (it belongs to the static demo course).
+        || (currentFlat.slide.apiLessonId ? '' : getAudioUrl(currentFlat.audioIndex)))
     : '';
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.src = audioUrl;
+    if (audioUrl) {
+      audio.src = audioUrl;
+    } else {
+      // src = '' would make the browser request the page itself as audio.
+      audio.removeAttribute('src');
+    }
     audio.load();
     setIsPlaying(false);
     setAudioTime(0);
