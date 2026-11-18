@@ -231,7 +231,8 @@
       "sectionSubtitle": "Sous-titre de section",
       "editingLanguage": "Modification",
       "selectEditingLanguage": "Sélectionner la langue d'édition",
-      "selectCategory": "Sélectionner une catégorie"
+      "selectCategory": "Sélectionner une catégorie",
+      "error": "Erreur"
     },
     "sidebar": {
       "dashboard": "Tableau de bord",
@@ -649,6 +650,10 @@
       "toastMarkedRead": "Marqué comme lu.",
       "toastMarkedUnread": "Marqué comme non lu.",
       "toastDeleted": "Message supprimé."
+    },
+    "achievements": {
+      "title": "Réalisations",
+      "subtitle": "Gérez les badges que les apprenants débloquent et l'XP qu'ils rapportent."
     }
   },
   "auth": {
