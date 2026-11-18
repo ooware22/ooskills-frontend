@@ -231,7 +231,8 @@
       "sectionSubtitle": "العنوان الفرعي للقسم",
       "editingLanguage": "تحرير",
       "selectEditingLanguage": "اختر لغة التحرير",
-      "selectCategory": "اختر فئة"
+      "selectCategory": "اختر فئة",
+      "error": "خطأ"
     },
     "sidebar": {
       "dashboard": "لوحة التحكم",
@@ -649,6 +650,10 @@
       "toastMarkedRead": "تم التعليم كمقروءة.",
       "toastMarkedUnread": "تم التعليم كغير مقروءة.",
       "toastDeleted": "تم حذف الرسالة."
+    },
+    "achievements": {
+      "title": "الإنجازات",
+      "subtitle": "إدارة الشارات التي يحصل عليها المتعلمون ونقاط الخبرة التي تمنحها."
     }
   },
   "auth": {

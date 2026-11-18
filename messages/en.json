@@ -238,7 +238,8 @@
       "sectionSubtitle": "Section Subtitle",
       "editingLanguage": "Editing",
       "selectEditingLanguage": "Select editing language",
-      "selectCategory": "Select a category"
+      "selectCategory": "Select a category",
+      "error": "Error"
     },
     "sidebar": {
       "dashboard": "Dashboard",
@@ -656,6 +657,10 @@
       "toastMarkedRead": "Marked as read.",
       "toastMarkedUnread": "Marked as unread.",
       "toastDeleted": "Message deleted."
+    },
+    "achievements": {
+      "title": "Achievements",
+      "subtitle": "Manage the badges learners unlock and the XP they earn."
     }
   },
   "auth": {
